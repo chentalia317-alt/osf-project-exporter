@@ -6,6 +6,8 @@ import urllib.request as webhelper
 import click
 from fpdf import FPDF
 
+API_HOST = 'https://api.test.osf.io/v2'
+
 
 class MockAPIResponse:
     """Simulate OSF API response for testing purposes.
@@ -97,7 +99,7 @@ def get_project_data(pat, dryrun):
 
     if not dryrun:
         result = call_api(
-            'https://api.test.osf.io/v2/users/me/nodes/', 'GET', pat
+            f'{API_HOST}/users/me/nodes/', 'GET', pat
         )
         nodes = json.loads(result.read())
     else:
@@ -125,15 +127,15 @@ def get_project_data(pat, dryrun):
             metadata = MockAPIResponse('custom_metadata').read()
         else:
             metadata = json.loads(call_api(
-                f"https://api.test.osf.io/v2/custom_item_metadata_records/{project['id']}/",
+                f"{API_HOST}/custom_item_metadata_records/{project['id']}/",
                 'GET', pat
             ).read())
-        project_data['resource_type'] = metadata['data']['attributes']['resource_type_general']
-        project_data['resource_lang'] = metadata['data']['attributes']['language']
+        metadata = metadata['data']['attributes']
+        project_data['resource_type'] = metadata['resource_type_general']
+        project_data['resource_lang'] = metadata['language']
         project_data['funders'] = []
-        for funder in metadata['data']['attributes']['funders']:
+        for funder in metadata['funders']:
             project_data['funders'].append(funder)
-
 
         # Choose fields linked to in relationships field
         # to include for testing/production use
@@ -227,10 +229,16 @@ def pull_projects(pat, dryrun, filename):
                             field_name = pdf_display_names[subkey]
                         else:
                             field_name = subkey.replace('_', ' ').title()
-                        pdf.cell(text=f'{field_name}: {item[subkey]}', ln=True, align='C')
+                        pdf.cell(
+                            text=f'{field_name}: {item[subkey]}',
+                            ln=True, align='C'
+                        )
                 pdf.write(0, '\n')
             else:
-                pdf.cell(text=f'{field_name}: {project[key]}', ln=True, align='C')
+                pdf.cell(
+                    text=f'{field_name}: {project[key]}',
+                    ln=True, align='C'
+                )
         pdf.cell(text='=======', ln=True, align='C')
     pdf.output(filename)
 
@@ -242,7 +250,7 @@ def pull_projects(pat, dryrun, filename):
 def get_user_details(pat):
     """Get details for a specific OSF user."""
 
-    request = webhelper.Request('https://api.test.osf.io/v2/', method='GET')
+    request = webhelper.Request(f'{API_HOST}/', method='GET')
     request.add_header('Authorization', f'Bearer {pat}')
     result = webhelper.urlopen(request)
     click.echo(result.read())
