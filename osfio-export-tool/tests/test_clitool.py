@@ -42,7 +42,7 @@ class TestAPI(TestCase):
             'GET', os.getenv('PAT'), filters=filters
         )
         assert data.status == 200
-    
+
     def test_pull_projects_command(self):
         """Test we can successfully pull projects using the OSF API"""
 
