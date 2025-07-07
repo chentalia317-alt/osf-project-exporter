@@ -26,6 +26,10 @@ class MockAPIResponse:
             'tests', 'stubs', 'doistubs.json'),
         'custom_metadata': os.path.join(
             'tests', 'stubs', 'custommetadatastub.json'),
+        'root_folder': os.path.join(
+            'tests', 'stubs', 'files', 'rootfolders.json'),
+        'root_files': os.path.join(
+            'tests', 'stubs', 'files', 'rootfiles.json')
     }
 
     def __init__(self, field):
@@ -80,6 +84,30 @@ def call_api(url, method, pat, filters={}):
     result = webhelper.urlopen(request)
     return result
 
+def explore_file_tree(curr_link, pat, dryrun=True, visited=None):
+    """Explore and get names of files stored in OSF"""
+
+    # at start, no visited nodes:
+        # Create sets for visited links
+    # Add link to visited
+    # Get files and folders
+        # From Mock API if testing, otherwise use query params
+    # for each folder link
+        # if link not visited then
+            # visit the link
+    # add file names found for current link
+    # return file names list
+    if not visited:
+        visited = set()
+        filenames = []
+    visited.add(curr_link)
+    if dryrun:
+        files = MockAPIResponse(f"{curr_link}_files").read()
+
+    for file in files['data']:
+        filenames.append(file['attributes']['materialized_path'])
+
+    return filenames
 
 def get_project_data(pat, dryrun):
     """Pull and list projects for a user from the OSF.
