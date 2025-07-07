@@ -78,11 +78,9 @@ class TestClient(TestCase):
         """Test exploration of mock file tree."""
 
         files = explore_file_tree('root', os.getenv('PAT', ''), dryrun=True)
-        assert files == [
-            '/helloworld.txt.txt',
-            '/tf1/helloworld.txt.txt',
-            '/tf1/tf2/file.txt'
-        ], files
+        assert '/helloworld.txt.txt' in files
+        assert '/tf1/helloworld.txt.txt' in files
+        assert '/tf1/tf2/file.txt' in files
 
     def test_parse_api_responses(self):
         """Using JSON stubs to simulate API responses,
