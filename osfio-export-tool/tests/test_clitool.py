@@ -161,6 +161,9 @@ class TestClient(TestCase):
             'Expected resource_lang eng, got: ',
             projects[0]['resource_lang']
         )
+        assert '/helloworld.txt.txt' in projects[0]['files']
+        assert '/tf1/helloworld.txt.txt' in projects[0]['files']
+        assert '/tf1/tf2/file.txt' in projects[0]['files']
 
     def test_generate_pdf(self):
         """Test generating a PDF from parsed project data.
