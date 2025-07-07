@@ -29,7 +29,15 @@ class MockAPIResponse:
         'root_folder': os.path.join(
             'tests', 'stubs', 'files', 'rootfolders.json'),
         'root_files': os.path.join(
-            'tests', 'stubs', 'files', 'rootfiles.json')
+            'tests', 'stubs', 'files', 'rootfiles.json'),
+        'tf1_folder': os.path.join(
+            'tests', 'stubs', 'files', 'tf1folders.json'),
+        'tf1_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf1files.json'),
+        'tf2_folder': os.path.join(
+            'tests', 'stubs', 'files', 'tf2folders.json'),
+        'tf2_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf2files.json'),
     }
 
     def __init__(self, field):
@@ -84,29 +92,27 @@ def call_api(url, method, pat, filters={}):
     result = webhelper.urlopen(request)
     return result
 
-def explore_file_tree(curr_link, pat, dryrun=True, visited=None):
+def explore_file_tree(curr_link, pat, dryrun=True):
     """Explore and get names of files stored in OSF"""
 
-    # at start, no visited nodes:
-        # Create sets for visited links
-    # Add link to visited
+    filenames = []
+
     # Get files and folders
-        # From Mock API if testing, otherwise use query params
-    # for each folder link
-        # if link not visited then
-            # visit the link
-    # add file names found for current link
-    # return file names list
-    if not visited:
-        visited = set()
-        filenames = []
-    visited.add(curr_link)
+    # # From Mock API if testing, otherwise use query params
     if dryrun:
         files = MockAPIResponse(f"{curr_link}_files").read()
-
+        folders = MockAPIResponse(f"{curr_link}_folder").read()
+    
+    # Reach current deepest child for folders before adding filenames
+    try:
+        for folder in folders['data']:
+            link = folder['relationships']['files']['links']['related']['href']
+            filenames += explore_file_tree(link, pat, dryrun=dryrun)
+    except KeyError as e:
+        pass
     for file in files['data']:
         filenames.append(file['attributes']['materialized_path'])
-
+    
     return filenames
 
 def get_project_data(pat, dryrun):
