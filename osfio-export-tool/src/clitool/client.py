@@ -190,25 +190,22 @@ def get_project_data(pat, dryrun):
 
         # Get list of files in project
         if dryrun:
-            project_data['files'] = ', '.join(explore_file_tree('root', pat))
+            project_data['files'] = ', '.join(
+                explore_file_tree('root', pat, dryrun=True)
+            )
         else:
+            # Get files hosted on OSF storage
             link = relations['files']['links']['related']['href']
-            project_data['files'] = ', '.join(explore_file_tree(link, pat))
+            link += 'osfstorage/'
+            project_data['files'] = ', '.join(
+                explore_file_tree(link, pat, dryrun=False)
+            )
 
-        # Choose fields linked to in relationships field
-        # to include for testing/production use
-        if dryrun:
-            relation_keys = [
-                'affiliated_institutions',
-                'contributors',
-                'identifiers'
-            ]
-        else:
-            relation_keys = [
-                'affiliated_institutions',
-                'contributors',
-                'identifiers'
-            ]
+        relation_keys = [
+            'affiliated_institutions',
+            'contributors',
+            'identifiers'
+        ]
         for key in relation_keys:
             if not dryrun:
                 link = relations[key]['links']['related']['href']
