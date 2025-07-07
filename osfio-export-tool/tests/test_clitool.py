@@ -81,7 +81,7 @@ class TestAPI(TestCase):
             input=os.getenv('PAT', ''),
             terminal_width=60
         )
-        assert not result.exception, result.exception
+        assert not result.exception, result.exc_info
         assert os.path.exists(input_path)
 
         if os.path.exists(input_path):
@@ -178,7 +178,7 @@ class TestClient(TestCase):
             input=os.getenv('PAT', ''),
             terminal_width=60
         )
-        assert not result.exception, result.exception
+        assert not result.exception, result.exc_info
         assert os.path.exists(input_path)
 
         # Compare content of created PDF with reference PDF
