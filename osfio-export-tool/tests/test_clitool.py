@@ -42,6 +42,17 @@ class TestAPI(TestCase):
             'GET', os.getenv('PAT'), filters=filters
         )
         assert data.status == 200
+    
+    def test_explore_api_file_tree(self):
+        data = call_api(
+            'https://api.test.osf.io/v2/users/me/nodes/',
+            'GET', os.getenv('PAT')
+        )
+        node = json.loads(data.read())['data'][0]
+        if 'id' in node.keys():
+            link = f'https://api.test.osf.io/v2/nodes/{node['id']}/files/osfstorage/'
+            files = explore_file_tree(link, os.getenv('PAT'), dryrun=False)
+            assert isinstance(files, list)
 
     def test_pull_projects_command(self):
         """Test we can successfully pull projects using the OSF API"""
