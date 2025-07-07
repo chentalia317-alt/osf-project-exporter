@@ -1,9 +1,9 @@
 # OSF Project Exporter
-This is an external CLI tool you can use for exporting reserach data and files from the OSF website. The idea is to prototype a way to export data from projects, files, etc., from the OSF website, to give users some way to do this until this functionality is added to the main OSF codebase.
+This is a CLI tool you can use for exporting reserach data and files from the OSF website. The idea is to prototype a way to export data from projects, files, etc., from the OSF website, to give users some way to do this until this functionality can be added to the main OSF project.
 
 # Development Setup
-The CLI tool is setup as a Python package. To setup for local development you can set up a Docker container:
-1. Install and setup Docker and Docker Desktop on your local machine.
+For local development you can setup a Docker container with this tool installed as a Python package:
+1. [Install and setup Docker and Docker Desktop on your local machine](https://docs.docker.com/desktop/).
 2. Clone this repository onto your local machine.
 3. On the OSF test server (test.osf.io), create an account and personal access token (PAT) by going into your account settings.
 4. Create a `.env` file and add your personal access token to it (see `.env.template`.)
