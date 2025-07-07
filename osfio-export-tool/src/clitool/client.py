@@ -186,6 +186,15 @@ def get_project_data(pat, dryrun):
         for funder in metadata['funders']:
             project_data['funders'].append(funder)
 
+        relations = project['relationships']
+
+        # Get list of files in project
+        if dryrun:
+            project_data['files'] = ', '.join(explore_file_tree('root', pat))
+        else:
+            link = relations['files']['links']['related']['href']
+            project_data['files'] = ', '.join(explore_file_tree(link, pat))
+
         # Choose fields linked to in relationships field
         # to include for testing/production use
         if dryrun:
@@ -200,7 +209,6 @@ def get_project_data(pat, dryrun):
                 'contributors',
                 'identifiers'
             ]
-        relations = project['relationships']
         for key in relation_keys:
             if not dryrun:
                 link = relations[key]['links']['related']['href']
