@@ -95,6 +95,12 @@ def call_api(url, method, pat, filters={}):
 def explore_file_tree(curr_link, pat, dryrun=True):
     """Explore and get names of files stored in OSF"""
 
+    FILE_FILTER = {
+        'kind': 'file'
+    }
+    FOLDER_FILTER = {
+        'kind': 'folder'
+    }
     filenames = []
 
     # Get files and folders
@@ -102,6 +108,13 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     if dryrun:
         files = MockAPIResponse(f"{curr_link}_files").read()
         folders = MockAPIResponse(f"{curr_link}_folder").read()
+    else:
+        files = json.loads(
+            call_api(curr_link, 'GET', pat, filters=FILE_FILTER).read()
+        )
+        folders = json.loads(
+            call_api(curr_link, 'GET', pat, filters=FOLDER_FILTER).read()
+        )
     
     # Reach current deepest child for folders before adding filenames
     try:
