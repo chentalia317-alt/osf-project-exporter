@@ -5,7 +5,7 @@ import json
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from clitool import cli, call_api, get_project_data
+from clitool import cli, call_api, get_project_data, explore_file_tree
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
@@ -73,6 +73,12 @@ class TestAPI(TestCase):
 
 class TestClient(TestCase):
     """Tests for the internal CLI parts without real API usage."""
+
+    def test_explore_mock_file_tree(self):
+        """Test exploration of mock file tree."""
+
+        files = explore_file_tree('root', os.getenv('PAT', ''), dryrun=True)
+        assert files == ['/helloworld.txt.txt'], files
 
     def test_parse_api_responses(self):
         """Using JSON stubs to simulate API responses,
