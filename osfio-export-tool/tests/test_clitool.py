@@ -7,6 +7,8 @@ from pypdf import PdfReader
 
 from clitool import cli, call_api, get_project_data, explore_file_tree
 
+API_HOST = 'https://api.test.osf.io/v2'
+
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
 input_path = os.path.join('tests', TEST_PDF_FOLDER, TEST_INPUT)
@@ -23,7 +25,7 @@ class TestAPI(TestCase):
         """Test for if JSON for user's projects are loaded correctly"""
 
         data = call_api(
-            'https://api.test.osf.io/v2/users/me/nodes/',
+            f'{API_HOST}/users/me/nodes/',
             'GET', os.getenv('PAT')
         )
         assert data.status == 200
@@ -38,19 +40,19 @@ class TestAPI(TestCase):
             'title': 'ttt'
         }
         data = call_api(
-            'https://api.test.osf.io/v2/nodes/',
+            f'{API_HOST}/nodes/',
             'GET', os.getenv('PAT'), filters=filters
         )
         assert data.status == 200
-    
+
     def test_explore_api_file_tree(self):
         data = call_api(
-            'https://api.test.osf.io/v2/users/me/nodes/',
+            f'{API_HOST}/users/me/nodes/',
             'GET', os.getenv('PAT')
         )
         node = json.loads(data.read())['data'][0]
         if 'id' in node.keys():
-            link = f'https://api.test.osf.io/v2/nodes/{node['id']}/files/osfstorage/'
+            link = f'{API_HOST}/nodes/{node['id']}/files/osfstorage/'
             files = explore_file_tree(link, os.getenv('PAT'), dryrun=False)
             assert isinstance(files, list)
 

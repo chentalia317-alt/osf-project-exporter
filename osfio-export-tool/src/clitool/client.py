@@ -92,6 +92,7 @@ def call_api(url, method, pat, filters={}):
     result = webhelper.urlopen(request)
     return result
 
+
 def explore_file_tree(curr_link, pat, dryrun=True):
     """Explore and get names of files stored in OSF"""
 
@@ -115,18 +116,19 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         folders = json.loads(
             call_api(curr_link, 'GET', pat, filters=FOLDER_FILTER).read()
         )
-    
+
     # Reach current deepest child for folders before adding filenames
     try:
         for folder in folders['data']:
             link = folder['relationships']['files']['links']['related']['href']
             filenames += explore_file_tree(link, pat, dryrun=dryrun)
-    except KeyError as e:
+    except KeyError:
         pass
     for file in files['data']:
         filenames.append(file['attributes']['materialized_path'])
-    
+
     return filenames
+
 
 def get_project_data(pat, dryrun):
     """Pull and list projects for a user from the OSF.
