@@ -46,15 +46,19 @@ class TestAPI(TestCase):
         assert data.status == 200
 
     def test_explore_api_file_tree(self):
+        """Test using API to filter and search file links."""
+
         data = call_api(
             f'{API_HOST}/users/me/nodes/',
             'GET', os.getenv('PAT')
         )
-        node = json.loads(data.read())['data'][0]
-        if 'id' in node.keys():
-            link = f'{API_HOST}/nodes/{node['id']}/files/osfstorage/'
+        nodes = json.loads(data.read())['data']
+        if len(nodes) > 0:
+            link = f'{API_HOST}/nodes/{nodes[0]['id']}/files/osfstorage/'
             files = explore_file_tree(link, os.getenv('PAT'), dryrun=False)
             assert isinstance(files, list)
+        else:
+            print("No nodes available, consider making a test project.")
 
     def test_pull_projects_command(self):
         """Test we can successfully pull projects using the OSF API"""
