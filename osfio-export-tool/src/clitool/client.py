@@ -26,6 +26,8 @@ class MockAPIResponse:
             'tests', 'stubs', 'doistubs.json'),
         'custom_metadata': os.path.join(
             'tests', 'stubs', 'custommetadatastub.json'),
+        'license': os.path.join(
+            'tests', 'stubs', 'licensestub.json'),
     }
 
     def __init__(self, field):
@@ -143,7 +145,8 @@ def get_project_data(pat, dryrun):
             relation_keys = [
                 'affiliated_institutions',
                 'contributors',
-                'identifiers'
+                'identifiers',
+                'license'
             ]
         else:
             relation_keys = [
@@ -163,21 +166,26 @@ def get_project_data(pat, dryrun):
                 )
             else:
                 json_data = MockAPIResponse(key).read()
-
+            
             values = []
-            for item in json_data['data']:
-                # Required data can either be embedded or in attributes
-                if 'embeds' in item:
-                    if 'users' in item['embeds']:
-                        values.append(item['embeds']['users']['data']
-                                      ['attributes']['full_name'])
+
+            if isinstance(json_data['data'], list):
+                for item in json_data['data']:
+                    # Required data can either be embedded or in attributes
+                    if 'embeds' in item:
+                        if 'users' in item['embeds']:
+                            values.append(item['embeds']['users']['data']
+                                        ['attributes']['full_name'])
+                        else:
+                            values.append(item['embeds']['attributes']['name'])
                     else:
-                        values.append(item['embeds']['attributes']['name'])
-                else:
-                    if key == 'identifiers':
-                        values.append(item['attributes']['value'])
-                    else:
-                        values.append(item['attributes']['name'])
+                        if key == 'identifiers':
+                            values.append(item['attributes']['value'])
+                        else:
+                            values.append(item['attributes']['name'])
+            
+            if isinstance(json_data['data'], dict):
+                values.append(json_data['data']['attributes']['name'])
 
             if isinstance(values, list):
                 values = ', '.join(values)
