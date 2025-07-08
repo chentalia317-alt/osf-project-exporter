@@ -40,6 +40,8 @@ class MockAPIResponse:
             'tests', 'stubs', 'files', 'tf2files.json'),
         'license': os.path.join(
             'tests', 'stubs', 'licensestub.json'),
+        'subjects': os.path.join(
+            'tests', 'stubs', 'subjectsstub.json'),
     }
 
     def __init__(self, field):
@@ -223,7 +225,8 @@ def get_project_data(pat, dryrun):
             'affiliated_institutions',
             'contributors',
             'identifiers',
-            'license'
+            'license',
+            'subjects'
         ]
         for key in RELATION_KEYS:
             if not dryrun:
@@ -246,7 +249,7 @@ def get_project_data(pat, dryrun):
             if isinstance(json_data['data'], list):
                 for item in json_data['data']:
                     # Required data can either be embedded or in attributes
-                    if 'embeds' in item:
+                    if 'embeds' in item and key != "subjects":
                         if 'users' in item['embeds']:
                             values.append(
                                 item['embeds']['users']['data']
@@ -257,6 +260,8 @@ def get_project_data(pat, dryrun):
                     else:
                         if key == 'identifiers':
                             values.append(item['attributes']['value'])
+                        elif key == 'subjects':
+                            values.append(item['attributes']['text'])
                         else:
                             values.append(item['attributes']['name'])
             
