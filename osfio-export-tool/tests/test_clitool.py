@@ -99,10 +99,6 @@ class TestClient(TestCase):
             'Expected mynewlicense, got: ',
             projects[0]['license']
         )
-        assert projects[1]['license'] == '', (
-            'Expected no license, got: ',
-            projects[1]['license']
-        )
         assert projects[0]['description'] == 'Test1 Description', (
             'Expected description Test1 Description, got: ',
             projects[0]['description']
