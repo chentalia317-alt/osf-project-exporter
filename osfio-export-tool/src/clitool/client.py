@@ -211,13 +211,16 @@ def get_project_data(pat, dryrun):
         ]
         for key in relation_keys:
             if not dryrun:
-                link = relations[key]['links']['related']['href']
-                json_data = json.loads(
-                    call_api(
-                        link, 'GET', pat,
-                        filters=URL_FILTERS.get(key, {})
-                    ).read()
-                )
+                try:
+                    link = relations[key]['links']['related']['href']
+                    json_data = json.loads(
+                        call_api(
+                            link, 'GET', pat,
+                            filters=URL_FILTERS.get(key, {})
+                        ).read()
+                    )
+                except KeyError:
+                    json_data = {'data': None}
             else:
                 json_data = MockAPIResponse(key).read()
             
