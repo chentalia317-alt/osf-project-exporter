@@ -91,8 +91,12 @@ def call_api(url, method, pat, filters={}):
         query_string = '&'.join([f'filter[{key}]={value}'
                                  for key, value in filters.items()])
         url = f'{url}?{query_string}'
+    
+    API_VERSION = '2.20'
     request = webhelper.Request(url, method=method)
     request.add_header('Authorization', f'Bearer {pat}')
+    # Pin API version so that responses have correct format
+    request.add_header('Accept', f'application/vnd.api+json;version={API_VERSION}')
     result = webhelper.urlopen(request)
     return result
 
