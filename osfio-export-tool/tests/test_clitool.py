@@ -5,7 +5,9 @@ import json
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from clitool import cli, call_api, get_project_data
+from clitool import cli, call_api, get_project_data, explore_file_tree
+
+API_HOST = 'https://api.test.osf.io/v2'
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
@@ -23,7 +25,7 @@ class TestAPI(TestCase):
         """Test for if JSON for user's projects are loaded correctly"""
 
         data = call_api(
-            'https://api.test.osf.io/v2/users/me/nodes/',
+            f'{API_HOST}/users/me/nodes/',
             'GET', os.getenv('PAT')
         )
         assert data.status == 200
@@ -38,10 +40,25 @@ class TestAPI(TestCase):
             'title': 'ttt'
         }
         data = call_api(
-            'https://api.test.osf.io/v2/nodes/',
+            f'{API_HOST}/nodes/',
             'GET', os.getenv('PAT'), filters=filters
         )
         assert data.status == 200
+
+    def test_explore_api_file_tree(self):
+        """Test using API to filter and search file links."""
+
+        data = call_api(
+            f'{API_HOST}/users/me/nodes/',
+            'GET', os.getenv('PAT')
+        )
+        nodes = json.loads(data.read())['data']
+        if len(nodes) > 0:
+            link = f'{API_HOST}/nodes/{nodes[0]['id']}/files/osfstorage/'
+            files = explore_file_tree(link, os.getenv('PAT'), dryrun=False)
+            assert isinstance(files, list)
+        else:
+            print("No nodes available, consider making a test project.")
 
     def test_pull_projects_command(self):
         """Test we can successfully pull projects using the OSF API"""
@@ -64,7 +81,7 @@ class TestAPI(TestCase):
             input=os.getenv('PAT', ''),
             terminal_width=60
         )
-        assert not result.exception, result.exception
+        assert not result.exception, result.exc_info
         assert os.path.exists(input_path)
 
         if os.path.exists(input_path):
@@ -73,6 +90,14 @@ class TestAPI(TestCase):
 
 class TestClient(TestCase):
     """Tests for the internal CLI parts without real API usage."""
+
+    def test_explore_mock_file_tree(self):
+        """Test exploration of mock file tree."""
+
+        files = explore_file_tree('root', os.getenv('PAT', ''), dryrun=True)
+        assert '/helloworld.txt.txt' in files
+        assert '/tf1/helloworld.txt.txt' in files
+        assert '/tf1/tf2/file.txt' in files
 
     def test_parse_api_responses(self):
         """Using JSON stubs to simulate API responses,
@@ -140,6 +165,9 @@ class TestClient(TestCase):
             'Expected resource_lang eng, got: ',
             projects[0]['resource_lang']
         )
+        assert '/helloworld.txt.txt' in projects[0]['files']
+        assert '/tf1/helloworld.txt.txt' in projects[0]['files']
+        assert '/tf1/tf2/file.txt' in projects[0]['files']
 
     def test_generate_pdf(self):
         """Test generating a PDF from parsed project data.

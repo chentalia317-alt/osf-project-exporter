@@ -1,7 +1,8 @@
-from .client import cli, call_api, get_project_data
+from .client import cli, call_api, get_project_data, explore_file_tree
 
 __all__ = [
     'cli',
     'call_api',
-    'get_project_data'
+    'get_project_data',
+    'explore_file_tree'
 ]

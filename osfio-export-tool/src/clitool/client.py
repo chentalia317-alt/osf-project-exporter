@@ -26,6 +26,18 @@ class MockAPIResponse:
             'tests', 'stubs', 'doistubs.json'),
         'custom_metadata': os.path.join(
             'tests', 'stubs', 'custommetadatastub.json'),
+        'root_folder': os.path.join(
+            'tests', 'stubs', 'files', 'rootfolders.json'),
+        'root_files': os.path.join(
+            'tests', 'stubs', 'files', 'rootfiles.json'),
+        'tf1_folder': os.path.join(
+            'tests', 'stubs', 'files', 'tf1folders.json'),
+        'tf1_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf1files.json'),
+        'tf2_folder': os.path.join(
+            'tests', 'stubs', 'files', 'tf2folders.json'),
+        'tf2_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf2files.json'),
         'license': os.path.join(
             'tests', 'stubs', 'licensestub.json'),
     }
@@ -81,6 +93,43 @@ def call_api(url, method, pat, filters={}):
     request.add_header('Authorization', f'Bearer {pat}')
     result = webhelper.urlopen(request)
     return result
+
+
+def explore_file_tree(curr_link, pat, dryrun=True):
+    """Explore and get names of files stored in OSF"""
+
+    FILE_FILTER = {
+        'kind': 'file'
+    }
+    FOLDER_FILTER = {
+        'kind': 'folder'
+    }
+    filenames = []
+
+    # Get files and folders
+    # # From Mock API if testing, otherwise use query params
+    if dryrun:
+        files = MockAPIResponse(f"{curr_link}_files").read()
+        folders = MockAPIResponse(f"{curr_link}_folder").read()
+    else:
+        files = json.loads(
+            call_api(curr_link, 'GET', pat, filters=FILE_FILTER).read()
+        )
+        folders = json.loads(
+            call_api(curr_link, 'GET', pat, filters=FOLDER_FILTER).read()
+        )
+
+    # Reach current deepest child for folders before adding filenames
+    try:
+        for folder in folders['data']:
+            link = folder['relationships']['files']['links']['related']['href']
+            filenames += explore_file_tree(link, pat, dryrun=dryrun)
+    except KeyError:
+        pass
+    for file in files['data']:
+        filenames.append(file['attributes']['materialized_path'])
+
+    return filenames
 
 
 def get_project_data(pat, dryrun):
@@ -139,22 +188,27 @@ def get_project_data(pat, dryrun):
         for funder in metadata['funders']:
             project_data['funders'].append(funder)
 
-        # Choose fields linked to in relationships field
-        # to include for testing/production use
-        if dryrun:
-            relation_keys = [
-                'affiliated_institutions',
-                'contributors',
-                'identifiers',
-                'license'
-            ]
-        else:
-            relation_keys = [
-                'affiliated_institutions',
-                'contributors',
-                'identifiers'
-            ]
         relations = project['relationships']
+
+        # Get list of files in project
+        if dryrun:
+            project_data['files'] = ', '.join(
+                explore_file_tree('root', pat, dryrun=True)
+            )
+        else:
+            # Get files hosted on OSF storage
+            link = relations['files']['links']['related']['href']
+            link += 'osfstorage/'
+            project_data['files'] = ', '.join(
+                explore_file_tree(link, pat, dryrun=False)
+            )
+
+        relation_keys = [
+            'affiliated_institutions',
+            'contributors',
+            'identifiers',
+            'license'
+        ]
         for key in relation_keys:
             if not dryrun:
                 link = relations[key]['links']['related']['href']
