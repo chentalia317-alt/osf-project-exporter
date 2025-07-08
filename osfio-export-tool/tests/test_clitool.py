@@ -30,8 +30,14 @@ class TestAPI(TestCase):
             'GET', os.getenv('PAT')
         )
         assert data.status == 200
+        
         data = json.loads(data.read())
         assert isinstance(data, dict)
+        # All mocked data assumes API version 2.20 is used
+        assert data['meta']['version'] == '2.20', (
+            'Expected API version 2.20, actual version: ',
+            data['meta']['version']
+        )
 
     def test_filter_by_api(self):
         """Test if we use query params in API calls."""
