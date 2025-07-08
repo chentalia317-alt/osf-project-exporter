@@ -169,6 +169,10 @@ class TestClient(TestCase):
         assert '/helloworld.txt.txt' in projects[0]['files']
         assert '/tf1/helloworld.txt.txt' in projects[0]['files']
         assert '/tf1/tf2/file.txt' in projects[0]['files']
+        assert projects[0]['subjects'] == 'Education, Literature, Geography', (
+            'Expected Education, Literature, Geography, got: ',
+            projects[0]['subjects']
+        )
 
     def test_generate_pdf(self):
         """Test generating a PDF from parsed project data.
