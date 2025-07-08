@@ -241,6 +241,8 @@ def get_project_data(pat, dryrun):
                         ).read()
                     )
                 except KeyError:
+                    if key == 'subjects':
+                        raise KeyError() # Subjects should have a href link
                     json_data = {'data': None}
             else:
                 json_data = MockAPIResponse(key).read()
