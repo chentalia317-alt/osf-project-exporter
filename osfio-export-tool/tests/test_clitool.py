@@ -1,6 +1,7 @@
 from unittest import TestCase
 import os
 import json
+import pdb
 
 from click.testing import CliRunner
 from pypdf import PdfReader
@@ -98,6 +99,8 @@ class TestClient(TestCase):
         assert '/helloworld.txt.txt' in files
         assert '/tf1/helloworld.txt.txt' in files
         assert '/tf1/tf2/file.txt' in files
+        assert '/tf1/tf2-second/secondpage.txt' in files
+        assert '/tf1/tf2-second/thirdpage.txt' in files
 
     def test_parse_api_responses(self):
         """Using JSON stubs to simulate API responses,
