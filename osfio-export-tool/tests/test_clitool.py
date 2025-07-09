@@ -38,11 +38,12 @@ class TestAPI(TestCase):
 
         filters = {
             'category': '',
-            'title': 'ttt'
+            'title': 'ttt',
         }
         data = call_api(
             f'{API_HOST}/nodes/',
-            'GET', os.getenv('PAT'), filters=filters
+            'GET', os.getenv('PAT'),
+            per_page=12, filters=filters
         )
         assert data.status == 200
 
