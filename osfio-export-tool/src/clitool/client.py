@@ -82,6 +82,9 @@ def call_api(url, method, pat, per_page=None, filters={}):
         HTTP method for the request.
     pat: str
         Personal Access Token to authorise a user with.
+    per_page: int
+        Number of items to include in a JSON page for API responses.
+        The maximum is 100.
     filters: dict
         Dictionary of query parameters to filter results with.
 
@@ -107,7 +110,21 @@ def call_api(url, method, pat, per_page=None, filters={}):
 
 
 def explore_file_tree(curr_link, pat, dryrun=True):
-    """Explore and get names of files stored in OSF"""
+    """Explore and get names of files stored in OSF.
+    
+    Parameters
+    ----------
+    curr_link: string
+        Link/string to use to get files and folders.
+    pat: string
+        Personal Access Token to authorise a user.
+    dryrun: bool
+        Flag to indicate whether to use mock JSON files or real API calls.
+
+    Returns
+    ----------
+        filenames: list[str]
+            List of file paths found in the project."""
 
     FILE_FILTER = {
         'kind': 'file'
@@ -115,6 +132,8 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     FOLDER_FILTER = {
         'kind': 'folder'
     }
+    per_page = 100
+
     filenames = []
 
     is_last_page_folders = False
@@ -124,7 +143,10 @@ def explore_file_tree(curr_link, pat, dryrun=True):
             folders = MockAPIResponse(f"{curr_link}_folder").read()
         else:
             folders = json.loads(
-                call_api(curr_link, 'GET', pat, filters=FOLDER_FILTER).read()
+                call_api(
+                    curr_link, 'GET', pat,
+                    per_page=per_page, filters=FOLDER_FILTER
+                ).read()
             )
         
         # Find deepest subfolders first to avoid missing files
@@ -142,7 +164,10 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                 files = MockAPIResponse(f"{curr_link}_files").read()
             else:
                 files = json.loads(
-                    call_api(curr_link, 'GET', pat, filters=FILE_FILTER).read()
+                    call_api(
+                        curr_link, 'GET', pat,
+                        per_page=per_page, filters=FILE_FILTER
+                    ).read()
                 )
             try:
                 for file in files['data']:
