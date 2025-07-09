@@ -71,7 +71,7 @@ URL_FILTERS = {
 }
 
 
-def call_api(url, method, pat, filters={}):
+def call_api(url, method, pat, per_page=None, filters={}):
     """Call OSF v2 API methods.
 
     Parameters
@@ -93,10 +93,13 @@ def call_api(url, method, pat, filters={}):
         result: HTTPResponse
             Response to the request from the API.
     """
-    if filters and method == 'GET':
+    if (filters or per_page) and method == 'GET':
         query_string = '&'.join([f'filter[{key}]={value}'
-                                 for key, value in filters.items()])
+                                 for key, value in filters.items() if not isinstance(value, dict)])
+        if per_page:
+            query_string += f'&page[size]={per_page}'
         url = f'{url}?{query_string}'
+    
     request = webhelper.Request(url, method=method)
     request.add_header('Authorization', f'Bearer {pat}')
     result = webhelper.urlopen(request)
