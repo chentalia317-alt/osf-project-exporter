@@ -32,12 +32,22 @@ class MockAPIResponse:
             'tests', 'stubs', 'files', 'rootfiles.json'),
         'tf1_folder': os.path.join(
             'tests', 'stubs', 'files', 'tf1folders.json'),
+        'tf1-2_folder': os.path.join(
+            'tests', 'stubs', 'files', 'tf1folders-2.json'),
+        'tf1-2_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf2-second-folders.json'),
         'tf1_files': os.path.join(
             'tests', 'stubs', 'files', 'tf1files.json'),
         'tf2_folder': os.path.join(
             'tests', 'stubs', 'files', 'tf2folders.json'),
+        'tf2-second_folder': os.path.join(
+            'tests', 'stubs', 'files', 'tf2-second-folders.json'),
         'tf2_files': os.path.join(
             'tests', 'stubs', 'files', 'tf2files.json'),
+        'tf2-second_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf2-second-files.json'),
+        'tf2-second-2_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf2-second-files-2.json'),
     }
 
     def __init__(self, field):
@@ -104,28 +114,47 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     }
     filenames = []
 
-    # Get files and folders
-    # # From Mock API if testing, otherwise use query params
-    if dryrun:
-        files = MockAPIResponse(f"{curr_link}_files").read()
-        folders = MockAPIResponse(f"{curr_link}_folder").read()
-    else:
-        files = json.loads(
-            call_api(curr_link, 'GET', pat, filters=FILE_FILTER).read()
-        )
-        folders = json.loads(
-            call_api(curr_link, 'GET', pat, filters=FOLDER_FILTER).read()
-        )
+    is_last_page_folders = False
+    while not is_last_page_folders:
+        # Use Mock JSON if unit/integration testing
+        if dryrun:
+            folders = MockAPIResponse(f"{curr_link}_folder").read()
+        else:
+            folders = json.loads(
+                call_api(curr_link, 'GET', pat, filters=FOLDER_FILTER).read()
+            )
+        
+        # Find deepest subfolders first to avoid missing files
+        try:
+            for folder in folders['data']:
+                link = folder['relationships']['files']['links']['related']['href']
+                filenames += explore_file_tree(link, pat, dryrun=dryrun)
+        except KeyError:
+            pass
 
-    # Reach current deepest child for folders before adding filenames
-    try:
-        for folder in folders['data']:
-            link = folder['relationships']['files']['links']['related']['href']
-            filenames += explore_file_tree(link, pat, dryrun=dryrun)
-    except KeyError:
-        pass
-    for file in files['data']:
-        filenames.append(file['attributes']['materialized_path'])
+        # Now find files in current folder to complete current page
+        is_last_page_files = False
+        while not is_last_page_files:
+            if dryrun:
+                files = MockAPIResponse(f"{curr_link}_files").read()
+            else:
+                files = json.loads(
+                    call_api(curr_link, 'GET', pat, filters=FILE_FILTER).read()
+                )
+            try:
+                for file in files['data']:
+                    filenames.append(file['attributes']['materialized_path'])
+            except KeyError:
+                pass
+            # Files could be split into multiple pages - loop until no more pages
+            curr_link = files['links']['next']
+            if curr_link == None:
+                is_last_page_files = True
+        
+        # Folders could be split across pages - loop until no more pages
+        curr_link = folders['links']['next']
+        if curr_link == None:
+            is_last_page_folders = True
 
     return filenames
 
