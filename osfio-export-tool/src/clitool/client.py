@@ -48,6 +48,8 @@ class MockAPIResponse:
             'tests', 'stubs', 'files', 'tf2-second-files.json'),
         'tf2-second-2_files': os.path.join(
             'tests', 'stubs', 'files', 'tf2-second-files-2.json'),
+        'license': os.path.join(
+            'tests', 'stubs', 'licensestub.json'),
     }
 
     def __init__(self, field):
@@ -115,7 +117,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     Parameters
     ----------
     curr_link: string
-        Link/string to use to get files and folders.
+        URL/name to use to get real/mock files and folders.
     pat: string
         Personal Access Token to authorise a user.
     dryrun: bool
@@ -258,37 +260,51 @@ def get_project_data(pat, dryrun):
                 explore_file_tree(link, pat, dryrun=False)
             )
 
-        relation_keys = [
+        # Get links for data for these keys and extract
+        # certain attributes for each one
+        RELATION_KEYS = [
             'affiliated_institutions',
             'contributors',
-            'identifiers'
+            'identifiers',
+            'license'
         ]
-        for key in relation_keys:
+        for key in RELATION_KEYS:
             if not dryrun:
-                link = relations[key]['links']['related']['href']
-                json_data = json.loads(
-                    call_api(
-                        link, 'GET', pat,
-                        filters=URL_FILTERS.get(key, {})
-                    ).read()
-                )
+                # Check relationship exists and can get link to linked data
+                # Otherwise just pass a placeholder dict
+                try:
+                    link = relations[key]['links']['related']['href']
+                    json_data = json.loads(
+                        call_api(
+                            link, 'GET', pat,
+                            filters=URL_FILTERS.get(key, {})
+                        ).read()
+                    )
+                except KeyError:
+                    json_data = {'data': None}
             else:
                 json_data = MockAPIResponse(key).read()
 
             values = []
-            for item in json_data['data']:
-                # Required data can either be embedded or in attributes
-                if 'embeds' in item:
-                    if 'users' in item['embeds']:
-                        values.append(item['embeds']['users']['data']
-                                      ['attributes']['full_name'])
+            if isinstance(json_data['data'], list):
+                for item in json_data['data']:
+                    # Required data can either be embedded or in attributes
+                    if 'embeds' in item:
+                        if 'users' in item['embeds']:
+                            values.append(
+                                item['embeds']['users']['data']
+                                ['attributes']['full_name']
+                            )
+                        else:
+                            values.append(item['embeds']['attributes']['name'])
                     else:
-                        values.append(item['embeds']['attributes']['name'])
-                else:
-                    if key == 'identifiers':
-                        values.append(item['attributes']['value'])
-                    else:
-                        values.append(item['attributes']['name'])
+                        if key == 'identifiers':
+                            values.append(item['attributes']['value'])
+                        else:
+                            values.append(item['attributes']['name'])
+            
+            if isinstance(json_data['data'], dict): # e.g. license field
+                values.append(json_data['data']['attributes']['name'])
 
             if isinstance(values, list):
                 values = ', '.join(values)

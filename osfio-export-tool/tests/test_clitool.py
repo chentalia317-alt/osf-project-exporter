@@ -2,6 +2,7 @@ from unittest import TestCase
 import os
 import json
 import pdb
+import traceback
 
 from click.testing import CliRunner
 from pypdf import PdfReader
@@ -83,7 +84,7 @@ class TestAPI(TestCase):
             input=os.getenv('PAT', ''),
             terminal_width=60
         )
-        assert not result.exception, result.exc_info
+        assert not result.exception, traceback.format_tb(result.exc_info[2])
         assert os.path.exists(input_path)
 
         if os.path.exists(input_path):
@@ -123,6 +124,10 @@ class TestClient(TestCase):
         assert projects[1]['title'] == 'Test2', (
             'Expected title Test2, got: ',
             projects[1]['title']
+        )
+        assert projects[0]['license'] == 'mynewlicense', (
+            'Expected mynewlicense, got: ',
+            projects[0]['license']
         )
         assert projects[0]['description'] == 'Test1 Description', (
             'Expected description Test1 Description, got: ',
@@ -182,7 +187,7 @@ class TestClient(TestCase):
             input=os.getenv('PAT', ''),
             terminal_width=60
         )
-        assert not result.exception, result.exc_info
+        assert not result.exception, traceback.format_tb(result.exc_info[2])
         assert os.path.exists(input_path)
 
         # Compare content of created PDF with reference PDF
