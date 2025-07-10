@@ -50,6 +50,8 @@ class MockAPIResponse:
             'tests', 'stubs', 'files', 'tf2-second-files-2.json'),
         'license': os.path.join(
             'tests', 'stubs', 'licensestub.json'),
+        'subjects': os.path.join(
+            'tests', 'stubs', 'subjectsstub.json'),
     }
 
     def __init__(self, field):
@@ -105,8 +107,11 @@ def call_api(url, method, pat, per_page=None, filters={}):
             query_string += f'&page[size]={per_page}'
         url = f'{url}?{query_string}'
     
+    API_VERSION = '2.20'
     request = webhelper.Request(url, method=method)
     request.add_header('Authorization', f'Bearer {pat}')
+    # Pin API version so that responses have correct format
+    request.add_header('Accept', f'application/vnd.api+json;version={API_VERSION}')
     result = webhelper.urlopen(request)
     return result
 
@@ -266,7 +271,8 @@ def get_project_data(pat, dryrun):
             'affiliated_institutions',
             'contributors',
             'identifiers',
-            'license'
+            'license',
+            'subjects'
         ]
         for key in RELATION_KEYS:
             if not dryrun:
@@ -281,6 +287,8 @@ def get_project_data(pat, dryrun):
                         ).read()
                     )
                 except KeyError:
+                    if key == 'subjects':
+                        raise KeyError() # Subjects should have a href link
                     json_data = {'data': None}
             else:
                 json_data = MockAPIResponse(key).read()
@@ -289,7 +297,7 @@ def get_project_data(pat, dryrun):
             if isinstance(json_data['data'], list):
                 for item in json_data['data']:
                     # Required data can either be embedded or in attributes
-                    if 'embeds' in item:
+                    if 'embeds' in item and key != "subjects":
                         if 'users' in item['embeds']:
                             values.append(
                                 item['embeds']['users']['data']
@@ -300,6 +308,8 @@ def get_project_data(pat, dryrun):
                     else:
                         if key == 'identifiers':
                             values.append(item['attributes']['value'])
+                        elif key == 'subjects':
+                            values.append(item['attributes']['text'])
                         else:
                             values.append(item['attributes']['name'])
             
