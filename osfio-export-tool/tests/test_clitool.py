@@ -114,8 +114,12 @@ class TestClient(TestCase):
         """Test getting the latest version of a mock wiki"""
 
         link = 'wiki'
-        wiki = explore_wikis(link, os.getenv('PAT'), dryrun=True)
-        assert len(wiki['data']) == 2
+        wikis, content = explore_wikis(link, os.getenv('PAT'), dryrun=True)
+        assert len(wikis['data']) == 2
+        assert len(content) == 2
+
+        assert 'hello world!' in content[0]
+        assert 'hello world!' in content[1]
 
 
     def test_parse_api_responses(self):
