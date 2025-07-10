@@ -103,6 +103,14 @@ class TestClient(TestCase):
         assert '/tf1/tf2/file.txt' in files
         assert '/tf1/tf2-second/secondpage.txt' in files
         assert '/tf1/tf2-second/thirdpage.txt' in files
+    
+    def test_get_latest_wiki_version(self):
+        """Test getting the latest version of a mock wiki"""
+
+        link = 'wiki'
+        wiki = export_wiki(link, os.getenv('PAT'), dryrun=True)
+        assert len(wiki) == 2
+
 
     def test_parse_api_responses(self):
         """Using JSON stubs to simulate API responses,
