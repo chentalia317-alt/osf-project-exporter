@@ -122,7 +122,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     Parameters
     ----------
     curr_link: string
-        Link/string to use to get files and folders.
+        URL/name to use to get real/mock files and folders.
     pat: string
         Personal Access Token to authorise a user.
     dryrun: bool
