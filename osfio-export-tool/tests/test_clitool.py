@@ -115,7 +115,7 @@ class TestClient(TestCase):
 
         link = 'wiki'
         wiki = explore_wikis(link, os.getenv('PAT'), dryrun=True)
-        assert len(wiki) == 2
+        assert len(wiki['data']) == 2
 
 
     def test_parse_api_responses(self):
