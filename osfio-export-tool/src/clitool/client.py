@@ -52,6 +52,8 @@ class MockAPIResponse:
             'tests', 'stubs', 'licensestub.json'),
         'subjects': os.path.join(
             'tests', 'stubs', 'subjectsstub.json'),
+        'wikis': os.path.join(
+            'tests', 'stubs', 'wikistubs.json')
     }
 
     def __init__(self, field):
@@ -193,6 +195,31 @@ def explore_file_tree(curr_link, pat, dryrun=True):
 
     return filenames
 
+
+def explore_wikis(link, pat, dryrun=True):
+    """Get wiki contents for a particular project.
+    
+    Parameters:
+    -------------
+    link: str
+        URL to project wikis or name of wikis field to access mock JSON.
+    pat: str
+        Personal Access Token to authenticate a user with.
+    dryrun: bool
+        Flag to indicate whether to use mock JSON files or real API calls.
+    
+    Returns
+    ---------------
+    wikis: List of JSON representing wikis for a project."""
+
+    if dryrun:
+        wikis = MockAPIResponse('wikis').read()
+    else:
+        wikis = json.loads(
+            call_api(link, 'GET', pat).read()
+        )
+    
+    return wikis
 
 def get_project_data(pat, dryrun):
     """Pull and list projects for a user from the OSF.
