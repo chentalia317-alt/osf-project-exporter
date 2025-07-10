@@ -7,7 +7,7 @@ import traceback
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from clitool import cli, call_api, get_project_data, explore_file_tree
+from clitool import cli, call_api, get_project_data, explore_file_tree, explore_wikis
 
 API_HOST = 'https://api.test.osf.io/v2'
 
@@ -114,7 +114,7 @@ class TestClient(TestCase):
         """Test getting the latest version of a mock wiki"""
 
         link = 'wiki'
-        wiki = export_wiki(link, os.getenv('PAT'), dryrun=True)
+        wiki = explore_wikis(link, os.getenv('PAT'), dryrun=True)
         assert len(wiki) == 2
 
 
