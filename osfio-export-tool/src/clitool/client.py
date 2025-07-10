@@ -32,12 +32,22 @@ class MockAPIResponse:
             'tests', 'stubs', 'files', 'rootfiles.json'),
         'tf1_folder': os.path.join(
             'tests', 'stubs', 'files', 'tf1folders.json'),
+        'tf1-2_folder': os.path.join(
+            'tests', 'stubs', 'files', 'tf1folders-2.json'),
+        'tf1-2_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf2-second-folders.json'),
         'tf1_files': os.path.join(
             'tests', 'stubs', 'files', 'tf1files.json'),
         'tf2_folder': os.path.join(
             'tests', 'stubs', 'files', 'tf2folders.json'),
+        'tf2-second_folder': os.path.join(
+            'tests', 'stubs', 'files', 'tf2-second-folders.json'),
         'tf2_files': os.path.join(
             'tests', 'stubs', 'files', 'tf2files.json'),
+        'tf2-second_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf2-second-files.json'),
+        'tf2-second-2_files': os.path.join(
+            'tests', 'stubs', 'files', 'tf2-second-files-2.json'),
         'license': os.path.join(
             'tests', 'stubs', 'licensestub.json'),
         'subjects': os.path.join(
@@ -65,7 +75,7 @@ URL_FILTERS = {
 }
 
 
-def call_api(url, method, pat, filters={}):
+def call_api(url, method, pat, per_page=None, filters={}):
     """Call OSF v2 API methods.
 
     Parameters
@@ -76,6 +86,9 @@ def call_api(url, method, pat, filters={}):
         HTTP method for the request.
     pat: str
         Personal Access Token to authorise a user with.
+    per_page: int
+        Number of items to include in a JSON page for API responses.
+        The maximum is 100.
     filters: dict
         Dictionary of query parameters to filter results with.
 
@@ -87,9 +100,11 @@ def call_api(url, method, pat, filters={}):
         result: HTTPResponse
             Response to the request from the API.
     """
-    if filters and method == 'GET':
+    if (filters or per_page) and method == 'GET':
         query_string = '&'.join([f'filter[{key}]={value}'
-                                 for key, value in filters.items()])
+                                 for key, value in filters.items() if not isinstance(value, dict)])
+        if per_page:
+            query_string += f'&page[size]={per_page}'
         url = f'{url}?{query_string}'
     
     API_VERSION = '2.20'
@@ -106,17 +121,17 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     
     Parameters
     ----------
-    curr_link: str
-        URL/name of API method/resource/query.
-    pat: str
-        Personal Access Token to authorise a user with.
+    curr_link: string
+        Link/string to use to get files and folders.
+    pat: string
+        Personal Access Token to authorise a user.
     dryrun: bool
-        If enabled, use JSON stubs to create mock responses.
+        Flag to indicate whether to use mock JSON files or real API calls.
 
     Returns
     ----------
-        result: list
-            A list of file paths for the project."""
+        filenames: list[str]
+            List of file paths found in the project."""
 
     FILE_FILTER = {
         'kind': 'file'
@@ -124,30 +139,57 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     FOLDER_FILTER = {
         'kind': 'folder'
     }
+    per_page = 100
+
     filenames = []
 
-    # Get files and folders
-    # # From Mock API if testing, otherwise use query params
-    if dryrun:
-        files = MockAPIResponse(f"{curr_link}_files").read()
-        folders = MockAPIResponse(f"{curr_link}_folder").read()
-    else:
-        files = json.loads(
-            call_api(curr_link, 'GET', pat, filters=FILE_FILTER).read()
-        )
-        folders = json.loads(
-            call_api(curr_link, 'GET', pat, filters=FOLDER_FILTER).read()
-        )
+    is_last_page_folders = False
+    while not is_last_page_folders:
+        # Use Mock JSON if unit/integration testing
+        if dryrun:
+            folders = MockAPIResponse(f"{curr_link}_folder").read()
+        else:
+            folders = json.loads(
+                call_api(
+                    curr_link, 'GET', pat,
+                    per_page=per_page, filters=FOLDER_FILTER
+                ).read()
+            )
+        
+        # Find deepest subfolders first to avoid missing files
+        try:
+            for folder in folders['data']:
+                link = folder['relationships']['files']['links']['related']['href']
+                filenames += explore_file_tree(link, pat, dryrun=dryrun)
+        except KeyError:
+            pass
 
-    # Reach current deepest child for folders before adding filenames
-    try:
-        for folder in folders['data']:
-            link = folder['relationships']['files']['links']['related']['href']
-            filenames += explore_file_tree(link, pat, dryrun=dryrun)
-    except KeyError:
-        pass
-    for file in files['data']:
-        filenames.append(file['attributes']['materialized_path'])
+        # Now find files in current folder to complete current page
+        is_last_page_files = False
+        while not is_last_page_files:
+            if dryrun:
+                files = MockAPIResponse(f"{curr_link}_files").read()
+            else:
+                files = json.loads(
+                    call_api(
+                        curr_link, 'GET', pat,
+                        per_page=per_page, filters=FILE_FILTER
+                    ).read()
+                )
+            try:
+                for file in files['data']:
+                    filenames.append(file['attributes']['materialized_path'])
+            except KeyError:
+                pass
+            # Files could be split into multiple pages - loop until no more pages
+            curr_link = files['links']['next']
+            if curr_link == None:
+                is_last_page_files = True
+        
+        # Folders could be split across pages - loop until no more pages
+        curr_link = folders['links']['next']
+        if curr_link == None:
+            is_last_page_folders = True
 
     return filenames
 

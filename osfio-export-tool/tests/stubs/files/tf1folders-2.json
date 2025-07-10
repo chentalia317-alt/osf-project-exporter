@@ -6,12 +6,12 @@
             "attributes": {
                 "guid": null,
                 "checkout": null,
-                "name": "tf2",
+                "name": "tf3",
                 "kind": "folder",
                 "path": "/z/",
                 "size": null,
                 "provider": "osfstorage",
-                "materialized_path": "/tf1/tf2/",
+                "materialized_path": "/tf1/tf3/",
                 "last_touched": null,
                 "date_modified": null,
                 "date_created": null,
@@ -42,7 +42,7 @@
                 "files": {
                     "links": {
                         "related": {
-                            "href": "tf2",
+                            "href": "tf2-second",
                             "meta": {}
                         }
                     }
@@ -89,7 +89,7 @@
         "self": "https://api.test.osf.io/v2/nodes/x/files/osfstorage/",
         "first": null,
         "last": null,
-        "prev": null,
-        "next": "tf1-2"
+        "prev": "tf1-1",
+        "next": null
     }
 }
