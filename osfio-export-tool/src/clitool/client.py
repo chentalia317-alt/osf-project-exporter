@@ -51,7 +51,9 @@ class MockAPIResponse:
         'subjects': os.path.join(
             'tests', 'stubs', 'subjectsstub.json'),
         'wikis': os.path.join(
-            'tests', 'stubs', 'wikis', 'wikistubs.json')
+            'tests', 'stubs', 'wikis', 'wikistubs.json'),
+        'wikis2': os.path.join(
+            'tests', 'stubs', 'wikis', 'wikis2stubs.json')
     }
 
     MARKDOWN_FILES = {
@@ -59,6 +61,8 @@ class MockAPIResponse:
             'tests', 'stubs', 'wikis', 'helloworld.md'),
         'home': os.path.join(
             'tests', 'stubs', 'wikis', 'home.md'),
+        'anotherone': os.path.join(
+            'tests', 'stubs', 'wikis', 'anotherone.md'),
     }
 
     @staticmethod
@@ -232,24 +236,37 @@ def explore_wikis(link, pat, dryrun=True):
     ---------------
     wikis: List of JSON representing wikis for a project."""
 
+    wiki_content = {}
+    contents = []
+    is_last_page = False
     if dryrun:
         wikis = MockAPIResponse.read('wikis')
     else:
         wikis = json.loads(
             call_api(link, pat).read()
         )
-    
-    wiki_content = {}
-    contents = []
-    for wiki in wikis['data']:
-        if dryrun:
-            content = MockAPIResponse.read(wiki['attributes']['name'])
+
+    while not is_last_page:
+        for wiki in wikis['data']:
+            if dryrun:
+                content = MockAPIResponse.read(wiki['attributes']['name'])
+            else:
+                content = call_api(
+                    wiki['links']['download'], pat=pat, is_json=False
+                ).read().decode('utf-8')
+            contents.append(content)
+            wiki_content[wiki['attributes']['name']] = content
+        
+        link = wikis['links']['next']
+        if not link:
+            is_last_page = True
         else:
-            content = call_api(
-                wiki['links']['download'], pat=pat, is_json=False
-            ).read().decode('utf-8')
-        contents.append(content)
-        wiki_content[wiki['attributes']['name']] = content
+            if dryrun:
+                wikis = MockAPIResponse.read(link)
+            else:
+                wikis = json.loads(
+                    call_api(link, pat).read()
+                )
     
     return wiki_content, contents
 
