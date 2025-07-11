@@ -1,13 +1,16 @@
 from unittest import TestCase
 import os
 import json
-import pdb
+# import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
 
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from clitool import cli, call_api, get_project_data, explore_file_tree, explore_wikis
+from clitool import (
+    cli, call_api, get_project_data,
+    explore_file_tree, explore_wikis
+)
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
@@ -31,7 +34,7 @@ class TestAPI(TestCase):
             os.getenv('TEST_PAT')
         )
         assert data.status == 200
-        
+
         data = json.loads(data.read())
         assert isinstance(data, dict)
         # All mocked data assumes API version 2.20 is used
@@ -64,7 +67,9 @@ class TestAPI(TestCase):
         nodes = json.loads(data.read())['data']
         if len(nodes) > 0:
             link = f'{API_HOST}/nodes/{nodes[0]['id']}/files/osfstorage/'
-            files = explore_file_tree(link, os.getenv('TEST_PAT'), dryrun=False)
+            files = explore_file_tree(
+                link, os.getenv('TEST_PAT'), dryrun=False
+            )
             assert isinstance(files, list)
         else:
             print("No nodes available, consider making a test project.")
@@ -106,18 +111,22 @@ class TestClient(TestCase):
     def test_explore_mock_file_tree(self):
         """Test exploration of mock file tree."""
 
-        files = explore_file_tree('root', os.getenv('TEST_PAT', ''), dryrun=True)
+        files = explore_file_tree(
+            'root', os.getenv('TEST_PAT', ''), dryrun=True
+        )
         assert '/helloworld.txt.txt' in files
         assert '/tf1/helloworld.txt.txt' in files
         assert '/tf1/tf2/file.txt' in files
         assert '/tf1/tf2-second/secondpage.txt' in files
         assert '/tf1/tf2-second/thirdpage.txt' in files
-    
+
     def test_get_latest_wiki_version(self):
         """Test getting the latest version of a mock wiki"""
 
         link = 'wiki'
-        wikis, content = explore_wikis(link, os.getenv('TEST_PAT'), dryrun=True)
+        wikis = explore_wikis(
+            link, os.getenv('TEST_PAT'), dryrun=True
+            )
         assert len(wikis) == 3
         assert 'helloworld'in wikis.keys(), (
             'Missing wiki IDs'
@@ -128,11 +137,13 @@ class TestClient(TestCase):
         assert 'anotherone' in wikis.keys(), (
             'Missing wiki IDs'
         )
-        assert len(content) == 3
 
-        assert 'hello world!' in content[0], content[0]
-        assert 'hello world!' in content[1], content[1]
-        assert '~~strikethrough~~' in content[1], content[1]
+        assert 'hello world' in wikis['helloworld'], (
+            wikis['helloworld']
+        )
+        assert '~~strikethrough~~' in wikis['home'], (
+            wikis['home']
+        )
 
 
     def test_parse_api_responses(self):
@@ -208,12 +219,7 @@ class TestClient(TestCase):
             'Expected Education, Literature, Geography, got: ',
             projects[0]['subjects']
         )
-        assert 'hello world' in projects[0]['wikis']['helloworld'], (
-            projects[0]['wikis']['helloworld']
-        )
-        assert '~~strikethrough~~' in projects[0]['wikis']['home'], (
-            projects[0]['wikis']['home']
-        )
+        assert len(projects[0]['wikis']) == 3
 
     def test_generate_pdf(self):
         """Test generating a PDF from parsed project data.

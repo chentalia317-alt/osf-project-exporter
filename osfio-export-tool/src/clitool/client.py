@@ -118,7 +118,7 @@ def call_api(url, pat, method='GET', per_page=None, filters={}, is_json=True):
         Example Input: {'category': 'project', 'title': 'ttt'}
         Example Query String: ?filter[category]=project&filter[title]=ttt
     is_json: bool
-        If expected response type is JSON, add header to set API version and content type.
+        If true, set API version to get correct API responses.
 
     Returns
     ----------
@@ -127,24 +127,29 @@ def call_api(url, pat, method='GET', per_page=None, filters={}, is_json=True):
     """
     if (filters or per_page) and method == 'GET':
         query_string = '&'.join([f'filter[{key}]={value}'
-                                 for key, value in filters.items() if not isinstance(value, dict)])
+                                 for key, value in filters.items()
+                                 if not isinstance(value, dict)])
         if per_page:
             query_string += f'&page[size]={per_page}'
         url = f'{url}?{query_string}'
-    
-    API_VERSION = '2.20'
+
     request = webhelper.Request(url, method=method)
     request.add_header('Authorization', f'Bearer {pat}')
+
     # Pin API version so that JSON has correct format
+    API_VERSION = '2.20'
     if is_json:
-        request.add_header('Accept', f'application/vnd.api+json;version={API_VERSION}')
+        request.add_header(
+            'Accept',
+            f'application/vnd.api+json;version={API_VERSION}'
+        )
     result = webhelper.urlopen(request)
     return result
 
 
 def explore_file_tree(curr_link, pat, dryrun=True):
     """Explore and get names of files stored in OSF.
-    
+
     Parameters
     ----------
     curr_link: string
@@ -181,7 +186,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                     per_page=per_page, filters=FOLDER_FILTER
                 ).read()
             )
-        
+
         # Find deepest subfolders first to avoid missing files
         try:
             for folder in folders['data']:
@@ -190,7 +195,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         except KeyError:
             pass
 
-        # Now find files in current folder to complete current page
+        # Now find files in current folder
         is_last_page_files = False
         while not is_last_page_files:
             if dryrun:
@@ -207,14 +212,14 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                     filenames.append(file['attributes']['materialized_path'])
             except KeyError:
                 pass
-            # Files could be split into multiple pages - loop until no more pages
+            # Need to go to next page of files if response paginated
             curr_link = files['links']['next']
-            if curr_link == None:
+            if curr_link is None:
                 is_last_page_files = True
-        
-        # Folders could be split across pages - loop until no more pages
+
+        # Need to go to next page of folders if response paginated
         curr_link = folders['links']['next']
-        if curr_link == None:
+        if curr_link is None:
             is_last_page_folders = True
 
     return filenames
@@ -222,7 +227,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
 
 def explore_wikis(link, pat, dryrun=True):
     """Get wiki contents for a particular project.
-    
+
     Parameters:
     -------------
     link: str
@@ -231,13 +236,12 @@ def explore_wikis(link, pat, dryrun=True):
         Personal Access Token to authenticate a user with.
     dryrun: bool
         Flag to indicate whether to use mock JSON files or real API calls.
-    
+
     Returns
     ---------------
     wikis: List of JSON representing wikis for a project."""
 
     wiki_content = {}
-    contents = []
     is_last_page = False
     if dryrun:
         wikis = MockAPIResponse.read('wikis')
@@ -251,12 +255,14 @@ def explore_wikis(link, pat, dryrun=True):
             if dryrun:
                 content = MockAPIResponse.read(wiki['attributes']['name'])
             else:
+                # Decode Markdown content to allow parsing later on
                 content = call_api(
                     wiki['links']['download'], pat=pat, is_json=False
                 ).read().decode('utf-8')
-            contents.append(content)
             wiki_content[wiki['attributes']['name']] = content
-        
+
+        # Go to next page of wikis if pagination applied
+        # so that we don't miss wikis
         link = wikis['links']['next']
         if not link:
             is_last_page = True
@@ -267,8 +273,8 @@ def explore_wikis(link, pat, dryrun=True):
                 wikis = json.loads(
                     call_api(link, pat).read()
                 )
-    
-    return wiki_content, contents
+
+    return wiki_content
 
 
 def get_project_data(pat, dryrun):
@@ -365,7 +371,7 @@ def get_project_data(pat, dryrun):
                     )
                 except KeyError:
                     if key == 'subjects':
-                        raise KeyError() # Subjects should have a href link
+                        raise KeyError()  # Subjects should have a href link
                     json_data = {'data': None}
             else:
                 json_data = MockAPIResponse.read(key)
@@ -389,15 +395,15 @@ def get_project_data(pat, dryrun):
                             values.append(item['attributes']['text'])
                         else:
                             values.append(item['attributes']['name'])
-            
-            if isinstance(json_data['data'], dict): # e.g. license field
+
+            if isinstance(json_data['data'], dict):  # e.g. license field
                 values.append(json_data['data']['attributes']['name'])
 
             if isinstance(values, list):
                 values = ', '.join(values)
             project_data[key] = values
-        
-        project_data['wikis'], contents = explore_wikis(
+
+        project_data['wikis'] = explore_wikis(
             f'{API_HOST}/nodes/{project_data['id']}/wikis/',
             pat=pat, dryrun=dryrun
         )
@@ -459,8 +465,8 @@ def pull_projects(pat, dryrun, filename):
                     text=f'{field_name}: {project[key]}',
                     ln=True, align='C'
                 )
-            
-        # Write wikis separately to deal with Markdown parsing
+
+        # Write wikis separately to more easily handle Markdown parsing
         pdf.write(0, '\n')
         pdf.cell(text='Wiki\n', ln=True, align='C')
         pdf.write(0, '\n')
