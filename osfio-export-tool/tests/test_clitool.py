@@ -120,6 +120,7 @@ class TestClient(TestCase):
 
         assert 'hello world!' in content[0], content[0]
         assert 'hello world!' in content[1], content[1]
+        assert '~~strikethrough~~' in content[1], content[1]
 
 
     def test_parse_api_responses(self):
@@ -194,6 +195,12 @@ class TestClient(TestCase):
         assert projects[0]['subjects'] == 'Education, Literature, Geography', (
             'Expected Education, Literature, Geography, got: ',
             projects[0]['subjects']
+        )
+        assert 'hello world' in projects[0]['wikis']['helloworld'], (
+            projects[0]['wikis']['helloworld']
+        )
+        assert '~~strikethrough~~' in projects[0]['wikis']['home'], (
+            projects[0]['wikis']['home']
         )
 
     def test_generate_pdf(self):
