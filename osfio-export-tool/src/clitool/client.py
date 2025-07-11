@@ -7,7 +7,7 @@ import click
 from fpdf import FPDF
 from mistletoe import markdown
 
-API_HOST = 'https://api.test.osf.io/v2'
+API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
 
 class MockAPIResponse:
