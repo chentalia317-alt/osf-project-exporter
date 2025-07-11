@@ -115,7 +115,13 @@ class TestClient(TestCase):
 
         link = 'wiki'
         wikis, content = explore_wikis(link, os.getenv('PAT'), dryrun=True)
-        assert len(wikis['data']) == 2
+        assert len(wikis) == 2
+        assert 'helloworld'in wikis.keys(), (
+            'Missing wiki IDs'
+        )
+        assert 'home' in wikis.keys(), (
+            'Missing wiki IDs'
+        )
         assert len(content) == 2
 
         assert 'hello world!' in content[0], content[0]
