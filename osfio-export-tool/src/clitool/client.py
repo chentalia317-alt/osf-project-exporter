@@ -94,7 +94,7 @@ URL_FILTERS = {
 }
 
 
-def call_api(url, method, pat, per_page=None, filters={}):
+def call_api(url, method, pat, per_page=None, filters={}, is_json=True):
     """Call OSF v2 API methods.
 
     Parameters
@@ -113,6 +113,8 @@ def call_api(url, method, pat, per_page=None, filters={}):
 
         Example Input: {'category': 'project', 'title': 'ttt'}
         Example Query String: ?filter[category]=project&filter[title]=ttt
+    is_json: bool
+        If expected response type is JSON, add header to set API version and content type.
 
     Returns
     ----------
@@ -129,8 +131,9 @@ def call_api(url, method, pat, per_page=None, filters={}):
     API_VERSION = '2.20'
     request = webhelper.Request(url, method=method)
     request.add_header('Authorization', f'Bearer {pat}')
-    # Pin API version so that responses have correct format
-    request.add_header('Accept', f'application/vnd.api+json;version={API_VERSION}')
+    # Pin API version so that JSON has correct format
+    if is_json:
+        request.add_header('Accept', f'application/vnd.api+json;version={API_VERSION}')
     result = webhelper.urlopen(request)
     return result
 
@@ -239,9 +242,14 @@ def explore_wikis(link, pat, dryrun=True):
     wiki_content = {}
     contents = []
     for wiki in wikis['data']:
-        content = MockAPIResponse.read(wiki['id'])
+        if dryrun:
+            content = MockAPIResponse.read(wiki['attributes']['name'])
+        else:
+            content = call_api(
+                wiki['links']['download'], 'GET', pat=pat, is_json=False
+            ).read().decode('utf-8')
         contents.append(content)
-        wiki_content[wiki['id']] = content
+        wiki_content[wiki['attributes']['name']] = content
     
     return wiki_content, contents
 
