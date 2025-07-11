@@ -118,8 +118,8 @@ class TestClient(TestCase):
         assert len(wikis['data']) == 2
         assert len(content) == 2
 
-        assert 'hello world!' in content[0]
-        assert 'hello world!' in content[1]
+        assert 'hello world!' in content[0], content[0]
+        assert 'hello world!' in content[1], content[1]
 
 
     def test_parse_api_responses(self):

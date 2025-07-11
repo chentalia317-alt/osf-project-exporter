@@ -1,10 +1,10 @@
 {
     "data": [
         {
-            "id": "a",
+            "id": "helloworld",
             "type": "wikis",
             "attributes": {
-                "name": "testwiki",
+                "name": "helloworld",
                 "kind": "file",
                 "size": 53,
                 "path": "/a",
@@ -60,13 +60,13 @@
             },
             "links": {
                 "info": "https://api.test.osf.io/v2/wikis/a/",
-                "download": "https://api.test.osf.io/v2/wikis/a/content/",
+                "download": "helloworld",
                 "self": "https://api.test.osf.io/v2/wikis/a/",
                 "iri": "https://test.osf.io/a"
             }
         },
         {
-            "id": "a",
+            "id": "home",
             "type": "wikis",
             "attributes": {
                 "name": "home",
@@ -125,7 +125,7 @@
             },
             "links": {
                 "info": "https://api.test.osf.io/v2/wikis/a/",
-                "download": "https://api.test.osf.io/v2/wikis/a/content/",
+                "download": "home",
                 "self": "https://api.test.osf.io/v2/wikis/a/",
                 "iri": "https://test.osf.io/a"
             }

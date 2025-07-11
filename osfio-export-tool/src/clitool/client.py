@@ -53,7 +53,14 @@ class MockAPIResponse:
         'subjects': os.path.join(
             'tests', 'stubs', 'subjectsstub.json'),
         'wikis': os.path.join(
-            'tests', 'stubs', 'wikistubs.json')
+            'tests', 'stubs', 'wikis', 'wikistubs.json')
+    }
+
+    MARKDOWN_FILES = {
+        'helloworld': os.path.join(
+            'tests', 'stubs', 'wikis', 'helloworld.md'),
+        'home': os.path.join(
+            'tests', 'stubs', 'wikis', 'home.md'),
     }
 
     def __init__(self, field):
@@ -65,6 +72,9 @@ class MockAPIResponse:
         if self.field in MockAPIResponse.JSON_FILES.keys():
             with open(MockAPIResponse.JSON_FILES[self.field], 'r') as file:
                 return json.load(file)
+        elif self.field in MockAPIResponse.MARKDOWN_FILES.keys():
+            with open(MockAPIResponse.MARKDOWN_FILES[self.field], 'r') as file:
+                return file.read()
         else:
             return {}
 
@@ -219,7 +229,13 @@ def explore_wikis(link, pat, dryrun=True):
             call_api(link, 'GET', pat).read()
         )
     
-    return wikis
+    contents = []
+    for wiki in wikis['data']:
+        content = MockAPIResponse(wiki['id']).read()
+        contents.append(content)
+    
+    return wikis, contents
+
 
 def get_project_data(pat, dryrun):
     """Pull and list projects for a user from the OSF.
