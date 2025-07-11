@@ -10,10 +10,7 @@ API_HOST = 'https://api.test.osf.io/v2'
 
 
 class MockAPIResponse:
-    """Simulate OSF API response for testing purposes.
-
-    :param field: String for the field name to mock.
-    """
+    """Simulate OSF API response for testing purposes."""
 
     JSON_FILES = {
         'nodes': os.path.join(
@@ -63,17 +60,26 @@ class MockAPIResponse:
             'tests', 'stubs', 'wikis', 'home.md'),
     }
 
-    def __init__(self, field):
-        self.field = field
+    @staticmethod
+    def read(field):
+        """Get mock response for a field.
+        
+        Parameters
+        -----------
+            field: str
+                ID associated to a JSON or Markdown mock file.
+                Available fields to mock are listed in class-level
+                JSON_FILES and MARKDOWN_FILES attributes.
+        
+        Returns
+        ------------
+            Parsed JSON dictionary or Markdown."""
 
-    def read(self):
-        """Get mock response for a field."""
-
-        if self.field in MockAPIResponse.JSON_FILES.keys():
-            with open(MockAPIResponse.JSON_FILES[self.field], 'r') as file:
+        if field in MockAPIResponse.JSON_FILES.keys():
+            with open(MockAPIResponse.JSON_FILES[field], 'r') as file:
                 return json.load(file)
-        elif self.field in MockAPIResponse.MARKDOWN_FILES.keys():
-            with open(MockAPIResponse.MARKDOWN_FILES[self.field], 'r') as file:
+        elif field in MockAPIResponse.MARKDOWN_FILES.keys():
+            with open(MockAPIResponse.MARKDOWN_FILES[field], 'r') as file:
                 return file.read()
         else:
             return {}
@@ -159,7 +165,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     while not is_last_page_folders:
         # Use Mock JSON if unit/integration testing
         if dryrun:
-            folders = MockAPIResponse(f"{curr_link}_folder").read()
+            folders = MockAPIResponse.read(f"{curr_link}_folder")
         else:
             folders = json.loads(
                 call_api(
@@ -180,7 +186,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         is_last_page_files = False
         while not is_last_page_files:
             if dryrun:
-                files = MockAPIResponse(f"{curr_link}_files").read()
+                files = MockAPIResponse.read(f"{curr_link}_files")
             else:
                 files = json.loads(
                     call_api(
@@ -223,7 +229,7 @@ def explore_wikis(link, pat, dryrun=True):
     wikis: List of JSON representing wikis for a project."""
 
     if dryrun:
-        wikis = MockAPIResponse('wikis').read()
+        wikis = MockAPIResponse.read('wikis')
     else:
         wikis = json.loads(
             call_api(link, 'GET', pat).read()
@@ -231,7 +237,7 @@ def explore_wikis(link, pat, dryrun=True):
     
     contents = []
     for wiki in wikis['data']:
-        content = MockAPIResponse(wiki['id']).read()
+        content = MockAPIResponse.read(wiki['id'])
         contents.append(content)
     
     return wikis, contents
@@ -259,7 +265,7 @@ def get_project_data(pat, dryrun):
         )
         nodes = json.loads(result.read())
     else:
-        nodes = MockAPIResponse('nodes').read()
+        nodes = MockAPIResponse.read('nodes')
 
     projects = []
     for project in nodes['data']:
@@ -280,7 +286,7 @@ def get_project_data(pat, dryrun):
         # Resource type/lang/funding info share specific endpoint
         # that isn't linked to in user nodes' responses
         if dryrun:
-            metadata = MockAPIResponse('custom_metadata').read()
+            metadata = MockAPIResponse.read('custom_metadata')
         else:
             metadata = json.loads(call_api(
                 f"{API_HOST}/custom_item_metadata_records/{project['id']}/",
@@ -334,7 +340,7 @@ def get_project_data(pat, dryrun):
                         raise KeyError() # Subjects should have a href link
                     json_data = {'data': None}
             else:
-                json_data = MockAPIResponse(key).read()
+                json_data = MockAPIResponse.read(key)
 
             values = []
             if isinstance(json_data['data'], list):
