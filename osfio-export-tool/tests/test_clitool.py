@@ -28,7 +28,7 @@ class TestAPI(TestCase):
 
         data = call_api(
             f'{API_HOST}/users/me/nodes/',
-            'GET', os.getenv('PAT')
+            os.getenv('PAT')
         )
         assert data.status == 200
         
@@ -49,7 +49,7 @@ class TestAPI(TestCase):
         }
         data = call_api(
             f'{API_HOST}/nodes/',
-            'GET', os.getenv('PAT'),
+            os.getenv('PAT'),
             per_page=12, filters=filters
         )
         assert data.status == 200
@@ -59,7 +59,7 @@ class TestAPI(TestCase):
 
         data = call_api(
             f'{API_HOST}/users/me/nodes/',
-            'GET', os.getenv('PAT')
+            os.getenv('PAT')
         )
         nodes = json.loads(data.read())['data']
         if len(nodes) > 0:

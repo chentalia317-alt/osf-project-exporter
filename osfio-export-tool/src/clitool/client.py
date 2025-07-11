@@ -64,14 +64,14 @@ class MockAPIResponse:
     @staticmethod
     def read(field):
         """Get mock response for a field.
-        
+
         Parameters
         -----------
             field: str
                 ID associated to a JSON or Markdown mock file.
                 Available fields to mock are listed in class-level
                 JSON_FILES and MARKDOWN_FILES attributes.
-        
+
         Returns
         ------------
             Parsed JSON dictionary or Markdown."""
@@ -94,7 +94,7 @@ URL_FILTERS = {
 }
 
 
-def call_api(url, method, pat, per_page=None, filters={}, is_json=True):
+def call_api(url, pat, method='GET', per_page=None, filters={}, is_json=True):
     """Call OSF v2 API methods.
 
     Parameters
@@ -173,7 +173,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         else:
             folders = json.loads(
                 call_api(
-                    curr_link, 'GET', pat,
+                    curr_link, pat,
                     per_page=per_page, filters=FOLDER_FILTER
                 ).read()
             )
@@ -194,7 +194,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
             else:
                 files = json.loads(
                     call_api(
-                        curr_link, 'GET', pat,
+                        curr_link, pat,
                         per_page=per_page, filters=FILE_FILTER
                     ).read()
                 )
@@ -236,7 +236,7 @@ def explore_wikis(link, pat, dryrun=True):
         wikis = MockAPIResponse.read('wikis')
     else:
         wikis = json.loads(
-            call_api(link, 'GET', pat).read()
+            call_api(link, pat).read()
         )
     
     wiki_content = {}
@@ -246,7 +246,7 @@ def explore_wikis(link, pat, dryrun=True):
             content = MockAPIResponse.read(wiki['attributes']['name'])
         else:
             content = call_api(
-                wiki['links']['download'], 'GET', pat=pat, is_json=False
+                wiki['links']['download'], pat=pat, is_json=False
             ).read().decode('utf-8')
         contents.append(content)
         wiki_content[wiki['attributes']['name']] = content
@@ -272,7 +272,7 @@ def get_project_data(pat, dryrun):
 
     if not dryrun:
         result = call_api(
-            f'{API_HOST}/users/me/nodes/', 'GET', pat
+            f'{API_HOST}/users/me/nodes/', pat
         )
         nodes = json.loads(result.read())
     else:
@@ -301,7 +301,7 @@ def get_project_data(pat, dryrun):
         else:
             metadata = json.loads(call_api(
                 f"{API_HOST}/custom_item_metadata_records/{project['id']}/",
-                'GET', pat
+                pat
             ).read())
         metadata = metadata['data']['attributes']
         project_data['resource_type'] = metadata['resource_type_general']
@@ -342,7 +342,7 @@ def get_project_data(pat, dryrun):
                     link = relations[key]['links']['related']['href']
                     json_data = json.loads(
                         call_api(
-                            link, 'GET', pat,
+                            link, pat,
                             filters=URL_FILTERS.get(key, {})
                         ).read()
                     )
