@@ -5,6 +5,7 @@ import urllib.request as webhelper
 
 import click
 from fpdf import FPDF
+from mistletoe import markdown
 
 API_HOST = 'https://api.test.osf.io/v2'
 
@@ -235,12 +236,14 @@ def explore_wikis(link, pat, dryrun=True):
             call_api(link, 'GET', pat).read()
         )
     
+    wiki_content = {}
     contents = []
     for wiki in wikis['data']:
         content = MockAPIResponse.read(wiki['id'])
         contents.append(content)
+        wiki_content[wiki['id']] = content
     
-    return wikis, contents
+    return wiki_content, contents
 
 
 def get_project_data(pat, dryrun):
@@ -321,7 +324,7 @@ def get_project_data(pat, dryrun):
             'contributors',
             'identifiers',
             'license',
-            'subjects'
+            'subjects',
         ]
         for key in RELATION_KEYS:
             if not dryrun:
@@ -368,6 +371,11 @@ def get_project_data(pat, dryrun):
             if isinstance(values, list):
                 values = ', '.join(values)
             project_data[key] = values
+        
+        project_data['wikis'], contents = explore_wikis(
+            f'{API_HOST}/nodes/{project_data['id']}/wikis/',
+            pat=pat, dryrun=dryrun
+        )
 
         projects.append(project_data)
 
@@ -401,6 +409,7 @@ def pull_projects(pat, dryrun, filename):
     pdf.cell(text='Exported OSF Projects', ln=True, align='C')
     pdf.write(0, '\n')
     for project in projects:
+        wikis = project.pop('wikis')
         for key in projects[0].keys():
             if key in pdf_display_names:
                 field_name = pdf_display_names[key]
@@ -425,7 +434,17 @@ def pull_projects(pat, dryrun, filename):
                     text=f'{field_name}: {project[key]}',
                     ln=True, align='C'
                 )
-        pdf.cell(text='=======', ln=True, align='C')
+            
+        # Write wikis separately to deal with Markdown parsing
+        pdf.write(0, '\n')
+        pdf.cell(text='Wiki\n', ln=True, align='C')
+        pdf.write(0, '\n')
+        for wiki in wikis.keys():
+            pdf.write(0, f'{wiki}')
+            pdf.write(0, '\n')
+            html = markdown(wikis[wiki])
+            pdf.write_html(html)
+            pdf.add_page()
     pdf.output(filename)
 
 
