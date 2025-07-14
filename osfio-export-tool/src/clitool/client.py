@@ -104,23 +104,26 @@ def call_api(url, method, pat, per_page=None, filters={}):
     """
     if (filters or per_page) and method == 'GET':
         query_string = '&'.join([f'filter[{key}]={value}'
-                                 for key, value in filters.items() if not isinstance(value, dict)])
+                                 for key, value in filters.items()
+                                 if not isinstance(value, dict)])
         if per_page:
             query_string += f'&page[size]={per_page}'
         url = f'{url}?{query_string}'
-    
+
     API_VERSION = '2.20'
     request = webhelper.Request(url, method=method)
     request.add_header('Authorization', f'Bearer {pat}')
     # Pin API version so that responses have correct format
-    request.add_header('Accept', f'application/vnd.api+json;version={API_VERSION}')
+    request.add_header(
+        'Accept', f'application/vnd.api+json;version={API_VERSION}'
+    )
     result = webhelper.urlopen(request)
     return result
 
 
 def explore_file_tree(curr_link, pat, dryrun=True):
     """Explore and get names of files stored in OSF.
-    
+
     Parameters
     ----------
     curr_link: string
@@ -157,7 +160,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                     per_page=per_page, filters=FOLDER_FILTER
                 ).read()
             )
-        
+
         # Find deepest subfolders first to avoid missing files
         try:
             for folder in folders['data']:
@@ -183,14 +186,14 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                     filenames.append(file['attributes']['materialized_path'])
             except KeyError:
                 pass
-            # Files could be split into multiple pages - loop until no more pages
+            # Need to go to next page of files if response paginated
             curr_link = files['links']['next']
-            if curr_link == None:
+            if curr_link is None:
                 is_last_page_files = True
-        
-        # Folders could be split across pages - loop until no more pages
+
+        # Need to go to next page of folders if response paginated
         curr_link = folders['links']['next']
-        if curr_link == None:
+        if curr_link is None:
             is_last_page_folders = True
 
     return filenames
@@ -222,10 +225,10 @@ def get_project_data(pat, dryrun, project_url=''):
             if '/' in project_id:
                 # Need extra processing for API links
                 project_id = project_id.split('/')[-1]
-        except Exception as e:
+        except Exception:
             click.echo("Project URL is invalid! PLease try another")
             return []
-    
+
     if not dryrun:
         if project_id:
             result = call_api(
@@ -244,7 +247,6 @@ def get_project_data(pat, dryrun, project_url=''):
             nodes = {'data': [MockAPIResponse(project_id).read()['data']]}
         else:
             nodes = MockAPIResponse('nodes').read()
-
 
     projects = []
     for project in nodes['data']:
@@ -316,7 +318,7 @@ def get_project_data(pat, dryrun, project_url=''):
                     )
                 except KeyError:
                     if key == 'subjects':
-                        raise KeyError() # Subjects should have a href link
+                        raise KeyError()  # Subjects should have a href link
                     json_data = {'data': None}
             else:
                 json_data = MockAPIResponse(key).read()
@@ -340,8 +342,8 @@ def get_project_data(pat, dryrun, project_url=''):
                             values.append(item['attributes']['text'])
                         else:
                             values.append(item['attributes']['name'])
-            
-            if isinstance(json_data['data'], dict): # e.g. license field
+
+            if isinstance(json_data['data'], dict):  # e.g. license field
                 values.append(json_data['data']['attributes']['name'])
 
             if isinstance(values, list):

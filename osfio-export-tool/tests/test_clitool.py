@@ -1,7 +1,7 @@
 from unittest import TestCase
 import os
 import json
-import pdb
+# import pdb
 import traceback
 
 from click.testing import CliRunner
@@ -31,7 +31,7 @@ class TestAPI(TestCase):
             'GET', os.getenv('PAT')
         )
         assert data.status == 200
-        
+
         data = json.loads(data.read())
         assert isinstance(data, dict)
         # All mocked data assumes API version 2.20 is used
@@ -39,7 +39,7 @@ class TestAPI(TestCase):
             'Expected API version 2.20, actual version: ',
             data['meta']['version']
         )
-    
+
     def test_single_project_json_is_as_expected(self):
         # Use first public project available for this test
         data = call_api(
@@ -196,17 +196,23 @@ class TestClient(TestCase):
             'Expected Education, Literature, Geography, got: ',
             projects[0]['subjects']
         )
-    
+
     def test_get_single_mock_project(self):
-        #pdb.set_trace()
-        projects = get_project_data(os.getenv('PAT', ''), True, 'https://osf.io/x/')
+        # pdb.set_trace()
+        projects = get_project_data(
+            os.getenv('PAT', ''), True,
+            'https://osf.io/x/'
+        )
         assert len(projects) == 1
         assert projects[0]['id'] == 'x'
 
-        projects = get_project_data(os.getenv('PAT', ''), True, 'https://api.test.osf.io/v2/nodes/x/')
+        projects = get_project_data(
+            os.getenv('PAT', ''), True,
+            'https://api.test.osf.io/v2/nodes/x/'
+        )
         assert len(projects) == 1
         assert projects[0]['id'] == 'x'
- 
+
     def test_generate_pdf(self):
         """Test generating a PDF from parsed project data.
         This assumes the JSON parsing works correctly."""
@@ -216,7 +222,11 @@ class TestClient(TestCase):
 
         runner = CliRunner()
         result = runner.invoke(
-            cli, ['pull-projects', '--dryrun', '--filename', input_path, '--url', ''],
+            cli, [
+                'pull-projects', '--dryrun',
+                '--filename', input_path,
+                '--url', ''
+            ],
             input=os.getenv('PAT', ''),
             terminal_width=60
         )
