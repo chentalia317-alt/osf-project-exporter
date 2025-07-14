@@ -202,6 +202,10 @@ class TestClient(TestCase):
         projects = get_project_data(os.getenv('PAT', ''), True, 'https://osf.io/x/')
         assert len(projects) == 1
         assert projects[0]['id'] == 'x'
+
+        projects = get_project_data(os.getenv('PAT', ''), True, 'https://api.test.osf.io/v2/nodes/x/')
+        assert len(projects) == 1
+        assert projects[0]['id'] == 'x'
  
     def test_generate_pdf(self):
         """Test generating a PDF from parsed project data.
