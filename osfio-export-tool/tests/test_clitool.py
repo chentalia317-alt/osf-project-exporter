@@ -39,6 +39,17 @@ class TestAPI(TestCase):
             'Expected API version 2.20, actual version: ',
             data['meta']['version']
         )
+    
+    def test_single_project_json_is_as_expected(self):
+        data = call_api(
+            f'{API_HOST}/nodes/',
+            'GET', os.getenv('PAT'),
+            per_page=1
+        )
+        node = json.loads(data.read())['data'][0]
+        link = node['links']['html']
+        projects = get_project_data(os.getenv('PAT'), False, link)
+        assert len(projects) == 1
 
     def test_filter_by_api(self):
         """Test if we use query params in API calls."""
@@ -188,6 +199,7 @@ class TestClient(TestCase):
         #pdb.set_trace()
         projects = get_project_data(os.getenv('PAT', ''), True, 'https://osf.io/x/')
         assert len(projects) == 1
+        assert projects[0]['id'] == 'x'
 
     def test_generate_pdf(self):
         """Test generating a PDF from parsed project data.
