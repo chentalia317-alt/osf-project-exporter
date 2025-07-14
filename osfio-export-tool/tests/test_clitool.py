@@ -41,6 +41,7 @@ class TestAPI(TestCase):
         )
     
     def test_single_project_json_is_as_expected(self):
+        # Use first public project available for this test
         data = call_api(
             f'{API_HOST}/nodes/',
             'GET', os.getenv('PAT'),
@@ -211,7 +212,7 @@ class TestClient(TestCase):
 
         runner = CliRunner()
         result = runner.invoke(
-            cli, ['pull-projects', '--dryrun', '--filename', input_path],
+            cli, ['pull-projects', '--dryrun', '--filename', input_path, '--url', ''],
             input=os.getenv('PAT', ''),
             terminal_width=60
         )
