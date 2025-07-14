@@ -325,27 +325,14 @@ def get_project_data(pat, dryrun):
     return projects
 
 
-@click.command()
-@click.option('--pat', type=str, default='',
-              prompt=True, hide_input=True,
-              help='Personal Access Token to authorise OSF account access.')
-@click.option('--dryrun', is_flag=True, default=False,
-              help='If enabled, use mock responses in place of the API.')
-@click.option('--filename', type=str, default='osf_projects.pdf',
-              help='Name of the PDF file to export to.')
-def pull_projects(pat, dryrun, filename):
-    """Pull and export OSF projects to a PDF file."""
-
-    projects = get_project_data(pat, dryrun)
-    click.echo(f'Found {len(projects)} projects.')
-    click.echo('Generating PDF...')
+def make_pdf(projects, filepath):
+    """Make PDF using project data."""
 
     # Set nicer display names for certian PDF fields
     pdf_display_names = {
         'identifiers': 'DOI',
         'funders': 'Support/Funding Information'
     }
-
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font('helvetica', size=12)
@@ -377,7 +364,24 @@ def pull_projects(pat, dryrun, filename):
                     ln=True, align='C'
                 )
         pdf.cell(text='=======', ln=True, align='C')
-    pdf.output(filename)
+    pdf.output(filepath)
+
+
+@click.command()
+@click.option('--pat', type=str, default='',
+              prompt=True, hide_input=True,
+              help='Personal Access Token to authorise OSF account access.')
+@click.option('--dryrun', is_flag=True, default=False,
+              help='If enabled, use mock responses in place of the API.')
+@click.option('--filename', type=str, default='osf_projects.pdf',
+              help='Name of the PDF file to export to.')
+def pull_projects(pat, dryrun, filename):
+    """Pull and export OSF projects to a PDF file."""
+
+    projects = get_project_data(pat, dryrun)
+    click.echo(f'Found {len(projects)} projects.')
+    click.echo('Generating PDF...')
+    pdf = make_pdf(projects, filename)
 
 
 @click.command()
