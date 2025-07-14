@@ -358,10 +358,12 @@ def get_project_data(pat, dryrun, project_url=''):
               help='If enabled, use mock responses in place of the API.')
 @click.option('--filename', type=str, default='osf_projects.pdf',
               help='Name of the PDF file to export to.')
-def pull_projects(pat, dryrun, filename):
+@click.option('--url', type=str, default='',
+              help='Give a link to a project to export just that one.')
+def pull_projects(pat, dryrun, filename, url=''):
     """Pull and export OSF projects to a PDF file."""
 
-    projects = get_project_data(pat, dryrun)
+    projects = get_project_data(pat, dryrun, project_url=url)
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
 
