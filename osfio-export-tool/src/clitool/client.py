@@ -164,7 +164,8 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         # Find deepest subfolders first to avoid missing files
         try:
             for folder in folders['data']:
-                link = folder['relationships']['files']['links']['related']['href']
+                links = folder['relationships']['files']['links']
+                link = links['related']['href']
                 filenames += explore_file_tree(link, pat, dryrun=dryrun)
         except KeyError:
             pass
@@ -368,8 +369,7 @@ def get_project_data(pat, dryrun, project_url=''):
 
               For example: https://osf.io/dry9j/
 
-              Leave blank to export all projects you have access to."""
-            )
+              Leave blank to export all projects you have access to.""")
 def pull_projects(pat, dryrun, filename, url=''):
     """Pull and export OSF projects to a PDF file.
     You can export all projects you have access to, or one specific one
