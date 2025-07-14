@@ -18,6 +18,8 @@ class MockAPIResponse:
     JSON_FILES = {
         'nodes': os.path.join(
             'tests', 'stubs', 'nodestubs.json'),
+        'x': os.path.join(
+            'tests', 'stubs', 'singlenode.json'),
         'affiliated_institutions': os.path.join(
             'tests', 'stubs', 'institutionstubs.json'),
         'contributors': os.path.join(
@@ -194,7 +196,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     return filenames
 
 
-def get_project_data(pat, dryrun):
+def get_project_data(pat, dryrun, project_url=''):
     """Pull and list projects for a user from the OSF.
 
     Parameters
@@ -216,7 +218,12 @@ def get_project_data(pat, dryrun):
         )
         nodes = json.loads(result.read())
     else:
-        nodes = MockAPIResponse('nodes').read()
+        try:
+            osf_id = project_url.split(".io/")[1].strip("/")
+            nodes = {'data': [MockAPIResponse(osf_id).read()['data']]}
+        except Exception:
+            nodes = MockAPIResponse('nodes').read()
+
 
     projects = []
     for project in nodes['data']:
