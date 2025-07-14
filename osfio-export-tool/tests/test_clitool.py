@@ -183,6 +183,11 @@ class TestClient(TestCase):
             'Expected Education, Literature, Geography, got: ',
             projects[0]['subjects']
         )
+    
+    def test_get_single_project(self):
+        #pdb.set_trace()
+        projects = get_project_data(os.getenv('PAT', ''), True, 'https://osf.io/x/')
+        assert len(projects) == 1
 
     def test_generate_pdf(self):
         """Test generating a PDF from parsed project data.
