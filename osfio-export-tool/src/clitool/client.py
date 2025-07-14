@@ -364,9 +364,16 @@ def get_project_data(pat, dryrun, project_url=''):
 @click.option('--filename', type=str, default='osf_projects.pdf',
               help='Name of the PDF file to export to.')
 @click.option('--url', type=str, default='',
-              help='Give a link to a project to export just that one.')
+              help="""A link to one project you want to export.
+
+              For example: https://osf.io/dry9j/
+
+              Leave blank to export all projects you have access to."""
+            )
 def pull_projects(pat, dryrun, filename, url=''):
-    """Pull and export OSF projects to a PDF file."""
+    """Pull and export OSF projects to a PDF file.
+    You can export all projects you have access to, or one specific one
+    with the --url option."""
 
     projects = get_project_data(pat, dryrun, project_url=url)
     click.echo(f'Found {len(projects)} projects.')
