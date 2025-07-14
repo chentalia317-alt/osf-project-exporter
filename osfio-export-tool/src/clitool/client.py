@@ -213,10 +213,17 @@ def get_project_data(pat, dryrun, project_url=''):
     """
 
     if not dryrun:
-        result = call_api(
-            f'{API_HOST}/users/me/nodes/', 'GET', pat
-        )
-        nodes = json.loads(result.read())
+        try:
+            project_id = project_url.split(".io/")[1].strip("/")
+            result = call_api(
+                f'{API_HOST}/nodes/{project_id}/', 'GET', pat
+            )
+            nodes = {'data': [json.loads(result.read())['data']]}
+        except Exception:
+            result = call_api(
+                f'{API_HOST}/users/me/nodes/', 'GET', pat
+            )
+            nodes = json.loads(result.read())
     else:
         try:
             osf_id = project_url.split(".io/")[1].strip("/")
