@@ -219,6 +219,9 @@ def get_project_data(pat, dryrun, project_url=''):
     if project_url != '':
         try:
             project_id = project_url.split(".io/")[1].strip("/")
+            if '/' in project_id:
+                # Need extra processing for API links
+                project_id = project_id.split('/')[-1]
         except Exception as e:
             click.echo("Project URL is invalid! PLease try another")
             return []
