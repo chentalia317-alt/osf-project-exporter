@@ -50,6 +50,7 @@ class TestAPI(TestCase):
         link = node['links']['html']
         projects = get_project_data(os.getenv('PAT'), False, link)
         assert len(projects) == 1
+        assert projects[0]['title'] == node['attributes']['title']
 
     def test_filter_by_api(self):
         """Test if we use query params in API calls."""
@@ -195,12 +196,12 @@ class TestClient(TestCase):
             projects[0]['subjects']
         )
     
-    def test_get_single_project(self):
+    def test_get_single_mock_project(self):
         #pdb.set_trace()
         projects = get_project_data(os.getenv('PAT', ''), True, 'https://osf.io/x/')
         assert len(projects) == 1
         assert projects[0]['id'] == 'x'
-
+ 
     def test_generate_pdf(self):
         """Test generating a PDF from parsed project data.
         This assumes the JSON parsing works correctly."""

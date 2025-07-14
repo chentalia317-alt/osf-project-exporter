@@ -205,6 +205,8 @@ def get_project_data(pat, dryrun, project_url=''):
         Personal Access Token to authorise a user with.
     dryrun: bool
         If True, use test data from JSON stubs to mock API calls.
+    project_url: str
+        Optional URL to a specific OSF project, of form <URL>.io/<project_id>/
 
     Returns
     ----------
@@ -212,23 +214,32 @@ def get_project_data(pat, dryrun, project_url=''):
             List of dictionaries representing projects.
     """
 
-    if not dryrun:
+    # Don't get other projects if user gives valid/invalid URL to save time
+    project_id = None
+    if project_url != '':
         try:
             project_id = project_url.split(".io/")[1].strip("/")
+        except Exception as e:
+            click.echo("Project URL is invalid! PLease try another")
+            return []
+    
+    if not dryrun:
+        if project_id:
             result = call_api(
                 f'{API_HOST}/nodes/{project_id}/', 'GET', pat
             )
+            # Put data into same format as if multiple nodes found
             nodes = {'data': [json.loads(result.read())['data']]}
-        except Exception:
+        else:
             result = call_api(
                 f'{API_HOST}/users/me/nodes/', 'GET', pat
             )
             nodes = json.loads(result.read())
     else:
-        try:
-            osf_id = project_url.split(".io/")[1].strip("/")
-            nodes = {'data': [MockAPIResponse(osf_id).read()['data']]}
-        except Exception:
+        if project_id:
+            # Put data into same format as if multiple nodes found
+            nodes = {'data': [MockAPIResponse(project_id).read()['data']]}
+        else:
             nodes = MockAPIResponse('nodes').read()
 
 
