@@ -1,6 +1,7 @@
 import datetime
 from unittest import TestCase
 import os
+import shutil
 import json
 # import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
@@ -224,6 +225,12 @@ class TestClient(TestCase):
         assert len(projects[0]['wikis']) == 3
     
     def test_make_pdfs_from_dict(self):
+        # Put PDFs in a folder to keep things tidy
+        folder_out = os.path.join('tests', 'outfolder')
+        if os.path.exists(folder_out):
+            shutil.rmtree(folder_out)
+        os.mkdir(folder_out)
+        
         projects = [
             {
                 'title': 'My Project Title',
@@ -255,8 +262,16 @@ class TestClient(TestCase):
                 'wikis': {}
             }
         ]
-        pdfs = write_pdfs(projects)
+        # Do we write only one PDF per project?
+        pdfs = write_pdfs(projects, folder_out)
         assert len(pdfs) == len(projects)
+
+        # Can we specify where to write PDFs?
+        files = os.listdir(folder_out)
+        assert len(files) == len(projects)
+
+        if os.path.exists(folder_out):
+            shutil.rmtree(folder_out)
         
 
     def test_get_mock_projects_and_make_pdfs(self):
