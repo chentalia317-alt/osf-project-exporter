@@ -417,59 +417,84 @@ def write_pdfs(projects, folder=''):
     """Make PDF for each project.
     TODO: replace make_pdf with this once finalised."""
 
-    # Set nicer display names for certain PDF fields
-    pdf_display_names = {
-        'identifiers': 'DOI',
-        'funders': 'Support/Funding Information'
-    }
+    def write_list_section(key, fielddict):
+        """Handle writing fields based on their type to PDF.
+        Possible types are lists or strings."""
+
+        # Set nicer display names for certain PDF fields
+        pdf_display_names = {
+            'identifiers': 'DOI',
+            'funders': 'Support/Funding Information'
+        }
+        if key in pdf_display_names:
+                field_name = pdf_display_names[key]
+        else:
+            field_name = key.replace('_', ' ').title()
+        if isinstance(fielddict[key], list):
+            pdf.multi_cell(
+                0, h=0,
+                text=f'**{field_name}**\n\n',
+                align='L', markdown=True
+            )
+            for item in fielddict[key]:
+                for subkey in item.keys():
+                    if subkey in pdf_display_names:
+                        field_name = pdf_display_names[subkey]
+                    else:
+                        field_name = subkey.replace('_', ' ').title()
+                    
+                    pdf.multi_cell(
+                        0, h=0,
+                        text=f'**{field_name}:** {item[subkey]}\n\n',
+                        align='L', markdown=True
+                    )
+        else:
+            pdf.multi_cell(
+                0,
+                h=0,
+                text=f'**{field_name}:** {fielddict[key]}\n\n',
+                align='L',
+                markdown=True
+            )
 
     pdfs = []
     for project in projects:
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font('helvetica', size=12)
-        #pdf.cell(text='Exported OSF Projects', ln=True, align='C')
-        #pdf.write(0, '\n')
         wikis = project.pop('wikis')
-        for key in project.keys():
-            if key in pdf_display_names:
-                field_name = pdf_display_names[key]
-            else:
-                field_name = key.replace('_', ' ').title()
-            if isinstance(project[key], list):
-                pdf.write(0, '\n')
-                pdf.cell(text=f'{field_name}', ln=True, align='C')
-                for item in project[key]:
-                    for subkey in item.keys():
-                        if subkey in pdf_display_names:
-                            field_name = pdf_display_names[subkey]
-                        else:
-                            field_name = subkey.replace('_', ' ').title()
-                        pdf.cell(
-                            text=f'{field_name}: {item[subkey]}',
-                            ln=True, align='C'
-                        )
-                pdf.write(0, '\n')
-            else:
-                pdf.cell(
-                    text=f'{field_name}: {project[key]}',
-                    ln=True, align='C'
-                )
+
+        # Write header section
+        title = project['metadata']['title']
+        pdf.set_font('Times', size=18, style='B')
+        pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
+        pdf.ln()
+        pdf.set_font('helvetica', size=12)
+
+        # Write title for metadata section, then actual fields
+        pdf.set_font('Times', size=16, style='B')
+        pdf.multi_cell(0, h=0, text=f'1. Project Metadata\n', align='L')
+        pdf.set_font('helvetica', size=12)
+        for key in project['metadata']:
+            write_list_section(key, project['metadata'])
 
         # Write wikis separately to more easily handle Markdown parsing
-        pdf.write(0, '\n')
-        pdf.cell(text='Wiki\n', ln=True, align='C')
-        pdf.write(0, '\n')
+        pdf.ln()
+        pdf.set_font('Times', size=18, style='B')
+        pdf.multi_cell(0, h=0, text='4. Wiki\n', align='L')
+        pdf.ln()
         for wiki in wikis.keys():
-            pdf.write(0, f'{wiki}')
-            pdf.write(0, '\n')
+            pdf.set_font('Times', size=16, style='B')
+            pdf.multi_cell(0, h=0, text=f'{wiki}\n')
+            pdf.set_font('helvetica', size=12)
             html = markdown(wikis[wiki])
             pdf.write_html(html)
             pdf.add_page()
         
-        filename = f'{project['title']}_export.pdf'
+        filename = f'{title}_export.pdf'
         pdf.output(os.path.join(folder, filename))
         pdfs.append(pdf)
+    
     return pdfs
 
 
