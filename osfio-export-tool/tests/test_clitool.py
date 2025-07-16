@@ -1,3 +1,4 @@
+import datetime
 from unittest import TestCase
 import os
 import json
@@ -9,7 +10,8 @@ from pypdf import PdfReader
 
 from clitool import (
     cli, call_api, get_project_data,
-    explore_file_tree, explore_wikis
+    explore_file_tree, explore_wikis,
+    write_pdfs
 )
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
@@ -220,8 +222,44 @@ class TestClient(TestCase):
             projects[0]['subjects']
         )
         assert len(projects[0]['wikis']) == 3
+    
+    def test_make_pdfs_from_dict(self):
+        projects = [
+            {
+                'title': 'My Project Title',
+                'id': 'id',
+                'description': 'This is a description of the project',
+                'date_created': datetime.datetime.fromisoformat(
+                    '2025-06-12T15:54:42.105112Z'
+                ),
+                'date_modified': datetime.datetime.fromisoformat(
+                    '2001-01-01T01:01:01.105112Z'
+                ),
+                'tags': 'tag1, tag2, tag3',
+                'resource_type': 'na',
+                'resource_lang': 'english',
+                'files': 'file1.txt, file2.txt',
+                'contributors': 'A1, B2, C3',
+                'funders': [],
+                'affiliated_institutions': 'University of Manchester',
+                'identifiers': 'N/A',
+                'license': 'Apache 2.0',
+                'subjects': 'sub1, sub2, sub3',
+                'wikis': {
+                    'Home': 'hello world',
+                    'Page2': 'another page'
+                }
+            },
+            {
+                "title": "Second Project in new PDF",
+                'wikis': {}
+            }
+        ]
+        pdfs = write_pdfs(projects)
+        assert len(pdfs) == len(projects)
+        
 
-    def test_generate_pdf(self):
+    def test_get_mock_projects_and_make_pdfs(self):
         """Test generating a PDF from parsed project data.
         This assumes the JSON parsing works correctly."""
 
