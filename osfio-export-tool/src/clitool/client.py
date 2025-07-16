@@ -413,7 +413,7 @@ def get_project_data(pat, dryrun):
     return projects
 
 
-def write_pdfs(projects):
+def write_pdfs(projects, folder=''):
     """Make PDF for each project.
     TODO: replace make_pdf with this once finalised."""
 
@@ -468,7 +468,7 @@ def write_pdfs(projects):
             pdf.add_page()
         
         filename = f'{project['title']}_export.pdf'
-        pdf.output(filename)
+        pdf.output(os.path.join(folder, filename))
         pdfs.append(pdf)
     return pdfs
 
