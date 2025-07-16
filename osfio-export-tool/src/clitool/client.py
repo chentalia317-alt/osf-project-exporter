@@ -413,6 +413,66 @@ def get_project_data(pat, dryrun):
     return projects
 
 
+def write_pdfs(projects):
+    """Make PDF for each project.
+    TODO: replace make_pdf with this once finalised."""
+
+    # Set nicer display names for certain PDF fields
+    pdf_display_names = {
+        'identifiers': 'DOI',
+        'funders': 'Support/Funding Information'
+    }
+
+    pdfs = []
+    for project in projects:
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font('helvetica', size=12)
+        #pdf.cell(text='Exported OSF Projects', ln=True, align='C')
+        #pdf.write(0, '\n')
+        wikis = project.pop('wikis')
+        for key in project.keys():
+            if key in pdf_display_names:
+                field_name = pdf_display_names[key]
+            else:
+                field_name = key.replace('_', ' ').title()
+            if isinstance(project[key], list):
+                pdf.write(0, '\n')
+                pdf.cell(text=f'{field_name}', ln=True, align='C')
+                for item in project[key]:
+                    for subkey in item.keys():
+                        if subkey in pdf_display_names:
+                            field_name = pdf_display_names[subkey]
+                        else:
+                            field_name = subkey.replace('_', ' ').title()
+                        pdf.cell(
+                            text=f'{field_name}: {item[subkey]}',
+                            ln=True, align='C'
+                        )
+                pdf.write(0, '\n')
+            else:
+                pdf.cell(
+                    text=f'{field_name}: {project[key]}',
+                    ln=True, align='C'
+                )
+
+        # Write wikis separately to more easily handle Markdown parsing
+        pdf.write(0, '\n')
+        pdf.cell(text='Wiki\n', ln=True, align='C')
+        pdf.write(0, '\n')
+        for wiki in wikis.keys():
+            pdf.write(0, f'{wiki}')
+            pdf.write(0, '\n')
+            html = markdown(wikis[wiki])
+            pdf.write_html(html)
+            pdf.add_page()
+        
+        filename = f'{project['title']}_export.pdf'
+        pdf.output(filename)
+        pdfs.append(pdf)
+    return pdfs
+
+
 def make_pdf(projects, filepath):
     """Make PDF using project data."""
 
