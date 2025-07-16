@@ -233,32 +233,36 @@ class TestClient(TestCase):
         
         projects = [
             {
-                'title': 'My Project Title',
-                'id': 'id',
-                'description': 'This is a description of the project',
-                'date_created': datetime.datetime.fromisoformat(
-                    '2025-06-12T15:54:42.105112Z'
-                ),
-                'date_modified': datetime.datetime.fromisoformat(
-                    '2001-01-01T01:01:01.105112Z'
-                ),
-                'tags': 'tag1, tag2, tag3',
-                'resource_type': 'na',
-                'resource_lang': 'english',
+                'metadata': {
+                    'title': 'My Project Title',
+                    'id': 'id',
+                    'description': 'This is a description of the project',
+                    'date_created': datetime.datetime.fromisoformat(
+                        '2025-06-12T15:54:42.105112Z'
+                    ),
+                    'date_modified': datetime.datetime.fromisoformat(
+                        '2001-01-01T01:01:01.105112Z'
+                    ),
+                    'tags': 'tag1, tag2, tag3',
+                    'resource_type': 'na',
+                    'resource_lang': 'english',
+                    'affiliated_institutions': 'University of Manchester',
+                    'identifiers': 'N/A',
+                    'license': 'Apache 2.0',
+                    'subjects': 'sub1, sub2, sub3',
+                },
                 'files': 'file1.txt, file2.txt',
                 'contributors': 'A1, B2, C3',
                 'funders': [],
-                'affiliated_institutions': 'University of Manchester',
-                'identifiers': 'N/A',
-                'license': 'Apache 2.0',
-                'subjects': 'sub1, sub2, sub3',
                 'wikis': {
                     'Home': 'hello world',
                     'Page2': 'another page'
                 }
             },
             {
-                "title": "Second Project in new PDF",
+                'metadata': {
+                    "title": "Second Project in new PDF",
+                },
                 'wikis': {}
             }
         ]
@@ -270,8 +274,8 @@ class TestClient(TestCase):
         files = os.listdir(folder_out)
         assert len(files) == len(projects)
 
-        if os.path.exists(folder_out):
-            shutil.rmtree(folder_out)
+        # if os.path.exists(folder_out):
+        #     shutil.rmtree(folder_out)
         
 
     def test_get_mock_projects_and_make_pdfs(self):
