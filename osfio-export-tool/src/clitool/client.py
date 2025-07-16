@@ -5,15 +5,13 @@ import urllib.request as webhelper
 
 import click
 from fpdf import FPDF
+from mistletoe import markdown
 
-API_HOST = 'https://api.test.osf.io/v2'
+API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
 
 class MockAPIResponse:
-    """Simulate OSF API response for testing purposes.
-
-    :param field: String for the field name to mock.
-    """
+    """Simulate OSF API response for testing purposes."""
 
     JSON_FILES = {
         'nodes': os.path.join(
@@ -52,17 +50,42 @@ class MockAPIResponse:
             'tests', 'stubs', 'licensestub.json'),
         'subjects': os.path.join(
             'tests', 'stubs', 'subjectsstub.json'),
+        'wikis': os.path.join(
+            'tests', 'stubs', 'wikis', 'wikistubs.json'),
+        'wikis2': os.path.join(
+            'tests', 'stubs', 'wikis', 'wikis2stubs.json')
     }
 
-    def __init__(self, field):
-        self.field = field
+    MARKDOWN_FILES = {
+        'helloworld': os.path.join(
+            'tests', 'stubs', 'wikis', 'helloworld.md'),
+        'home': os.path.join(
+            'tests', 'stubs', 'wikis', 'home.md'),
+        'anotherone': os.path.join(
+            'tests', 'stubs', 'wikis', 'anotherone.md'),
+    }
 
-    def read(self):
-        """Get mock response for a field."""
+    @staticmethod
+    def read(field):
+        """Get mock response for a field.
 
-        if self.field in MockAPIResponse.JSON_FILES.keys():
-            with open(MockAPIResponse.JSON_FILES[self.field], 'r') as file:
+        Parameters
+        -----------
+            field: str
+                ID associated to a JSON or Markdown mock file.
+                Available fields to mock are listed in class-level
+                JSON_FILES and MARKDOWN_FILES attributes.
+
+        Returns
+        ------------
+            Parsed JSON dictionary or Markdown."""
+
+        if field in MockAPIResponse.JSON_FILES.keys():
+            with open(MockAPIResponse.JSON_FILES[field], 'r') as file:
                 return json.load(file)
+        elif field in MockAPIResponse.MARKDOWN_FILES.keys():
+            with open(MockAPIResponse.MARKDOWN_FILES[field], 'r') as file:
+                return file.read()
         else:
             return {}
 
@@ -75,7 +98,7 @@ URL_FILTERS = {
 }
 
 
-def call_api(url, method, pat, per_page=None, filters={}):
+def call_api(url, pat, method='GET', per_page=None, filters={}, is_json=True):
     """Call OSF v2 API methods.
 
     Parameters
@@ -94,6 +117,8 @@ def call_api(url, method, pat, per_page=None, filters={}):
 
         Example Input: {'category': 'project', 'title': 'ttt'}
         Example Query String: ?filter[category]=project&filter[title]=ttt
+    is_json: bool
+        If true, set API version to get correct API responses.
 
     Returns
     ----------
@@ -102,23 +127,29 @@ def call_api(url, method, pat, per_page=None, filters={}):
     """
     if (filters or per_page) and method == 'GET':
         query_string = '&'.join([f'filter[{key}]={value}'
-                                 for key, value in filters.items() if not isinstance(value, dict)])
+                                 for key, value in filters.items()
+                                 if not isinstance(value, dict)])
         if per_page:
             query_string += f'&page[size]={per_page}'
         url = f'{url}?{query_string}'
-    
-    API_VERSION = '2.20'
+
     request = webhelper.Request(url, method=method)
     request.add_header('Authorization', f'Bearer {pat}')
-    # Pin API version so that responses have correct format
-    request.add_header('Accept', f'application/vnd.api+json;version={API_VERSION}')
+
+    # Pin API version so that JSON has correct format
+    API_VERSION = '2.20'
+    if is_json:
+        request.add_header(
+            'Accept',
+            f'application/vnd.api+json;version={API_VERSION}'
+        )
     result = webhelper.urlopen(request)
     return result
 
 
 def explore_file_tree(curr_link, pat, dryrun=True):
     """Explore and get names of files stored in OSF.
-    
+
     Parameters
     ----------
     curr_link: string
@@ -147,15 +178,15 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     while not is_last_page_folders:
         # Use Mock JSON if unit/integration testing
         if dryrun:
-            folders = MockAPIResponse(f"{curr_link}_folder").read()
+            folders = MockAPIResponse.read(f"{curr_link}_folder")
         else:
             folders = json.loads(
                 call_api(
-                    curr_link, 'GET', pat,
+                    curr_link, pat,
                     per_page=per_page, filters=FOLDER_FILTER
                 ).read()
             )
-        
+
         # Find deepest subfolders first to avoid missing files
         try:
             for folder in folders['data']:
@@ -164,15 +195,15 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         except KeyError:
             pass
 
-        # Now find files in current folder to complete current page
+        # Now find files in current folder
         is_last_page_files = False
         while not is_last_page_files:
             if dryrun:
-                files = MockAPIResponse(f"{curr_link}_files").read()
+                files = MockAPIResponse.read(f"{curr_link}_files")
             else:
                 files = json.loads(
                     call_api(
-                        curr_link, 'GET', pat,
+                        curr_link, pat,
                         per_page=per_page, filters=FILE_FILTER
                     ).read()
                 )
@@ -181,17 +212,69 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                     filenames.append(file['attributes']['materialized_path'])
             except KeyError:
                 pass
-            # Files could be split into multiple pages - loop until no more pages
+            # Need to go to next page of files if response paginated
             curr_link = files['links']['next']
-            if curr_link == None:
+            if curr_link is None:
                 is_last_page_files = True
-        
-        # Folders could be split across pages - loop until no more pages
+
+        # Need to go to next page of folders if response paginated
         curr_link = folders['links']['next']
-        if curr_link == None:
+        if curr_link is None:
             is_last_page_folders = True
 
     return filenames
+
+
+def explore_wikis(link, pat, dryrun=True):
+    """Get wiki contents for a particular project.
+
+    Parameters:
+    -------------
+    link: str
+        URL to project wikis or name of wikis field to access mock JSON.
+    pat: str
+        Personal Access Token to authenticate a user with.
+    dryrun: bool
+        Flag to indicate whether to use mock JSON files or real API calls.
+
+    Returns
+    ---------------
+    wikis: List of JSON representing wikis for a project."""
+
+    wiki_content = {}
+    is_last_page = False
+    if dryrun:
+        wikis = MockAPIResponse.read('wikis')
+    else:
+        wikis = json.loads(
+            call_api(link, pat).read()
+        )
+
+    while not is_last_page:
+        for wiki in wikis['data']:
+            if dryrun:
+                content = MockAPIResponse.read(wiki['attributes']['name'])
+            else:
+                # Decode Markdown content to allow parsing later on
+                content = call_api(
+                    wiki['links']['download'], pat=pat, is_json=False
+                ).read().decode('utf-8')
+            wiki_content[wiki['attributes']['name']] = content
+
+        # Go to next page of wikis if pagination applied
+        # so that we don't miss wikis
+        link = wikis['links']['next']
+        if not link:
+            is_last_page = True
+        else:
+            if dryrun:
+                wikis = MockAPIResponse.read(link)
+            else:
+                wikis = json.loads(
+                    call_api(link, pat).read()
+                )
+
+    return wiki_content
 
 
 def get_project_data(pat, dryrun):
@@ -212,11 +295,11 @@ def get_project_data(pat, dryrun):
 
     if not dryrun:
         result = call_api(
-            f'{API_HOST}/users/me/nodes/', 'GET', pat
+            f'{API_HOST}/users/me/nodes/', pat
         )
         nodes = json.loads(result.read())
     else:
-        nodes = MockAPIResponse('nodes').read()
+        nodes = MockAPIResponse.read('nodes')
 
     projects = []
     for project in nodes['data']:
@@ -237,11 +320,11 @@ def get_project_data(pat, dryrun):
         # Resource type/lang/funding info share specific endpoint
         # that isn't linked to in user nodes' responses
         if dryrun:
-            metadata = MockAPIResponse('custom_metadata').read()
+            metadata = MockAPIResponse.read('custom_metadata')
         else:
             metadata = json.loads(call_api(
                 f"{API_HOST}/custom_item_metadata_records/{project['id']}/",
-                'GET', pat
+                pat
             ).read())
         metadata = metadata['data']['attributes']
         project_data['resource_type'] = metadata['resource_type_general']
@@ -272,7 +355,7 @@ def get_project_data(pat, dryrun):
             'contributors',
             'identifiers',
             'license',
-            'subjects'
+            'subjects',
         ]
         for key in RELATION_KEYS:
             if not dryrun:
@@ -282,16 +365,16 @@ def get_project_data(pat, dryrun):
                     link = relations[key]['links']['related']['href']
                     json_data = json.loads(
                         call_api(
-                            link, 'GET', pat,
+                            link, pat,
                             filters=URL_FILTERS.get(key, {})
                         ).read()
                     )
                 except KeyError:
                     if key == 'subjects':
-                        raise KeyError() # Subjects should have a href link
+                        raise KeyError()  # Subjects should have a href link
                     json_data = {'data': None}
             else:
-                json_data = MockAPIResponse(key).read()
+                json_data = MockAPIResponse.read(key)
 
             values = []
             if isinstance(json_data['data'], list):
@@ -312,13 +395,18 @@ def get_project_data(pat, dryrun):
                             values.append(item['attributes']['text'])
                         else:
                             values.append(item['attributes']['name'])
-            
-            if isinstance(json_data['data'], dict): # e.g. license field
+
+            if isinstance(json_data['data'], dict):  # e.g. license field
                 values.append(json_data['data']['attributes']['name'])
 
             if isinstance(values, list):
                 values = ', '.join(values)
             project_data[key] = values
+
+        project_data['wikis'] = explore_wikis(
+            f'{API_HOST}/nodes/{project_data['id']}/wikis/',
+            pat=pat, dryrun=dryrun
+        )
 
         projects.append(project_data)
 
@@ -339,6 +427,7 @@ def make_pdf(projects, filepath):
     pdf.cell(text='Exported OSF Projects', ln=True, align='C')
     pdf.write(0, '\n')
     for project in projects:
+        wikis = project.pop('wikis')
         for key in projects[0].keys():
             if key in pdf_display_names:
                 field_name = pdf_display_names[key]
@@ -363,7 +452,17 @@ def make_pdf(projects, filepath):
                     text=f'{field_name}: {project[key]}',
                     ln=True, align='C'
                 )
-        pdf.cell(text='=======', ln=True, align='C')
+
+        # Write wikis separately to more easily handle Markdown parsing
+        pdf.write(0, '\n')
+        pdf.cell(text='Wiki\n', ln=True, align='C')
+        pdf.write(0, '\n')
+        for wiki in wikis.keys():
+            pdf.write(0, f'{wiki}')
+            pdf.write(0, '\n')
+            html = markdown(wikis[wiki])
+            pdf.write_html(html)
+            pdf.add_page()
     pdf.output(filepath)
 
 
