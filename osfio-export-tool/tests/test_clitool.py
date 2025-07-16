@@ -251,8 +251,12 @@ class TestClient(TestCase):
                     'license': 'Apache 2.0',
                     'subjects': 'sub1, sub2, sub3',
                 },
+                'contributors': [
+                    ('Pineapple Pizza', True, 'email'),
+                    ('Margarita', True, 'email'),
+                    ('Margarine', True, 'email')
+                ],
                 'files': 'file1.txt, file2.txt',
-                'contributors': 'A1, B2, C3',
                 'funders': [],
                 'wikis': {
                     'Home': 'hello world',
@@ -263,6 +267,7 @@ class TestClient(TestCase):
                 'metadata': {
                     "title": "Second Project in new PDF",
                 },
+                'contributors': [],
                 'wikis': {}
             }
         ]
@@ -273,6 +278,13 @@ class TestClient(TestCase):
         # Can we specify where to write PDFs?
         files = os.listdir(folder_out)
         assert len(files) == len(projects)
+
+        # Compare content of created PDF with reference PDF
+        reader_created = PdfReader(os.path.join(folder_out, files[1]))
+        content_first_page = reader_created.pages[0].extract_text(extraction_mode='layout')
+        assert 'Pineapple Pizza' in content_first_page, (
+            reader_created.pages[0].extract_text(extraction_mode='layout')
+        )
 
         # if os.path.exists(folder_out):
         #     shutil.rmtree(folder_out)
