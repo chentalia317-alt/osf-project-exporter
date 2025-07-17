@@ -282,6 +282,152 @@ def explore_wikis(link, pat, dryrun=True):
     return wiki_content
 
 
+def v2_get_project_data(pat, dryrun=True):
+    """Pull and list projects for a user from the OSF.
+
+    Parameters
+    ----------
+    pat: str
+        Personal Access Token to authorise a user with.
+    dryrun: bool
+        If True, use test data from JSON stubs to mock API calls.
+
+    Returns
+    ----------
+        projects: list[dict]
+            List of dictionaries representing projects.
+    """
+
+    if not dryrun:
+        result = call_api(
+            f'{API_HOST}/users/me/nodes/', pat
+        )
+        nodes = json.loads(result.read())
+    else:
+        nodes = MockAPIResponse.read('nodes')
+
+    projects = []
+    for project in nodes['data']:
+        if project['attributes']['category'] != 'project':
+            continue
+        project_data = {
+            'metadata': {
+                'title': project['attributes']['title'],
+                'id': project['id'],
+                'description': project['attributes']['description'],
+                'date_created': datetime.datetime.fromisoformat(
+                    project['attributes']['date_created']),
+                'date_modified': datetime.datetime.fromisoformat(
+                    project['attributes']['date_modified']),
+                'tags': ', '.join(project['attributes']['tags'])
+                if project['attributes']['tags'] else 'NA',
+                'funders': []
+            },
+            'contributors': [],
+            'files': [],
+            'wikis': {}
+        }
+
+        # Resource type/lang/funding info share specific endpoint
+        # that isn't linked to in user nodes' responses
+        if dryrun:
+            metadata = MockAPIResponse.read('custom_metadata')
+        else:
+            metadata = json.loads(call_api(
+                f"{API_HOST}/custom_item_metadata_records/{project['id']}/",
+                pat
+            ).read())
+        metadata = metadata['data']['attributes']
+        project_data['metadata']['resource_type'] = metadata['resource_type_general']
+        project_data['metadata']['resource_lang'] = metadata['language']
+        for funder in metadata['funders']:
+            project_data['metadata']['funders'].append(funder)
+
+        relations = project['relationships']
+
+        # Get list of files in project
+        if dryrun:
+            files = explore_file_tree('root', pat, dryrun=True)
+            for f in files:
+                project_data['files'].append((f, None, None))
+        else:
+            # Get files hosted on OSF storage
+            link = relations['files']['links']['related']['href']
+            link += 'osfstorage/'
+            project_data['files'] = ', '.join(
+                explore_file_tree(link, pat, dryrun=False)
+            )
+
+        # Get links for data for these keys and extract
+        # certain attributes for each one
+        RELATION_KEYS = [
+            'affiliated_institutions',
+            'contributors',
+            'identifiers',
+            'license',
+            'subjects',
+        ]
+        for key in RELATION_KEYS:
+            if not dryrun:
+                # Check relationship exists and can get link to linked data
+                # Otherwise just pass a placeholder dict
+                try:
+                    link = relations[key]['links']['related']['href']
+                    json_data = json.loads(
+                        call_api(
+                            link, pat,
+                            filters=URL_FILTERS.get(key, {})
+                        ).read()
+                    )
+                except KeyError:
+                    if key == 'subjects':
+                        raise KeyError()  # Subjects should have a href link
+                    json_data = {'data': None}
+            else:
+                json_data = MockAPIResponse.read(key)
+
+            values = []
+            if isinstance(json_data['data'], list):
+                for item in json_data['data']:
+                    # Required data can either be embedded or in attributes
+                    if 'embeds' in item and key != "subjects":
+                        if 'users' in item['embeds']:
+                            values.append(
+                                item['embeds']['users']['data']
+                                ['attributes']['full_name']
+                            )
+                        else:
+                            values.append(item['embeds']['attributes']['name'])
+                    else:
+                        if key == 'identifiers':
+                            values.append(item['attributes']['value'])
+                        elif key == 'subjects':
+                            values.append(item['attributes']['text'])
+                        else:
+                            values.append(item['attributes']['name'])
+
+            if isinstance(json_data['data'], dict):  # e.g. license field
+                values.append(json_data['data']['attributes']['name'])
+
+            if isinstance(values, list):
+                if key != 'contributors':
+                    values = ', '.join(values)
+                else:
+                    contributors = []
+                    for c in values:
+                        contributors.append((c, False, 'N/A'))
+                    values = contributors
+            project_data[key] = values
+
+        project_data['wikis'] = explore_wikis(
+            f'{API_HOST}/nodes/{project['id']}/wikis/',
+            pat=pat, dryrun=dryrun
+        )
+
+        projects.append(project_data)
+
+    return projects
+
 def get_project_data(pat, dryrun):
     """Pull and list projects for a user from the OSF.
 

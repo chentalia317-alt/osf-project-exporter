@@ -1,7 +1,7 @@
 from .client import (
     cli, call_api, get_project_data,
     explore_file_tree, explore_wikis,
-    make_pdf, write_pdfs
+    make_pdf, write_pdfs, v2_get_project_data
 )
 
 __all__ = [
@@ -11,5 +11,6 @@ __all__ = [
     'explore_file_tree',
     'explore_wikis',
     'make_pdf',
-    'write_pdfs'
+    'write_pdfs',
+    'v2_get_project_data'
 ]
