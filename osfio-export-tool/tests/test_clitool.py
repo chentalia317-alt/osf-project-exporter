@@ -21,7 +21,6 @@ API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
 input_path = os.path.join('tests', TEST_PDF_FOLDER, TEST_INPUT)
-test_data = os.path.join('tests', 'myprojects.txt')
 
 # Run tests in docker container
 # with 'python -m unittest <tests.test_clitool.TESTCLASS>'
@@ -360,12 +359,14 @@ file2.txt                                         N/A                      N/A
         """Test generating a PDF from parsed project data.
         This assumes the JSON parsing works correctly."""
 
-        if os.path.exists(input_path):
-            os.remove(input_path)
+        folder_out = os.path.join('tests', 'outfolder')
+        if os.path.exists(folder_out):
+            shutil.rmtree(folder_out)
+        os.mkdir(folder_out)
 
         runner = CliRunner()
         result = runner.invoke(
-            cli, ['pull-projects', '--dryrun', '--filename', input_path],
+            cli, ['pull-projects', '--dryrun', '--folder', folder_out],
             input=os.getenv('TEST_PAT', ''),
             terminal_width=60
         )
@@ -373,22 +374,19 @@ file2.txt                                         N/A                      N/A
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
-        assert os.path.exists(input_path)
 
-        # Compare content of created PDF with reference PDF
-        reader_created = PdfReader(input_path)
-        reader_reference = PdfReader(os.path.join(
-            'tests', TEST_PDF_FOLDER, 'osf_projects_stub.pdf'
-        ))
-        for p1, p2 in zip(reader_created.pages, reader_reference.pages):
-            text_generated = p1.extract_text(extraction_mode='layout')
-            text_reference = p2.extract_text(extraction_mode='layout')
-            assert text_generated == text_reference, (
-                f'Generated text does not match reference text:\n'
-                f'Generated: {text_generated}\n'
-                f'Reference: {text_reference}'
-            )
-            assert all(x == y for x, y in zip(p1.images, p2.images))
+        files = os.listdir(folder_out)
+        for f in files:
+            # Compare content of created PDF with reference PDF
+            pdf_made = PdfReader(os.path.join(folder_out, f))
+            pdf_ref = PdfReader(os.path.join('tests', TEST_PDF_FOLDER, f))
 
-        if os.path.exists(input_path):
-            os.remove(input_path)
+            for p1, p2 in zip(pdf_made.pages, pdf_ref.pages):
+                text_generated = p1.extract_text(extraction_mode='layout')
+                text_reference = p2.extract_text(extraction_mode='layout')
+                assert text_generated == text_reference, (
+                    f'Generated text does not match reference text:\n'
+                    f'Generated: {text_generated}\n'
+                    f'Reference: {text_reference}'
+                )
+                assert all(x == y for x, y in zip(p1.images, p2.images))
