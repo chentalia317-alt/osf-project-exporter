@@ -527,13 +527,14 @@ def write_pdfs(projects, folder=''):
         pdf.set_font('Times', size=18, style='B')
         pdf.multi_cell(0, h=0, text='4. Wiki\n', align='L')
         pdf.ln()
-        for wiki in wikis.keys():
+        for i, wiki in enumerate(wikis.keys()):
             pdf.set_font('Times', size=16, style='B')
             pdf.multi_cell(0, h=0, text=f'{wiki}\n')
             pdf.set_font('helvetica', size=12)
             html = markdown(wikis[wiki])
             pdf.write_html(html)
-            pdf.add_page()
+            if i < len(wikis.keys())-1:
+                pdf.add_page()
         
         filename = f'{title}_export.pdf'
         pdf.output(os.path.join(folder, filename))
