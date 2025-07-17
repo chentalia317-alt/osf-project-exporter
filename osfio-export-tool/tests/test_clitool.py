@@ -270,8 +270,21 @@ class TestClient(TestCase):
                 'metadata': {
                     "title": "Second Project in new PDF",
                 },
-                'contributors': [],
-                'files': [],
+                'contributors': [
+                    ('Short Name', True, 'email'),
+                    (
+                        'Long Double-Barrelled Name and Surname', True,
+                        'Long Double-Barrelled Name and Surname@Long Double-Barrelled Name and Surname.com'
+                    ),
+                    (
+                        'Long Double-Barrelled Name and SurnameLong Double-Barrelled Name and Surname', True,
+                        'Long Double-Barrelled Name and Surname@Long Double-Barrelled Name and Surname.com'
+                    )
+                ],
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
                 'wikis': {}
             }
         ]
@@ -283,13 +296,11 @@ class TestClient(TestCase):
         files = os.listdir(folder_out)
         assert len(files) == len(projects)
 
-        # Compare content of created PDF with reference PDF
-        reader_created = PdfReader(os.path.join(folder_out, files[1]))
-        content_first_page = reader_created.pages[0].extract_text(extraction_mode='layout')
-
-        # One page for first 3 sections and first wiki page
-        # Second page for last one
-        assert len(reader_created.pages) == 2
+        pdf_first = PdfReader(os.path.join(folder_out, files[1]))
+        pdf_second = PdfReader(os.path.join(folder_out, files[0]))
+        assert len(pdf_first.pages) == 2
+        assert len(pdf_second.pages) == 1
+        content_first_page = pdf_first.pages[0].extract_text(extraction_mode='layout')
 
         print(content_first_page)
 
@@ -298,13 +309,13 @@ class TestClient(TestCase):
 
 2. Contributors
 
-Name                                     Bibliographic?                            Email (if available)
+Name                                              Bibliographic?           Email (if available)
 
-Pineapple Pizza                          Yes                                       email
+Pineapple Pizza                                   Yes                      email
 
-Margarita                                Yes                                       email
+Margarita                                         Yes                      email
 
-Margarine                                Yes                                       email
+Margarine                                         Yes                      email
 
 3. Files in Main Project"""
         assert contributors_table in content_first_page
@@ -313,11 +324,11 @@ Margarine                                Yes                                    
 
 A. OSF Storage
 
-File Name                                Size (MB)                                 Download Link
+File Name                                         Size (MB)                Download Link
 
-file1.txt                                N/A                                       N/A
+file1.txt                                         N/A                      N/A
 
-file2.txt                                N/A                                       N/A
+file2.txt                                         N/A                      N/A
 
 4. Wiki"""
         
