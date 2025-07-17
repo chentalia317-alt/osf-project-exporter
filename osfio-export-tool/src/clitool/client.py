@@ -477,6 +477,8 @@ def write_pdfs(projects, folder=''):
         pdf.set_font('helvetica', size=12)
         for key in project['metadata']:
             write_list_section(key, project['metadata'])
+        pdf.write(0, '\n')
+        pdf.write(0, '\n')
         
         # Write Contributors in table
         pdf.set_font('Times', size=16, style='B')
@@ -495,6 +497,8 @@ def write_pdfs(projects, folder=''):
                     if datum == False:
                         datum = 'N/A'
                     row.cell(datum)
+        pdf.write(0, '\n')
+        pdf.write(0, '\n')
         
         # List files stored in storage providers
         # For now only OSF Storage is involved
