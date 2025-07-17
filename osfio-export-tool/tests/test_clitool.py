@@ -150,74 +150,74 @@ class TestClient(TestCase):
         """Using JSON stubs to simulate API responses,
         test we can parse them correctly"""
 
-        projects = get_project_data(os.getenv('TEST_PAT', ''), True)
+        projects = v2_get_project_data(os.getenv('TEST_PAT', ''), True)
 
         assert len(projects) == 2, (
             'Expected 2 projects in the stub data'
         )
-        assert projects[0]['title'] == 'Test1', (
+        assert projects[0]['metadata']['title'] == 'Test1', (
             'Expected title Test1, got: ',
-            projects[0]['title']
+            projects[0]['metadata']['title']
         )
-        assert projects[0]['id'] == 'x', (
+        assert projects[0]['metadata']['id'] == 'x', (
             'Expected ID x, got: ',
-            projects[0]['id']
+            projects[0]['metadata']['id']
         )
-        assert projects[1]['title'] == 'Test2', (
+        assert projects[1]['metadata']['title'] == 'Test2', (
             'Expected title Test2, got: ',
-            projects[1]['title']
+            projects[1]['metadata']['title']
         )
-        assert projects[0]['license'] == 'mynewlicense', (
+        assert projects[0]['metadata']['license'] == 'mynewlicense', (
             'Expected mynewlicense, got: ',
-            projects[0]['license']
+            projects[0]['metadata']['license']
         )
-        assert projects[0]['description'] == 'Test1 Description', (
+        assert projects[0]['metadata']['description'] == 'Test1 Description', (
             'Expected description Test1 Description, got: ',
-            projects[0]['description']
+            projects[0]['metadata']['description']
         )
         assert projects[1]['description'] == 'Test2 Description', (
             'Expected description Test2 Description, got: ',
             projects[1]['description']
         )
         expected_date = '2000-01-01 14:18:00.376705+00:00'
-        assert str(projects[0]['date_created']) == expected_date, (
+        assert str(projects[0]['metadata']['date_created']) == expected_date, (
             f'Expected date_created {expected_date}, got: ',
-            projects[0]['date_created']
+            projects[0]['metadata']['date_created']
         )
-        assert str(projects[0]['date_modified']) == expected_date, (
+        assert str(projects[0]['metadata']['date_modified']) == expected_date, (
             f'Expected date_modified {expected_date}, got: ',
-            projects[0]['date_modified']
+            projects[0]['metadata']['date_modified']
         )
-        assert projects[0]['tags'] == 'test1, test2, test3', (
+        assert projects[0]['metadata']['tags'] == 'test1, test2, test3', (
             'Expected tags test1, test2, test3, got: ',
-            projects[0]['tags']
+            projects[0]['metadata']['tags']
         )
-        assert projects[1]['tags'] == 'NA', (
+        assert projects[1]['metadata']['tags'] == 'NA', (
             'Expected tags NA, got: ',
-            projects[1]['tags']
+            projects[1]['metadata']['tags']
         )
-        assert projects[0]['contributors'] == 'Test User 1, Test User 2', (
+        assert projects[0]['metadata']['contributors'] == 'Test User 1, Test User 2', (
             'Expected contributors Test User 1, Test User 2, got: ',
-            projects[0]['contributors']
+            projects[0]['metadata']['contributors']
         )
-        assert projects[0]['identifiers'] == '10.4-2-6-25/OSF.IO/74PAD', (
+        assert projects[0]['metadata']['identifiers'] == '10.4-2-6-25/OSF.IO/74PAD', (
             'Expected identifiers 10.4-2-6-25/OSF.IO/74PAD, got: ',
-            projects[0]['identifiers']
+            projects[0]['metadata']['identifiers']
         )
-        assert projects[0]['resource_type'] == 'Other', (
+        assert projects[0]['metadata']['resource_type'] == 'Other', (
             'Expected resource_type Other, got: ',
-            projects[0]['resource_type']
+            projects[0]['metadata']['resource_type']
         )
-        assert projects[0]['resource_lang'] == 'eng', (
+        assert projects[0]['metadata']['resource_lang'] == 'eng', (
             'Expected resource_lang eng, got: ',
-            projects[0]['resource_lang']
+            projects[0]['metadata']['resource_lang']
         )
-        assert '/helloworld.txt.txt' in projects[0]['files']
-        assert '/tf1/helloworld.txt.txt' in projects[0]['files']
-        assert '/tf1/tf2/file.txt' in projects[0]['files']
-        assert projects[0]['subjects'] == 'Education, Literature, Geography', (
+        assert '/helloworld.txt.txt' in projects[0]['files'][0][0]
+        assert '/tf1/helloworld.txt.txt' in projects[0]['files'][1][0]
+        assert '/tf1/tf2/file.txt' in projects[0]['files'][2][0]
+        assert projects[0]['metadata']['subjects'] == 'Education, Literature, Geography', (
             'Expected Education, Literature, Geography, got: ',
-            projects[0]['subjects']
+            projects[0]['metadata']['subjects']
         )
         assert len(projects[0]['wikis']) == 3
     
