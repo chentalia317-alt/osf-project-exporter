@@ -466,6 +466,9 @@ def write_pdfs(projects, folder=''):
     for project in projects:
         pdf = FPDF()
         pdf.add_page()
+        pdf.set_line_width(0.05)
+        pdf.set_left_margin(10)
+        pdf.set_right_margin(10)
         pdf.set_font('Times', size=12)
         wikis = project.pop('wikis')
 
@@ -489,7 +492,7 @@ def write_pdfs(projects, folder=''):
         pdf.set_font('Times', size=16, style='B')
         pdf.multi_cell(0, h=0, text=f'2. Contributors\n', align='L')
         pdf.set_font('Times', size=12)
-        with pdf.table(headings_style=HEADINGS_STYLE) as table:
+        with pdf.table(headings_style=HEADINGS_STYLE, col_widths=(1, 0.5, 1)) as table:
             row = table.row()
             row.cell('Name')
             row.cell('Bibliographic?')
@@ -513,7 +516,7 @@ def write_pdfs(projects, folder=''):
         pdf.set_font('Times', size=14, style='B')
         pdf.multi_cell(0, h=0, text=f'A. OSF Storage\n', align='L')
         pdf.set_font('Times', size=12)
-        with pdf.table(headings_style=HEADINGS_STYLE) as table:
+        with pdf.table(headings_style=HEADINGS_STYLE, col_widths=(1,0.5,1)) as table:
             row = table.row()
             row.cell('File Name')
             row.cell('Size (MB)')
