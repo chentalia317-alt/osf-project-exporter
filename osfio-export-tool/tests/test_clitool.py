@@ -298,13 +298,13 @@ class TestClient(TestCase):
 
 2. Contributors
 
-Name                                  Bibliographic?                         Email (if available)
+Name                                     Bibliographic?                            Email (if available)
 
-Pineapple Pizza                       Yes                                    email
+Pineapple Pizza                          Yes                                       email
 
-Margarita                             Yes                                    email
+Margarita                                Yes                                       email
 
-Margarine                             Yes                                    email
+Margarine                                Yes                                       email
 
 3. Files in Main Project"""
         assert contributors_table in content_first_page
@@ -313,14 +313,13 @@ Margarine                             Yes                                    ema
 
 A. OSF Storage
 
-File Name                             Size (MB)                              Download Link
+File Name                                Size (MB)                                 Download Link
 
-file1.txt                             N/A                                    N/A
+file1.txt                                N/A                                       N/A
 
-file2.txt                             N/A                                    N/A
+file2.txt                                N/A                                       N/A
 
-4. Wiki
-"""
+4. Wiki"""
         
         assert files_table in content_first_page
 

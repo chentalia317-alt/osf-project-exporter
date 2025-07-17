@@ -5,9 +5,14 @@ import urllib.request as webhelper
 
 import click
 from fpdf import FPDF
+from fpdf.fonts import FontFace
 from mistletoe import markdown
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
+
+# Global styles for PDF
+BLUE = (173, 216, 230)
+HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
 
 
 class MockAPIResponse:
@@ -461,7 +466,7 @@ def write_pdfs(projects, folder=''):
     for project in projects:
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font('helvetica', size=12)
+        pdf.set_font('Times', size=12)
         wikis = project.pop('wikis')
 
         # Write header section
@@ -469,12 +474,12 @@ def write_pdfs(projects, folder=''):
         pdf.set_font('Times', size=18, style='B')
         pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
         pdf.ln()
-        pdf.set_font('helvetica', size=12)
+        pdf.set_font('Times', size=12)
 
         # Write title for metadata section, then actual fields
         pdf.set_font('Times', size=16, style='B')
         pdf.multi_cell(0, h=0, text=f'1. Project Metadata\n', align='L')
-        pdf.set_font('helvetica', size=12)
+        pdf.set_font('Times', size=12)
         for key in project['metadata']:
             write_list_section(key, project['metadata'])
         pdf.write(0, '\n')
@@ -483,8 +488,8 @@ def write_pdfs(projects, folder=''):
         # Write Contributors in table
         pdf.set_font('Times', size=16, style='B')
         pdf.multi_cell(0, h=0, text=f'2. Contributors\n', align='L')
-        pdf.set_font('helvetica', size=12)
-        with pdf.table() as table:
+        pdf.set_font('Times', size=12)
+        with pdf.table(headings_style=HEADINGS_STYLE) as table:
             row = table.row()
             row.cell('Name')
             row.cell('Bibliographic?')
@@ -507,8 +512,8 @@ def write_pdfs(projects, folder=''):
         pdf.write(0, '\n')
         pdf.set_font('Times', size=14, style='B')
         pdf.multi_cell(0, h=0, text=f'A. OSF Storage\n', align='L')
-        pdf.set_font('helvetica', size=12)
-        with pdf.table() as table:
+        pdf.set_font('Times', size=12)
+        with pdf.table(headings_style=HEADINGS_STYLE) as table:
             row = table.row()
             row.cell('File Name')
             row.cell('Size (MB)')
@@ -530,7 +535,7 @@ def write_pdfs(projects, folder=''):
         for i, wiki in enumerate(wikis.keys()):
             pdf.set_font('Times', size=16, style='B')
             pdf.multi_cell(0, h=0, text=f'{wiki}\n')
-            pdf.set_font('helvetica', size=12)
+            pdf.set_font('Times', size=12)
             html = markdown(wikis[wiki])
             pdf.write_html(html)
             if i < len(wikis.keys())-1:
@@ -553,7 +558,7 @@ def make_pdf(projects, filepath):
     }
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font('helvetica', size=12)
+    pdf.set_font('Times', size=12)
     pdf.cell(text='Exported OSF Projects', ln=True, align='C')
     pdf.write(0, '\n')
     for project in projects:
