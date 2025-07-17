@@ -236,6 +236,7 @@ class TestClient(TestCase):
                 'metadata': {
                     'title': 'My Project Title',
                     'id': 'id',
+                    'url': 'https://test.osf.io/',
                     'description': 'This is a description of the project',
                     'date_created': datetime.datetime.fromisoformat(
                         '2025-06-12T15:54:42.105112Z'
@@ -300,8 +301,11 @@ class TestClient(TestCase):
         pdf_second = PdfReader(os.path.join(folder_out, files[0]))
         assert len(pdf_first.pages) == 2
         assert len(pdf_second.pages) == 1
-        content_first_page = pdf_first.pages[0].extract_text(extraction_mode='layout')
 
+        content_first_page = pdf_first.pages[0].extract_text(extraction_mode='layout')
+        content_second_page = pdf_second.pages[0].extract_text(extraction_mode='layout')
+        assert f'Project URL: {projects[0]['metadata']['url']}' in content_first_page
+        assert 'Project URL:' not in content_second_page
         print(content_first_page)
 
         # Check for table text and gaps between section headers
