@@ -16,6 +16,8 @@ class MockAPIResponse:
     JSON_FILES = {
         'nodes': os.path.join(
             'tests', 'stubs', 'nodestubs.json'),
+        'x': os.path.join(
+            'tests', 'stubs', 'singlenode.json'),
         'affiliated_institutions': os.path.join(
             'tests', 'stubs', 'institutionstubs.json'),
         'contributors': os.path.join(
@@ -190,7 +192,8 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         # Find deepest subfolders first to avoid missing files
         try:
             for folder in folders['data']:
-                link = folder['relationships']['files']['links']['related']['href']
+                links = folder['relationships']['files']['links']
+                link = links['related']['href']
                 filenames += explore_file_tree(link, pat, dryrun=dryrun)
         except KeyError:
             pass
@@ -277,7 +280,7 @@ def explore_wikis(link, pat, dryrun=True):
     return wiki_content
 
 
-def get_project_data(pat, dryrun):
+def get_project_data(pat, dryrun, project_url=''):
     """Pull and list projects for a user from the OSF.
 
     Parameters
@@ -286,6 +289,8 @@ def get_project_data(pat, dryrun):
         Personal Access Token to authorise a user with.
     dryrun: bool
         If True, use test data from JSON stubs to mock API calls.
+    project_url: str
+        Optional URL to a specific OSF project, of form <URL>.io/<project_id>/
 
     Returns
     ----------
@@ -293,13 +298,36 @@ def get_project_data(pat, dryrun):
             List of dictionaries representing projects.
     """
 
+    # Don't get other projects if user gives valid/invalid URL to save time
+    project_id = None
+    if project_url != '':
+        try:
+            project_id = project_url.split(".io/")[1].strip("/")
+            if '/' in project_id:
+                # Need extra processing for API links
+                project_id = project_id.split('/')[-1]
+        except Exception:
+            click.echo("Project URL is invalid! PLease try another")
+            return []
+
     if not dryrun:
-        result = call_api(
-            f'{API_HOST}/users/me/nodes/', pat
-        )
-        nodes = json.loads(result.read())
+        if project_id:
+            result = call_api(
+                f'{API_HOST}/nodes/{project_id}/', pat
+            )
+            # Put data into same format as if multiple nodes found
+            nodes = {'data': [json.loads(result.read())['data']]}
+        else:
+            result = call_api(
+                f'{API_HOST}/users/me/nodes/', pat
+            )
+            nodes = json.loads(result.read())
     else:
-        nodes = MockAPIResponse.read('nodes')
+        if project_id:
+            # Put data into same format as if multiple nodes found
+            nodes = {'data': [MockAPIResponse.read(project_id)['data']]}
+        else:
+            nodes = MockAPIResponse.read('nodes')
 
     projects = []
     for project in nodes['data']:
@@ -421,10 +449,18 @@ def get_project_data(pat, dryrun):
               help='If enabled, use mock responses in place of the API.')
 @click.option('--filename', type=str, default='osf_projects.pdf',
               help='Name of the PDF file to export to.')
-def pull_projects(pat, dryrun, filename):
-    """Pull and export OSF projects to a PDF file."""
+@click.option('--url', type=str, default='',
+              help="""A link to one project you want to export.
 
-    projects = get_project_data(pat, dryrun)
+              For example: https://osf.io/dry9j/
+
+              Leave blank to export all projects you have access to.""")
+def pull_projects(pat, dryrun, filename, url=''):
+    """Pull and export OSF projects to a PDF file.
+    You can export all projects you have access to, or one specific one
+    with the --url option."""
+
+    projects = get_project_data(pat, dryrun, project_url=url)
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
 
