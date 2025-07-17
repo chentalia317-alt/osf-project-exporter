@@ -256,7 +256,10 @@ class TestClient(TestCase):
                     ('Margarita', True, 'email'),
                     ('Margarine', True, 'email')
                 ],
-                'files': 'file1.txt, file2.txt',
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
                 'funders': [],
                 'wikis': {
                     'Home': 'hello world',
@@ -268,6 +271,7 @@ class TestClient(TestCase):
                     "title": "Second Project in new PDF",
                 },
                 'contributors': [],
+                'files': [],
                 'wikis': {}
             }
         ]
@@ -282,9 +286,35 @@ class TestClient(TestCase):
         # Compare content of created PDF with reference PDF
         reader_created = PdfReader(os.path.join(folder_out, files[1]))
         content_first_page = reader_created.pages[0].extract_text(extraction_mode='layout')
-        assert 'Pineapple Pizza' in content_first_page, (
-            reader_created.pages[0].extract_text(extraction_mode='layout')
-        )
+
+        print(content_first_page)
+
+        contributors_table = """2. Contributors
+
+Name                                  Bibliographic?                         Email (if available)
+
+Pineapple Pizza                       Yes                                    email
+
+Margarita                             Yes                                    email
+
+Margarine                             Yes                                    email
+"""
+        assert contributors_table in content_first_page
+
+        files_table = """3. Files in Main Project
+
+A. OSF Storage
+
+File Name                             Size (MB)                              Download Link
+
+file1.txt                             N/A                                    N/A
+
+file2.txt                             N/A                                    N/A
+
+4. Wiki
+"""
+        
+        assert files_table in content_first_page
 
         # if os.path.exists(folder_out):
         #     shutil.rmtree(folder_out)
