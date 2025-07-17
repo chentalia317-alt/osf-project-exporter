@@ -768,15 +768,15 @@ def make_pdf(projects, filepath):
               help='Personal Access Token to authorise OSF account access.')
 @click.option('--dryrun', is_flag=True, default=False,
               help='If enabled, use mock responses in place of the API.')
-@click.option('--filename', type=str, default='osf_projects.pdf',
+@click.option('--folder', type=str, default='',
               help='Name of the PDF file to export to.')
-def pull_projects(pat, dryrun, filename):
+def pull_projects(pat, dryrun, folder):
     """Pull and export OSF projects to a PDF file."""
 
-    projects = get_project_data(pat, dryrun)
+    projects = v2_get_project_data(pat, dryrun)
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
-    pdf = make_pdf(projects, filename)
+    pdf = write_pdfs(projects, folder)
 
 
 @click.command()
