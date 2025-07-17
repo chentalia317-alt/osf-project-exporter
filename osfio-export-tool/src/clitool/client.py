@@ -477,6 +477,24 @@ def write_pdfs(projects, folder=''):
         pdf.set_font('helvetica', size=12)
         for key in project['metadata']:
             write_list_section(key, project['metadata'])
+        
+        # Write Contributors in table
+        pdf.set_font('Times', size=16, style='B')
+        pdf.multi_cell(0, h=0, text=f'2. Contributors\n', align='L')
+        pdf.set_font('helvetica', size=12)
+        with pdf.table() as table:
+            row = table.row()
+            row.cell('Name')
+            row.cell('Bibliographic?')
+            row.cell('Email (if available)')
+            for data_row in project['contributors']:
+                row = table.row()
+                for datum in data_row:
+                    if datum == True:
+                        datum = 'Yes'
+                    if datum == False:
+                        datum = 'N/A'
+                    row.cell(datum)
 
         # Write wikis separately to more easily handle Markdown parsing
         pdf.ln()
