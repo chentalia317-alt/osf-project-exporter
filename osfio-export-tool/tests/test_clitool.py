@@ -287,6 +287,10 @@ class TestClient(TestCase):
         reader_created = PdfReader(os.path.join(folder_out, files[1]))
         content_first_page = reader_created.pages[0].extract_text(extraction_mode='layout')
 
+        # One page for first 3 sections and first wiki page
+        # Second page for last one
+        assert len(reader_created.pages) == 2
+
         print(content_first_page)
 
         # Check for table text and gaps between section headers
