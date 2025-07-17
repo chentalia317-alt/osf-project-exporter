@@ -20,7 +20,7 @@ API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
-input_path = os.path.join('tests', TEST_PDF_FOLDER, TEST_INPUT)
+folder_out = os.path.join('tests', 'outfolder')
 
 # Run tests in docker container
 # with 'python -m unittest <tests.test_clitool.TESTCLASS>'
@@ -80,8 +80,10 @@ class TestAPI(TestCase):
     def test_pull_projects_command(self):
         """Test we can successfully pull projects using the OSF API"""
 
-        if os.path.exists(input_path):
-            os.remove(input_path)
+        folder_out = os.path.join('tests', 'outfolder')
+        if os.path.exists(folder_out):
+            shutil.rmtree(folder_out)
+        os.mkdir(folder_out)
 
         runner = CliRunner()
 
@@ -90,11 +92,10 @@ class TestAPI(TestCase):
             cli, ['pull-projects'], input='', terminal_width=60
         )
         assert result.exception
-        assert not os.path.exists(input_path)
 
         # Use PAT to find user projects
         result = runner.invoke(
-            cli, ['pull-projects', '--filename', input_path],
+            cli, ['pull-projects', '--folder', folder_out],
             input=os.getenv('TEST_PAT', ''),
             terminal_width=60
         )
@@ -102,10 +103,6 @@ class TestAPI(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
-        assert os.path.exists(input_path)
-
-        if os.path.exists(input_path):
-            os.remove(input_path)
 
 
 class TestClient(TestCase):
