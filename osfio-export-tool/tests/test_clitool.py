@@ -7,6 +7,7 @@ import json
 import traceback
 
 from click.testing import CliRunner
+from clitool.client import v2_get_project_data
 from pypdf import PdfReader
 
 from clitool import (
@@ -306,7 +307,7 @@ class TestClient(TestCase):
         content_second_page = pdf_second.pages[0].extract_text(extraction_mode='layout')
         assert f'Project URL: {projects[0]['metadata']['url']}' in content_first_page
         assert 'Project URL:' not in content_second_page
-        print(content_first_page)
+        #print(content_first_page)
 
         # Check for table text and gaps between section headers
         contributors_table = """Subjects: sub1, sub2, sub3
@@ -337,10 +338,23 @@ file2.txt                                         N/A                      N/A
 4. Wiki"""
         
         assert files_table in content_first_page
-
-        # if os.path.exists(folder_out):
-        #     shutil.rmtree(folder_out)
         
+    def test_write_pdfs_for_mocks(self):
+        folder_out = os.path.join('tests', 'outfolder')
+        if os.path.exists(folder_out):
+            shutil.rmtree(folder_out)
+        os.mkdir(folder_out)
+
+        projects = v2_get_project_data('', True)
+        print(projects[0])
+
+        # Do we write only one PDF per project?
+        pdfs = write_pdfs(projects, folder_out)
+        assert len(pdfs) == len(projects)
+
+        # Can we specify where to write PDFs?
+        files = os.listdir(folder_out)
+        assert len(files) == len(projects)
 
     def test_get_mock_projects_and_make_pdfs(self):
         """Test generating a PDF from parsed project data.
