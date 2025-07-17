@@ -327,7 +327,7 @@ Margarine                                         Yes                      email
 
         files_table = """3. Files in Main Project
 
-A. OSF Storage
+OSF Storage
 
 File Name                                         Size (MB)                Download Link
 

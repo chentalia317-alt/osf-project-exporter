@@ -321,6 +321,8 @@ def v2_get_project_data(pat, dryrun=True):
                     project['attributes']['date_modified']),
                 'tags': ', '.join(project['attributes']['tags'])
                 if project['attributes']['tags'] else 'NA',
+                'resource_type': 'NA',
+                'resource_lang': 'NA',
                 'funders': []
             },
             'contributors': [],
@@ -582,11 +584,14 @@ def write_pdfs(projects, folder=''):
         else:
             field_name = key.replace('_', ' ').title()
         if isinstance(fielddict[key], list):
+            pdf.write(0, '\n')
+            pdf.set_font('Times', size=14)
             pdf.multi_cell(
                 0, h=0,
                 text=f'**{field_name}**\n\n',
                 align='L', markdown=True
             )
+            pdf.set_font('Times', size=12)
             for item in fielddict[key]:
                 for subkey in item.keys():
                     if subkey in pdf_display_names:
@@ -599,6 +604,7 @@ def write_pdfs(projects, folder=''):
                         text=f'**{field_name}:** {item[subkey]}\n\n',
                         align='L', markdown=True
                     )
+                pdf.write(0, '\n')
         else:
             pdf.multi_cell(
                 0,
@@ -666,7 +672,7 @@ def write_pdfs(projects, folder=''):
         pdf.multi_cell(0, h=0, text=f'3. Files in Main Project\n', align='L')
         pdf.write(0, '\n')
         pdf.set_font('Times', size=14, style='B')
-        pdf.multi_cell(0, h=0, text=f'A. OSF Storage\n', align='L')
+        pdf.multi_cell(0, h=0, text=f'OSF Storage\n', align='L')
         pdf.set_font('Times', size=12)
         with pdf.table(headings_style=HEADINGS_STYLE, col_widths=(1,0.5,1)) as table:
             row = table.row()
