@@ -476,8 +476,14 @@ def write_pdfs(projects, folder=''):
         title = project['metadata']['title']
         pdf.set_font('Times', size=18, style='B')
         pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
-        pdf.ln()
         pdf.set_font('Times', size=12)
+        if 'url' in project['metadata'].keys():
+            pdf.multi_cell(
+                0, h=0,
+                text=f'Project URL: {project['metadata']['url']}\n',
+                align='L'
+            )
+        pdf.ln()
 
         # Write title for metadata section, then actual fields
         pdf.set_font('Times', size=16, style='B')
