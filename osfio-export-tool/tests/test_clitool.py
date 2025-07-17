@@ -289,7 +289,10 @@ class TestClient(TestCase):
 
         print(content_first_page)
 
-        contributors_table = """2. Contributors
+        # Check for table text and gaps between section headers
+        contributors_table = """Subjects: sub1, sub2, sub3
+
+2. Contributors
 
 Name                                  Bibliographic?                         Email (if available)
 
@@ -298,7 +301,8 @@ Pineapple Pizza                       Yes                                    ema
 Margarita                             Yes                                    email
 
 Margarine                             Yes                                    email
-"""
+
+3. Files in Main Project"""
         assert contributors_table in content_first_page
 
         files_table = """3. Files in Main Project
