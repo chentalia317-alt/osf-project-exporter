@@ -495,6 +495,28 @@ def write_pdfs(projects, folder=''):
                     if datum == False:
                         datum = 'N/A'
                     row.cell(datum)
+        
+        # List files stored in storage providers
+        # For now only OSF Storage is involved
+        pdf.set_font('Times', size=16, style='B')
+        pdf.multi_cell(0, h=0, text=f'3. Files in Main Project\n', align='L')
+        pdf.write(0, '\n')
+        pdf.set_font('Times', size=14, style='B')
+        pdf.multi_cell(0, h=0, text=f'A. OSF Storage\n', align='L')
+        pdf.set_font('helvetica', size=12)
+        with pdf.table() as table:
+            row = table.row()
+            row.cell('File Name')
+            row.cell('Size (MB)')
+            row.cell('Download Link')
+            for data_row in project['files']:
+                row = table.row()
+                for datum in data_row:
+                    if datum == True:
+                        datum = 'Yes'
+                    if datum == False or datum is None:
+                        datum = 'N/A'
+                    row.cell(datum)
 
         # Write wikis separately to more easily handle Markdown parsing
         pdf.ln()
