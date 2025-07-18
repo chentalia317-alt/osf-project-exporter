@@ -33,7 +33,7 @@ class TestAPI(TestCase):
 
         data = call_api(
             f'{API_HOST}/users/me/nodes/',
-            os.getenv('TEST_PAT')
+            os.getenv('TEST_PAT', '')
         )
         assert data.status == 200
 
@@ -45,6 +45,19 @@ class TestAPI(TestCase):
             data['meta']['version']
         )
 
+    def test_single_project_json_is_as_expected(self):
+        # Use first public project available for this test
+        data = call_api(
+            f'{API_HOST}/nodes/',
+            os.getenv('TEST_PAT', ''),
+            per_page=1
+        )
+        node = json.loads(data.read())['data'][0]
+        link = node['links']['html']
+        projects = get_project_data(os.getenv('TEST_PAT', ''), False, link)
+        assert len(projects) == 1
+        assert projects[0]['metadata']['title'] == node['attributes']['title']
+
     def test_filter_by_api(self):
         """Test if we use query params in API calls."""
 
@@ -54,7 +67,7 @@ class TestAPI(TestCase):
         }
         data = call_api(
             f'{API_HOST}/nodes/',
-            os.getenv('TEST_PAT'),
+            os.getenv('TEST_PAT', ''),
             per_page=12, filters=filters
         )
         assert data.status == 200
@@ -64,13 +77,13 @@ class TestAPI(TestCase):
 
         data = call_api(
             f'{API_HOST}/users/me/nodes/',
-            os.getenv('TEST_PAT')
+            os.getenv('TEST_PAT', '')
         )
         nodes = json.loads(data.read())['data']
         if len(nodes) > 0:
             link = f'{API_HOST}/nodes/{nodes[0]['id']}/files/osfstorage/'
             files = explore_file_tree(
-                link, os.getenv('TEST_PAT'), dryrun=False
+                link, os.getenv('TEST_PAT', ''), dryrun=False
             )
             assert isinstance(files, list)
         else:
@@ -124,10 +137,10 @@ class TestClient(TestCase):
 
         link = 'wiki'
         wikis = explore_wikis(
-            link, os.getenv('TEST_PAT'), dryrun=True
+            link, os.getenv('TEST_PAT', ''), dryrun=True
             )
         assert len(wikis) == 3
-        assert 'helloworld'in wikis.keys(), (
+        assert 'helloworld' in wikis.keys(), (
             'Missing wiki IDs'
         )
         assert 'home' in wikis.keys(), (
@@ -143,7 +156,6 @@ class TestClient(TestCase):
         assert '~~strikethrough~~' in wikis['home'], (
             wikis['home']
         )
-
 
     def test_parse_api_responses(self):
         """Using JSON stubs to simulate API responses,
@@ -231,6 +243,21 @@ class TestClient(TestCase):
         )
         assert len(projects[0]['wikis']) == 3
     
+    def test_get_single_mock_project(self):
+        projects = get_project_data(
+            os.getenv('TEST_PAT', ''), True,
+            'https://osf.io/x/'
+        )
+        assert len(projects) == 1
+        assert projects[0]['metadata']['id'] == 'x'
+
+        projects = get_project_data(
+            os.getenv('TEST_PAT', ''), True,
+            'https://api.test.osf.io/v2/nodes/x/'
+        )
+        assert len(projects) == 1
+        assert projects[0]['metadata']['id'] == 'x'
+
     def test_write_pdfs_from_dict(self):
         # Put PDFs in a folder to keep things tidy
         folder_out = os.path.join('tests', 'outfolder')
@@ -371,7 +398,11 @@ file2.txt                                         N/A                      N/A
 
         runner = CliRunner()
         result = runner.invoke(
-            cli, ['pull-projects', '--dryrun', '--folder', folder_out],
+            cli, [
+                'pull-projects', '--dryrun',
+                '--folder', folder_out,
+                '--url', ''
+            ],
             input=os.getenv('TEST_PAT', ''),
             terminal_width=60
         )
