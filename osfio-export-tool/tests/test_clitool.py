@@ -365,35 +365,49 @@ class TestClient(TestCase):
         assert f'Project URL: {url}' in content_first_page
         assert 'Project URL:' not in content_second_page
 
-        # Check for table text and gaps between section headers
-        contributors_table = """Subjects: sub1, sub2, sub3
+        # This way of string formatting compresses line lengths used
+        # End of headers and table rows marked by \n\n
+        contributors_table = (
+            'Subjects: sub1, sub2, sub3\n\n'
+            '2. Contributors\n\n'
+            'Name                                              '
+            'Bibliographic?           '
+            'Email (if available)\n\n'
+            'Pineapple Pizza                                   '
+            'Yes                      '
+            'email\n\n'
+            'Margarine                                         '
+            'Yes                      '
+            'email\n\n'
+            '3. Files in Main Project'
+        ).join('')
 
-2. Contributors
+        assert contributors_table in content_first_page, (
+            contributors_table,
+            content_first_page
+        )
 
-Name                                              Bibliographic?           Email (if available)
+        # This way of string formatting compresses line lengths used
+        # End of headers and table rows marked by \n\n
+        files_table = (
+            '3. Files in Main Project\n\n'
+            'OSF Storage\n\n'
+            'File Name                                         '
+            'Size (MB)                '
+            'Download Link\n\n'
+            'file1.txt                                         '
+            'N/A                      '
+            'N/A\n\n'
+            'file2.txt                                         '
+            'N/A                      '
+            'N/A\n\n'
+            '4. Wiki'
+        ).join('')
 
-Pineapple Pizza                                   Yes                      email
-
-Margarita                                         Yes                      email
-
-Margarine                                         Yes                      email
-
-3. Files in Main Project"""
-        assert contributors_table in content_first_page
-
-        files_table = """3. Files in Main Project
-
-OSF Storage
-
-File Name                                         Size (MB)                Download Link
-
-file1.txt                                         N/A                      N/A
-
-file2.txt                                         N/A                      N/A
-
-4. Wiki"""
-
-        assert files_table in content_first_page
+        assert files_table in content_first_page, (
+            files_table,
+            content_first_page
+        )
 
     def test_get_mock_projects_and_write_pdfs(self):
         """Test generating a PDF from parsed project data.
