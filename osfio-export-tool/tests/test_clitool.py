@@ -370,22 +370,6 @@ file2.txt                                         N/A                      N/A
 4. Wiki"""
         
         assert files_table in content_first_page
-        
-    def test_write_pdfs_for_mocks(self):
-        folder_out = os.path.join('tests', 'outfolder')
-        if os.path.exists(folder_out):
-            shutil.rmtree(folder_out)
-        os.mkdir(folder_out)
-
-        projects = get_project_data('', True)
-
-        # Do we write only one PDF per project?
-        pdfs = write_pdfs(projects, folder_out)
-        assert len(pdfs) == len(projects)
-
-        # Can we specify where to write PDFs?
-        files = os.listdir(folder_out)
-        assert len(files) == len(projects)
 
     def test_get_mock_projects_and_write_pdfs(self):
         """Test generating a PDF from parsed project data.
