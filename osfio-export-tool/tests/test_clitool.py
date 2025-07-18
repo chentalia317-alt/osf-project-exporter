@@ -7,13 +7,12 @@ import json
 import traceback
 
 from click.testing import CliRunner
-from clitool.client import v2_get_project_data
 from pypdf import PdfReader
 
 from clitool import (
     cli, call_api, get_project_data,
     explore_file_tree, explore_wikis,
-    write_pdfs
+    write_pdfs, v2_get_project_data
 )
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
@@ -175,7 +174,7 @@ class TestClient(TestCase):
             'Expected description Test1 Description, got: ',
             projects[0]['metadata']['description']
         )
-        assert projects[1]['description'] == 'Test2 Description', (
+        assert projects[1]['metadata']['description'] == 'Test2 Description', (
             'Expected description Test2 Description, got: ',
             projects[1]['description']
         )
@@ -196,9 +195,13 @@ class TestClient(TestCase):
             'Expected tags NA, got: ',
             projects[1]['metadata']['tags']
         )
-        assert projects[0]['metadata']['contributors'] == 'Test User 1, Test User 2', (
-            'Expected contributors Test User 1, Test User 2, got: ',
-            projects[0]['metadata']['contributors']
+        assert projects[0]['contributors'][0] == ('Test User 1', False, 'N/A'), (
+            "Expected contributor ('Test User 1', False, 'N/A'), got: ",
+            projects[0]['contributors'][0]
+        )
+        assert projects[0]['contributors'][1] == ('Test User 2', False, 'N/A'), (
+            "Expected contributor ('Test User 2', False, 'N/A'), got: ",
+            projects[0]['contributors'][1]
         )
         assert projects[0]['metadata']['identifiers'] == '10.4-2-6-25/OSF.IO/74PAD', (
             'Expected identifiers 10.4-2-6-25/OSF.IO/74PAD, got: ',
@@ -212,9 +215,16 @@ class TestClient(TestCase):
             'Expected resource_lang eng, got: ',
             projects[0]['metadata']['resource_lang']
         )
-        assert '/helloworld.txt.txt' in projects[0]['files'][0][0]
-        assert '/tf1/helloworld.txt.txt' in projects[0]['files'][1][0]
-        assert '/tf1/tf2/file.txt' in projects[0]['files'][2][0]
+        assert len(projects[0]['files']) == 5
+        assert '/helloworld.txt.txt' in projects[0]['files'][4][0], (
+            projects[0]['files'][4][0]
+        )
+        assert '/tf1/helloworld.txt.txt' in projects[0]['files'][1][0], (
+            projects[0]['files'][1][0]
+        )
+        assert '/tf1/tf2/file.txt' in projects[0]['files'][0][0], (
+            projects[0]['files'][0][0]
+        )
         assert projects[0]['metadata']['subjects'] == 'Education, Literature, Geography', (
             'Expected Education, Literature, Geography, got: ',
             projects[0]['metadata']['subjects']
