@@ -367,8 +367,10 @@ def get_project_data(pat, dryrun, project_url=''):
                 pat
             ).read())
         metadata = metadata['data']['attributes']
-        project_data['metadata']['resource_type'] = metadata['resource_type_general']
-        project_data['metadata']['resource_lang'] = metadata['language']
+        resource_type = metadata['resource_type_general']
+        resource_lang = metadata['language']
+        project_data['metadata']['resource_type'] = resource_type
+        project_data['metadata']['resource_lang'] = resource_lang
         for funder in metadata['funders']:
             project_data['metadata']['funders'].append(funder)
 
@@ -446,7 +448,7 @@ def get_project_data(pat, dryrun, project_url=''):
                     for c in values:
                         contributors.append((c, False, 'N/A'))
                     values = contributors
-            
+
             if key in METADATA_RELATIONS:
                 project_data['metadata'][key] = values
             else:
@@ -464,7 +466,7 @@ def get_project_data(pat, dryrun, project_url=''):
 
 def write_pdfs(projects, folder=''):
     """Make PDF for each project.
-    
+
     Parameters
     ------------
         projects: dict[str, str|tuple]
@@ -472,7 +474,7 @@ def write_pdfs(projects, folder=''):
         folder: str
             The path to the folder to output the project PDFs in.
             Default is the current working directory.
-    
+
     Returns
     ------------
         pdfs: list
@@ -489,7 +491,7 @@ def write_pdfs(projects, folder=''):
             'funders': 'Support/Funding Information'
         }
         if key in pdf_display_names:
-                field_name = pdf_display_names[key]
+            field_name = pdf_display_names[key]
         else:
             field_name = key.replace('_', ' ').title()
         if isinstance(fielddict[key], list):
@@ -507,7 +509,7 @@ def write_pdfs(projects, folder=''):
                         field_name = pdf_display_names[subkey]
                     else:
                         field_name = subkey.replace('_', ' ').title()
-                    
+
                     pdf.multi_cell(
                         0, h=0,
                         text=f'**{field_name}:** {item[subkey]}\n\n',
@@ -548,18 +550,21 @@ def write_pdfs(projects, folder=''):
 
         # Write title for metadata section, then actual fields
         pdf.set_font('Times', size=16, style='B')
-        pdf.multi_cell(0, h=0, text=f'1. Project Metadata\n', align='L')
+        pdf.multi_cell(0, h=0, text='1. Project Metadata\n', align='L')
         pdf.set_font('Times', size=12)
         for key in project['metadata']:
             write_list_section(key, project['metadata'])
         pdf.write(0, '\n')
         pdf.write(0, '\n')
-        
+
         # Write Contributors in table
         pdf.set_font('Times', size=16, style='B')
-        pdf.multi_cell(0, h=0, text=f'2. Contributors\n', align='L')
+        pdf.multi_cell(0, h=0, text='2. Contributors\n', align='L')
         pdf.set_font('Times', size=12)
-        with pdf.table(headings_style=HEADINGS_STYLE, col_widths=(1, 0.5, 1)) as table:
+        with pdf.table(
+            headings_style=HEADINGS_STYLE,
+            col_widths=(1, 0.5, 1)
+        ) as table:
             row = table.row()
             row.cell('Name')
             row.cell('Bibliographic?')
@@ -567,23 +572,26 @@ def write_pdfs(projects, folder=''):
             for data_row in project['contributors']:
                 row = table.row()
                 for datum in data_row:
-                    if datum == True:
+                    if datum is True:
                         datum = 'Yes'
-                    if datum == False:
+                    if datum is False:
                         datum = 'N/A'
                     row.cell(datum)
         pdf.write(0, '\n')
         pdf.write(0, '\n')
-        
+
         # List files stored in storage providers
         # For now only OSF Storage is involved
         pdf.set_font('Times', size=16, style='B')
-        pdf.multi_cell(0, h=0, text=f'3. Files in Main Project\n', align='L')
+        pdf.multi_cell(0, h=0, text='3. Files in Main Project\n', align='L')
         pdf.write(0, '\n')
         pdf.set_font('Times', size=14, style='B')
-        pdf.multi_cell(0, h=0, text=f'OSF Storage\n', align='L')
+        pdf.multi_cell(0, h=0, text='OSF Storage\n', align='L')
         pdf.set_font('Times', size=12)
-        with pdf.table(headings_style=HEADINGS_STYLE, col_widths=(1,0.5,1)) as table:
+        with pdf.table(
+            headings_style=HEADINGS_STYLE,
+            col_widths=(1, 0.5, 1)
+        ) as table:
             row = table.row()
             row.cell('File Name')
             row.cell('Size (MB)')
@@ -591,9 +599,9 @@ def write_pdfs(projects, folder=''):
             for data_row in project['files']:
                 row = table.row()
                 for datum in data_row:
-                    if datum == True:
+                    if datum is True:
                         datum = 'Yes'
-                    if datum == False or datum is None:
+                    if datum is False or datum is None:
                         datum = 'N/A'
                     row.cell(datum)
 
@@ -610,11 +618,11 @@ def write_pdfs(projects, folder=''):
             pdf.write_html(html)
             if i < len(wikis.keys())-1:
                 pdf.add_page()
-        
+
         filename = f'{title}_export.pdf'
         pdf.output(os.path.join(folder, filename))
         pdfs.append(pdf)
-    
+
     return pdfs
 
 
@@ -640,7 +648,7 @@ def pull_projects(pat, dryrun, folder, url=''):
     projects = get_project_data(pat, dryrun, project_url=url)
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
-    pdf = write_pdfs(projects, folder)
+    write_pdfs(projects, folder)
 
 
 @click.command()

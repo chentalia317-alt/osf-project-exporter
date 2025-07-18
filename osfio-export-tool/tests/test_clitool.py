@@ -191,11 +191,15 @@ class TestClient(TestCase):
             projects[1]['description']
         )
         expected_date = '2000-01-01 14:18:00.376705+00:00'
-        assert str(projects[0]['metadata']['date_created']) == expected_date, (
+        assert str(
+            projects[0]['metadata']['date_created']
+        ) == expected_date, (
             f'Expected date_created {expected_date}, got: ',
             projects[0]['metadata']['date_created']
         )
-        assert str(projects[0]['metadata']['date_modified']) == expected_date, (
+        assert str(
+            projects[0]['metadata']['date_modified']
+        ) == expected_date, (
             f'Expected date_modified {expected_date}, got: ',
             projects[0]['metadata']['date_modified']
         )
@@ -207,17 +211,22 @@ class TestClient(TestCase):
             'Expected tags NA, got: ',
             projects[1]['metadata']['tags']
         )
-        assert projects[0]['contributors'][0] == ('Test User 1', False, 'N/A'), (
+        assert projects[0]['contributors'][0] == (
+            'Test User 1', False, 'N/A'
+        ), (
             "Expected contributor ('Test User 1', False, 'N/A'), got: ",
             projects[0]['contributors'][0]
         )
-        assert projects[0]['contributors'][1] == ('Test User 2', False, 'N/A'), (
+        assert projects[0]['contributors'][1] == (
+            'Test User 2', False, 'N/A'
+        ), (
             "Expected contributor ('Test User 2', False, 'N/A'), got: ",
             projects[0]['contributors'][1]
         )
-        assert projects[0]['metadata']['identifiers'] == '10.4-2-6-25/OSF.IO/74PAD', (
+        doi = projects[0]['metadata']['identifiers']
+        assert doi == '10.4-2-6-25/OSF.IO/74PAD', (
             'Expected identifiers 10.4-2-6-25/OSF.IO/74PAD, got: ',
-            projects[0]['metadata']['identifiers']
+            doi
         )
         assert projects[0]['metadata']['resource_type'] == 'Other', (
             'Expected resource_type Other, got: ',
@@ -237,12 +246,13 @@ class TestClient(TestCase):
         assert '/tf1/tf2/file.txt' in projects[0]['files'][0][0], (
             projects[0]['files'][0][0]
         )
-        assert projects[0]['metadata']['subjects'] == 'Education, Literature, Geography', (
+        subjects = projects[0]['metadata']['subjects']
+        assert subjects == 'Education, Literature, Geography', (
             'Expected Education, Literature, Geography, got: ',
-            projects[0]['metadata']['subjects']
+            subjects
         )
         assert len(projects[0]['wikis']) == 3
-    
+
     def test_get_single_mock_project(self):
         projects = get_project_data(
             os.getenv('TEST_PAT', ''), True,
@@ -264,7 +274,7 @@ class TestClient(TestCase):
         if os.path.exists(folder_out):
             shutil.rmtree(folder_out)
         os.mkdir(folder_out)
-        
+
         projects = [
             {
                 'metadata': {
@@ -309,11 +319,20 @@ class TestClient(TestCase):
                     ('Short Name', True, 'email'),
                     (
                         'Long Double-Barrelled Name and Surname', True,
-                        'Long Double-Barrelled Name and Surname@Long Double-Barrelled Name and Surname.com'
+                        (
+                            'Long Double-Barrelled Name and Surname@'
+                            'Long Double-Barrelled Name and Surname.com'
+                        )
                     ),
                     (
-                        'Long Double-Barrelled Name and SurnameLong Double-Barrelled Name and Surname', True,
-                        'Long Double-Barrelled Name and Surname@Long Double-Barrelled Name and Surname.com'
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            'Long Double-Barrelled Name and Surname'
+                        ), True,
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            '@Long Double-Barrelled Name and Surname.com'
+                        )
                     )
                 ],
                 'files': [
@@ -336,9 +355,14 @@ class TestClient(TestCase):
         assert len(pdf_first.pages) == 2
         assert len(pdf_second.pages) == 1
 
-        content_first_page = pdf_first.pages[0].extract_text(extraction_mode='layout')
-        content_second_page = pdf_second.pages[0].extract_text(extraction_mode='layout')
-        assert f'Project URL: {projects[0]['metadata']['url']}' in content_first_page
+        content_first_page = pdf_first.pages[0].extract_text(
+            extraction_mode='layout'
+        )
+        content_second_page = pdf_second.pages[0].extract_text(
+            extraction_mode='layout'
+        )
+        url = projects[0]['metadata']['url']
+        assert f'Project URL: {url}' in content_first_page
         assert 'Project URL:' not in content_second_page
 
         # Check for table text and gaps between section headers
@@ -368,7 +392,7 @@ file1.txt                                         N/A                      N/A
 file2.txt                                         N/A                      N/A
 
 4. Wiki"""
-        
+
         assert files_table in content_first_page
 
     def test_get_mock_projects_and_write_pdfs(self):
