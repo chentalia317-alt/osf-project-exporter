@@ -282,7 +282,7 @@ def explore_wikis(link, pat, dryrun=True):
     return wiki_content
 
 
-def v2_get_project_data(pat, dryrun=True):
+def get_project_data(pat, dryrun=True):
     """Pull and list projects for a user from the OSF.
 
     Parameters
@@ -433,145 +433,23 @@ def v2_get_project_data(pat, dryrun=True):
 
     return projects
 
-def get_project_data(pat, dryrun):
-    """Pull and list projects for a user from the OSF.
-
-    Parameters
-    ----------
-    pat: str
-        Personal Access Token to authorise a user with.
-    dryrun: bool
-        If True, use test data from JSON stubs to mock API calls.
-
-    Returns
-    ----------
-        projects: list[dict]
-            List of dictionaries representing projects.
-    """
-
-    if not dryrun:
-        result = call_api(
-            f'{API_HOST}/users/me/nodes/', pat
-        )
-        nodes = json.loads(result.read())
-    else:
-        nodes = MockAPIResponse.read('nodes')
-
-    projects = []
-    for project in nodes['data']:
-        if project['attributes']['category'] != 'project':
-            continue
-        project_data = {
-            'title': project['attributes']['title'],
-            'id': project['id'],
-            'description': project['attributes']['description'],
-            'date_created': datetime.datetime.fromisoformat(
-                project['attributes']['date_created']),
-            'date_modified': datetime.datetime.fromisoformat(
-                project['attributes']['date_modified']),
-            'tags': ', '.join(project['attributes']['tags'])
-            if project['attributes']['tags'] else 'NA',
-        }
-
-        # Resource type/lang/funding info share specific endpoint
-        # that isn't linked to in user nodes' responses
-        if dryrun:
-            metadata = MockAPIResponse.read('custom_metadata')
-        else:
-            metadata = json.loads(call_api(
-                f"{API_HOST}/custom_item_metadata_records/{project['id']}/",
-                pat
-            ).read())
-        metadata = metadata['data']['attributes']
-        project_data['resource_type'] = metadata['resource_type_general']
-        project_data['resource_lang'] = metadata['language']
-        project_data['funders'] = []
-        for funder in metadata['funders']:
-            project_data['funders'].append(funder)
-
-        relations = project['relationships']
-
-        # Get list of files in project
-        if dryrun:
-            project_data['files'] = ', '.join(
-                explore_file_tree('root', pat, dryrun=True)
-            )
-        else:
-            # Get files hosted on OSF storage
-            link = relations['files']['links']['related']['href']
-            link += 'osfstorage/'
-            project_data['files'] = ', '.join(
-                explore_file_tree(link, pat, dryrun=False)
-            )
-
-        # Get links for data for these keys and extract
-        # certain attributes for each one
-        RELATION_KEYS = [
-            'affiliated_institutions',
-            'contributors',
-            'identifiers',
-            'license',
-            'subjects',
-        ]
-        for key in RELATION_KEYS:
-            if not dryrun:
-                # Check relationship exists and can get link to linked data
-                # Otherwise just pass a placeholder dict
-                try:
-                    link = relations[key]['links']['related']['href']
-                    json_data = json.loads(
-                        call_api(
-                            link, pat,
-                            filters=URL_FILTERS.get(key, {})
-                        ).read()
-                    )
-                except KeyError:
-                    if key == 'subjects':
-                        raise KeyError()  # Subjects should have a href link
-                    json_data = {'data': None}
-            else:
-                json_data = MockAPIResponse.read(key)
-
-            values = []
-            if isinstance(json_data['data'], list):
-                for item in json_data['data']:
-                    # Required data can either be embedded or in attributes
-                    if 'embeds' in item and key != "subjects":
-                        if 'users' in item['embeds']:
-                            values.append(
-                                item['embeds']['users']['data']
-                                ['attributes']['full_name']
-                            )
-                        else:
-                            values.append(item['embeds']['attributes']['name'])
-                    else:
-                        if key == 'identifiers':
-                            values.append(item['attributes']['value'])
-                        elif key == 'subjects':
-                            values.append(item['attributes']['text'])
-                        else:
-                            values.append(item['attributes']['name'])
-
-            if isinstance(json_data['data'], dict):  # e.g. license field
-                values.append(json_data['data']['attributes']['name'])
-
-            if isinstance(values, list):
-                values = ', '.join(values)
-            project_data[key] = values
-
-        project_data['wikis'] = explore_wikis(
-            f'{API_HOST}/nodes/{project_data['id']}/wikis/',
-            pat=pat, dryrun=dryrun
-        )
-
-        projects.append(project_data)
-
-    return projects
-
 
 def write_pdfs(projects, folder=''):
     """Make PDF for each project.
-    TODO: replace make_pdf with this once finalised."""
+    
+    Parameters
+    ------------
+        projects: dict[str, str|tuple]
+            Projects found to export into the PDF.
+        folder: str
+            The path to the folder to output the project PDFs in.
+            Default is the current working directory.
+    
+    Returns
+    ------------
+        pdfs: list
+            List of created PDF files.
+    """
 
     def write_list_section(key, fielddict):
         """Handle writing fields based on their type to PDF.
@@ -712,59 +590,6 @@ def write_pdfs(projects, folder=''):
     return pdfs
 
 
-def make_pdf(projects, filepath):
-    """Make PDF using project data."""
-
-    # Set nicer display names for certian PDF fields
-    pdf_display_names = {
-        'identifiers': 'DOI',
-        'funders': 'Support/Funding Information'
-    }
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font('Times', size=12)
-    pdf.cell(text='Exported OSF Projects', ln=True, align='C')
-    pdf.write(0, '\n')
-    for project in projects:
-        wikis = project.pop('wikis')
-        for key in projects[0].keys():
-            if key in pdf_display_names:
-                field_name = pdf_display_names[key]
-            else:
-                field_name = key.replace('_', ' ').title()
-            if isinstance(project[key], list):
-                pdf.write(0, '\n')
-                pdf.cell(text=f'{field_name}', ln=True, align='C')
-                for item in project[key]:
-                    for subkey in item.keys():
-                        if subkey in pdf_display_names:
-                            field_name = pdf_display_names[subkey]
-                        else:
-                            field_name = subkey.replace('_', ' ').title()
-                        pdf.cell(
-                            text=f'{field_name}: {item[subkey]}',
-                            ln=True, align='C'
-                        )
-                pdf.write(0, '\n')
-            else:
-                pdf.cell(
-                    text=f'{field_name}: {project[key]}',
-                    ln=True, align='C'
-                )
-
-        # Write wikis separately to more easily handle Markdown parsing
-        pdf.write(0, '\n')
-        pdf.cell(text='Wiki\n', ln=True, align='C')
-        pdf.write(0, '\n')
-        for wiki in wikis.keys():
-            pdf.write(0, f'{wiki}')
-            pdf.write(0, '\n')
-            html = markdown(wikis[wiki])
-            pdf.write_html(html)
-            pdf.add_page()
-    pdf.output(filepath)
-
-
 @click.command()
 @click.option('--pat', type=str, default='',
               prompt=True, hide_input=True,
@@ -776,7 +601,7 @@ def make_pdf(projects, filepath):
 def pull_projects(pat, dryrun, folder):
     """Pull and export OSF projects to a PDF file."""
 
-    projects = v2_get_project_data(pat, dryrun)
+    projects = get_project_data(pat, dryrun)
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
     pdf = write_pdfs(projects, folder)

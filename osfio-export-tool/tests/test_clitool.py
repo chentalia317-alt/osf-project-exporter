@@ -12,7 +12,7 @@ from pypdf import PdfReader
 from clitool import (
     cli, call_api, get_project_data,
     explore_file_tree, explore_wikis,
-    write_pdfs, v2_get_project_data
+    write_pdfs
 )
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
@@ -149,7 +149,7 @@ class TestClient(TestCase):
         """Using JSON stubs to simulate API responses,
         test we can parse them correctly"""
 
-        projects = v2_get_project_data(os.getenv('TEST_PAT', ''), True)
+        projects = get_project_data(os.getenv('TEST_PAT', ''), True)
 
         assert len(projects) == 2, (
             'Expected 2 projects in the stub data'
@@ -231,7 +231,7 @@ class TestClient(TestCase):
         )
         assert len(projects[0]['wikis']) == 3
     
-    def test_make_pdfs_from_dict(self):
+    def test_write_pdfs_from_dict(self):
         # Put PDFs in a folder to keep things tidy
         folder_out = os.path.join('tests', 'outfolder')
         if os.path.exists(folder_out):
@@ -313,7 +313,6 @@ class TestClient(TestCase):
         content_second_page = pdf_second.pages[0].extract_text(extraction_mode='layout')
         assert f'Project URL: {projects[0]['metadata']['url']}' in content_first_page
         assert 'Project URL:' not in content_second_page
-        #print(content_first_page)
 
         # Check for table text and gaps between section headers
         contributors_table = """Subjects: sub1, sub2, sub3
@@ -351,8 +350,7 @@ file2.txt                                         N/A                      N/A
             shutil.rmtree(folder_out)
         os.mkdir(folder_out)
 
-        projects = v2_get_project_data('', True)
-        print(projects[0])
+        projects = get_project_data('', True)
 
         # Do we write only one PDF per project?
         pdfs = write_pdfs(projects, folder_out)
@@ -362,7 +360,7 @@ file2.txt                                         N/A                      N/A
         files = os.listdir(folder_out)
         assert len(files) == len(projects)
 
-    def test_get_mock_projects_and_make_pdfs(self):
+    def test_get_mock_projects_and_write_pdfs(self):
         """Test generating a PDF from parsed project data.
         This assumes the JSON parsing works correctly."""
 
