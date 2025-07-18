@@ -325,7 +325,6 @@ def v2_get_project_data(pat, dryrun=True):
                 'resource_lang': 'NA',
                 'funders': []
             },
-            'contributors': [],
             'files': [],
             'wikis': {}
         }
@@ -360,15 +359,15 @@ def v2_get_project_data(pat, dryrun=True):
                 explore_file_tree(link, pat, dryrun=False)
             )
 
-        # Get links for data for these keys and extract
-        # certain attributes for each one
-        RELATION_KEYS = [
+        # These attributes need link traversal to get their data
+        # Most should be part of the project metadata
+        METADATA_RELATIONS = [
             'affiliated_institutions',
-            'contributors',
             'identifiers',
             'license',
             'subjects',
         ]
+        RELATION_KEYS = METADATA_RELATIONS + ['contributors']
         for key in RELATION_KEYS:
             if not dryrun:
                 # Check relationship exists and can get link to linked data
@@ -419,7 +418,11 @@ def v2_get_project_data(pat, dryrun=True):
                     for c in values:
                         contributors.append((c, False, 'N/A'))
                     values = contributors
-            project_data[key] = values
+            
+            if key in METADATA_RELATIONS:
+                project_data['metadata'][key] = values
+            else:
+                project_data[key] = values
 
         project_data['wikis'] = explore_wikis(
             f'{API_HOST}/nodes/{project['id']}/wikis/',
