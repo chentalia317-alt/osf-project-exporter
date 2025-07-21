@@ -377,9 +377,11 @@ def get_project_data(pat, dryrun, project_url=''):
                 'url': project['links']['html'],
                 'description': project['attributes']['description'],
                 'date_created': datetime.datetime.fromisoformat(
-                    project['attributes']['date_created']),
+                    project['attributes']['date_created']
+                ).astimezone().strftime('%Y-%m-%d'),
                 'date_modified': datetime.datetime.fromisoformat(
-                    project['attributes']['date_modified']),
+                    project['attributes']['date_modified']
+                ).astimezone().strftime('%Y-%m-%d'),
                 'tags': ', '.join(project['attributes']['tags'])
                 if project['attributes']['tags'] else 'NA',
                 'resource_type': 'NA',
