@@ -440,19 +440,3 @@ class TestClient(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
-
-        # files = os.listdir(folder_out)
-        # for f in files:
-        #     # Compare content of created PDF with reference PDF
-        #     pdf_made = PdfReader(os.path.join(folder_out, f))
-        #     pdf_ref = PdfReader(os.path.join('tests', TEST_PDF_FOLDER, f))
-
-        #     for p1, p2 in zip(pdf_made.pages, pdf_ref.pages):
-        #         text_generated = p1.extract_text(extraction_mode='layout')
-        #         text_reference = p2.extract_text(extraction_mode='layout')
-        #         assert text_generated == text_reference, (
-        #             f'Generated text does not match reference text:\n'
-        #             f'Generated: {text_generated}\n'
-        #             f'Reference: {text_reference}'
-        #         )
-        #         assert all(x == y for x, y in zip(p1.images, p2.images))
