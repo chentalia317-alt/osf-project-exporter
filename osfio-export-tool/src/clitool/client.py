@@ -527,6 +527,9 @@ def write_pdfs(projects, root_nodes, folder=''):
     ------------
         projects: dict[str, str|tuple]
             Projects found to export into the PDF.
+        root_nodes: list[int]
+            Positions of root nodes (no parent) in the projects list.
+            This is used for accessing root projects without sorting the list.
         folder: str
             The path to the folder to output the project PDFs in.
             Default is the current working directory.
@@ -582,6 +585,7 @@ def write_pdfs(projects, root_nodes, folder=''):
             )
         
     def write_project_body(pdf, project):
+        """Write the body of a project to the PDF."""
         pdf.add_page()
         pdf.set_line_width(0.05)
         pdf.set_left_margin(10)
@@ -682,14 +686,16 @@ def write_pdfs(projects, root_nodes, folder=''):
     
 
     def explore_project_tree(project, projects, pdf=None):
-        # For base, no pdf - make one
+        """Recursively find child projects and write them to the PDF."""
+
+        # Start with no PDF at root projects
         if not pdf:
             pdf = PDF()
         
         # Add current project to PDF
         pdf = write_project_body(pdf, project)
 
-        # 
+        # Do children last so that come at end of the PDF
         children = project['children']
         for child_id in children:
             child_project = next(
@@ -699,7 +705,6 @@ def write_pdfs(projects, root_nodes, folder=''):
                 pdf = explore_project_tree(child_project, projects, pdf=pdf)
         
         return pdf
-        
     
     pdfs = []
     for idx in root_nodes:
