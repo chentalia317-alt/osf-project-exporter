@@ -115,6 +115,7 @@ class TestAPI(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
+    
 
 
 class TestClient(TestCase):
@@ -283,14 +284,17 @@ class TestClient(TestCase):
             os.getenv('TEST_PAT', ''), True,
             'https://osf.io/x/'
         )
-        assert len(projects) == 1
+        assert len(roots) == 1
+        assert len(projects) == 3
         assert projects[0]['metadata']['id'] == 'x'
+        assert projects[0]['children'] == ['a', 'b']
 
         projects, roots = get_project_data(
             os.getenv('TEST_PAT', ''), True,
             'https://api.test.osf.io/v2/nodes/x/'
         )
-        assert len(projects) == 1
+        assert len(roots) == 1
+        assert len(projects) == 3
         assert projects[0]['metadata']['id'] == 'x'
 
     def test_write_pdfs_from_dict(self):

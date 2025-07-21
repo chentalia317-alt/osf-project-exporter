@@ -35,7 +35,7 @@
                 "children": {
                     "links": {
                         "related": {
-                            "href": "a_children",
+                            "href": "empty-children",
                             "meta": {}
                         }
                     }
@@ -352,7 +352,7 @@
                 "children": {
                     "links": {
                         "related": {
-                            "href": "empty_children",
+                            "href": "empty-children",
                             "meta": {}
                         }
                     }
