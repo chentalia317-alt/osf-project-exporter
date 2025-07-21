@@ -359,6 +359,7 @@ def get_project_data(pat, dryrun, project_url=''):
             'metadata': {
                 'title': project['attributes']['title'],
                 'id': project['id'],
+                'url': project['links']['html'],
                 'description': project['attributes']['description'],
                 'date_created': datetime.datetime.fromisoformat(
                     project['attributes']['date_created']),
@@ -557,10 +558,11 @@ def write_pdfs(projects, folder=''):
         pdf.set_font('Times', size=18, style='B')
         pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
         pdf.set_font('Times', size=12)
-        if 'url' in project['metadata'].keys():
+        url = project['metadata'].pop('url', '')
+        if url:
             pdf.multi_cell(
                 0, h=0,
-                text=f'Project URL: {project['metadata']['url']}\n',
+                text=f'Project URL: {url}\n',
                 align='L'
             )
         pdf.ln()
