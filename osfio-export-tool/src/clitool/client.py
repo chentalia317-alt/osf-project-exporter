@@ -100,19 +100,24 @@ class MockAPIResponse:
 
 class PDF(FPDF):
     
-    def __init__(self):
+    def __init__(self, url=''):
         super().__init__()
         self.date_printed = datetime.datetime.now()
+        self.url = url
 
     def footer(self):
         self.set_y(-15)
         self.set_x(-30)
-        self.set_font('Times', size=8)
+        self.set_font('Times', size=10)
         self.cell(0, 10, f"Page: {self.page_no()}", align="C")
         self.set_x(10)
         self.cell(0, 10, f"Printed: {self.date_printed.strftime(
             '%Y-%m-%d %H:%M:%S'
         )}", align="L")
+        self.set_x(10)
+        self.set_y(-25)
+        qr_img = generate_qr_code(self.url)
+        self.image(qr_img, w=15, h=15, x=Align.C)
 
 
 def generate_qr_code(url):
@@ -575,6 +580,7 @@ def write_pdfs(projects, folder=''):
                 text=f'Project URL: {url}\n',
                 align='L'
             )
+            pdf.url = url
         qr_img = generate_qr_code(url)
         pdf.image(qr_img, w=30, x=Align.C)
 
