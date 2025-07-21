@@ -48,7 +48,7 @@
                 "children": {
                     "links": {
                         "related": {
-                            "href": "https://api.test.osf.io/v2/nodes/x/children/",
+                            "href": "x-children",
                             "meta": {}
                         }
                     }
@@ -356,7 +356,7 @@
                 "children": {
                     "links": {
                         "related": {
-                            "href": "https://api.test.osf.io/v2/nodes/x/children/",
+                            "href": "empty-children",
                             "meta": {}
                         }
                     }
@@ -664,7 +664,7 @@
                 "children": {
                     "links": {
                         "related": {
-                            "href": "https://api.test.osf.io/v2/nodes/x/children/",
+                            "href": "empty-children",
                             "meta": {}
                         }
                     }
@@ -981,7 +981,7 @@
                 "children": {
                     "links": {
                         "related": {
-                            "href": "https://api.test.osf.io/v2/nodes/x/children/",
+                            "href": "empty-children",
                             "meta": {}
                         }
                     }

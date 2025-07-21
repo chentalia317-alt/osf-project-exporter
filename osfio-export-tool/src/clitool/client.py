@@ -55,7 +55,11 @@ class MockAPIResponse:
         'wikis': os.path.join(
             'tests', 'stubs', 'wikis', 'wikistubs.json'),
         'wikis2': os.path.join(
-            'tests', 'stubs', 'wikis', 'wikis2stubs.json')
+            'tests', 'stubs', 'wikis', 'wikis2stubs.json'),
+        'x-children': os.path.join(
+            'tests', 'stubs', 'components', 'x-children.json'),
+        'empty-children': os.path.join(
+            'tests', 'stubs', 'components', 'empty-children.json'),
     }
 
     MARKDOWN_FILES = {
@@ -331,8 +335,6 @@ def get_project_data(pat, dryrun, project_url=''):
 
     projects = []
     for project in nodes['data']:
-        if project['attributes']['category'] != 'project':
-            continue
         project_data = {
             'title': project['attributes']['title'],
             'id': project['id'],
@@ -344,6 +346,11 @@ def get_project_data(pat, dryrun, project_url=''):
             'tags': ', '.join(project['attributes']['tags'])
             if project['attributes']['tags'] else 'NA',
         }
+
+        project_data['parent'] = None
+        if 'links' in project['relationships']['parent']:
+            project_data['parent'] = project['relationships']['parent'][
+                'links']['related']['href'].split('/')[-1]
 
         # Resource type/lang/funding info share specific endpoint
         # that isn't linked to in user nodes' responses
@@ -435,6 +442,14 @@ def get_project_data(pat, dryrun, project_url=''):
             f'{API_HOST}/nodes/{project_data['id']}/wikis/',
             pat=pat, dryrun=dryrun
         )
+
+        children_link = relations['children']['links']['related']['href']
+        children = MockAPIResponse.read(children_link) if dryrun else json.loads(
+            call_api(children_link, pat).read()
+        )
+        project_data['children'] = []
+        for child in children['data']:
+            project_data['children'].append(child['id'])
 
         projects.append(project_data)
 
