@@ -372,7 +372,14 @@ def get_project_data(pat, dryrun, project_url=''):
 
     projects = []
     root_nodes = []  # Track position of root nodes for quick access when PDF writing
+    added_node_ids = set()  # Track added node IDs to avoid duplicates
+
     for idx, project in enumerate(nodes['data']):
+        if project['id'] in added_node_ids:
+            continue
+        else:
+            added_node_ids.add(project['id'])
+
         project_data = {
             'metadata': {
                 'title': project['attributes']['title'],
