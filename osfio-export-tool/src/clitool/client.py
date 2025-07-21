@@ -371,7 +371,8 @@ def get_project_data(pat, dryrun, project_url=''):
             nodes = MockAPIResponse.read('nodes')
 
     projects = []
-    for project in nodes['data']:
+    root_nodes = []  # Track position of root nodes for quick access when PDF writing
+    for idx, project in enumerate(nodes['data']):
         project_data = {
             'metadata': {
                 'title': project['attributes']['title'],
@@ -393,11 +394,6 @@ def get_project_data(pat, dryrun, project_url=''):
             'files': [],
             'wikis': {}
         }
-
-        project_data['parent'] = None
-        if 'links' in project['relationships']['parent']:
-            project_data['parent'] = project['relationships']['parent'][
-                'links']['related']['href'].split('/')[-1]
 
         # Resource type/lang/funding info share specific endpoint
         # that isn't linked to in user nodes' responses
@@ -501,6 +497,12 @@ def get_project_data(pat, dryrun, project_url=''):
             pat=pat, dryrun=dryrun
         )
 
+        if 'links' in project['relationships']['parent']:
+            project_data['parent'] = project['relationships']['parent'][
+                'links']['related']['href'].split('/')[-1]
+        else:
+            project_data['parent'] = None
+            root_nodes.append(idx)
         children_link = relations['children']['links']['related']['href']
         children = MockAPIResponse.read(children_link) if dryrun else json.loads(
             call_api(children_link, pat).read()
@@ -511,7 +513,7 @@ def get_project_data(pat, dryrun, project_url=''):
 
         projects.append(project_data)
 
-    return projects
+    return projects, root_nodes
 
 
 def write_pdfs(projects, folder=''):
@@ -701,7 +703,7 @@ def pull_projects(pat, dryrun, folder, url=''):
     You can export all projects you have access to, or one specific one
     with the --url option."""
 
-    projects = get_project_data(pat, dryrun, project_url=url)
+    projects, root_projects = get_project_data(pat, dryrun, project_url=url)
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
     write_pdfs(projects, folder)
