@@ -97,6 +97,23 @@ class MockAPIResponse:
             return {}
 
 
+class PDF(FPDF):
+    
+    def __init__(self):
+        super().__init__()
+        self.date_printed = datetime.datetime.now()
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_x(-30)
+        self.set_font('Times', size=8)
+        self.cell(0, 10, f"Page: {self.page_no()}", align="C")
+        self.set_x(10)
+        self.cell(0, 10, f"Printed: {self.date_printed.strftime(
+            '%Y-%m-%d %H:%M:%S'
+        )}", align="L")
+
+
 # Reduce response size by applying filters on fields
 URL_FILTERS = {
     'identifiers': {
@@ -527,7 +544,7 @@ def write_pdfs(projects, folder=''):
 
     pdfs = []
     for project in projects:
-        pdf = FPDF()
+        pdf = PDF()
         pdf.add_page()
         pdf.set_line_width(0.05)
         pdf.set_left_margin(10)
