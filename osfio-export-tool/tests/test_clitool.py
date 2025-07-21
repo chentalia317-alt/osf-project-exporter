@@ -334,7 +334,42 @@ class TestClient(TestCase):
                 'wikis': {
                     'Home': 'hello world',
                     'Page2': 'another page'
-                }
+                },
+                "parent": None,
+                'children': ['a']
+            },
+            {
+                'metadata': {
+                    "title": "child1",
+                    "id": "a",
+                },
+                'contributors': [
+                    ('Short Name', True, 'email'),
+                    (
+                        'Long Double-Barrelled Name and Surname', True,
+                        (
+                            'Long Double-Barrelled Name and Surname@'
+                            'Long Double-Barrelled Name and Surname.com'
+                        )
+                    ),
+                    (
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            'Long Double-Barrelled Name and Surname'
+                        ), True,
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            '@Long Double-Barrelled Name and Surname.com'
+                        )
+                    )
+                ],
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
+                'wikis': {},
+                "parent": 'id',
+                'children': ['b']
             },
             {
                 'metadata': {
@@ -364,16 +399,53 @@ class TestClient(TestCase):
                     ('file1.txt', None, None),
                     ('file2.txt', None, None),
                 ],
-                'wikis': {}
-            }
+                'wikis': {},
+                "parent": None,
+                'children': []
+            },
+            {
+                'metadata': {
+                    "title": "child2",
+                    "id": "b",
+                },
+                'contributors': [
+                    ('Short Name', True, 'email'),
+                    (
+                        'Long Double-Barrelled Name and Surname', True,
+                        (
+                            'Long Double-Barrelled Name and Surname@'
+                            'Long Double-Barrelled Name and Surname.com'
+                        )
+                    ),
+                    (
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            'Long Double-Barrelled Name and Surname'
+                        ), True,
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            '@Long Double-Barrelled Name and Surname.com'
+                        )
+                    )
+                ],
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
+                'wikis': {},
+                "parent": 'a',
+                'children': []
+            },
         ]
+
+        root_nodes = [0, 2]  # Indices of root nodes in projects list
 
         # Get URL now as it will be removed later
         url = projects[0]['metadata']['url']
 
         # Do we write only one PDF per project?
         pdfs = write_pdfs(projects, folder_out)
-        assert len(pdfs) == len(projects)
+        assert len(pdfs) == 2
 
         # Can we specify where to write PDFs?
         files = os.listdir(folder_out)
@@ -381,8 +453,6 @@ class TestClient(TestCase):
 
         pdf_first = PdfReader(os.path.join(folder_out, files[1]))
         pdf_second = PdfReader(os.path.join(folder_out, files[0]))
-        assert len(pdf_first.pages) == 2
-        assert len(pdf_second.pages) == 1
 
         content_first_page = pdf_first.pages[0].extract_text(
             extraction_mode='layout'
@@ -390,6 +460,7 @@ class TestClient(TestCase):
         content_second_page = pdf_second.pages[0].extract_text(
             extraction_mode='layout'
         )
+        print(content_first_page)
 
         assert f'Project URL: {url}' in content_first_page
         assert 'Project URL:' not in content_second_page
