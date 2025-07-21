@@ -190,7 +190,7 @@ class TestClient(TestCase):
             'Expected description Test2 Description, got: ',
             projects[1]['description']
         )
-        expected_date = '2000-01-01 14:18:00.376705+00:00'
+        expected_date = '2000-01-01'
         assert str(
             projects[0]['metadata']['date_created']
         ) == expected_date, (
