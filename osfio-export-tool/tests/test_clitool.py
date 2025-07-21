@@ -161,11 +161,25 @@ class TestClient(TestCase):
         """Using JSON stubs to simulate API responses,
         test we can parse them correctly"""
 
-        projects = get_project_data(os.getenv('TEST_PAT', ''), True)
+        projects, root_nodes = get_project_data(os.getenv('TEST_PAT', ''), True)
 
         assert len(projects) == 4, (
             'Expected 4 projects in the stub data'
         )
+        assert len(root_nodes) == 2, (
+            'Expected 2 root nodes in the stub data'
+        )
+        assert root_nodes[0] == 0
+        assert root_nodes[1] == 1
+        assert projects[root_nodes[0]]['metadata']['id'] == 'x', (
+            'Expected ID x, got: ',
+            projects[root_nodes[0]]['metadata']['id']
+        )
+        assert projects[root_nodes[1]]['metadata']['id'] == 'y', (
+            'Expected ID y, got: ',
+            projects[root_nodes[1]]['metadata']['id']
+        )
+
         assert projects[0]['metadata']['title'] == 'Test1', (
             'Expected title Test1, got: ',
             projects[0]['metadata']['title']
@@ -265,14 +279,14 @@ class TestClient(TestCase):
         assert 'b' in projects[0]['children']
 
     def test_get_single_mock_project(self):
-        projects = get_project_data(
+        projects, roots = get_project_data(
             os.getenv('TEST_PAT', ''), True,
             'https://osf.io/x/'
         )
         assert len(projects) == 1
         assert projects[0]['metadata']['id'] == 'x'
 
-        projects = get_project_data(
+        projects, roots = get_project_data(
             os.getenv('TEST_PAT', ''), True,
             'https://api.test.osf.io/v2/nodes/x/'
         )
