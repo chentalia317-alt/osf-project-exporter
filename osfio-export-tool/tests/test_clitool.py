@@ -54,8 +54,8 @@ class TestAPI(TestCase):
         )
         node = json.loads(data.read())['data'][0]
         link = node['links']['html']
-        projects = get_project_data(os.getenv('TEST_PAT', ''), False, link)
-        assert len(projects) == 1
+        projects, root_projects = get_project_data(os.getenv('TEST_PAT', ''), False, link)
+        assert len(root_projects) == 1
         assert projects[0]['metadata']['title'] == node['attributes']['title']
 
     def test_filter_by_api(self):
@@ -454,6 +454,10 @@ class TestClient(TestCase):
         assert len(files) == 2
 
         pdf_first = PdfReader(os.path.join(folder_out, files[1]))
+        assert len(pdf_first.pages) == 4, (
+            'Expected 4 pages in the first PDF, got: ',
+            len(pdf_first.pages)
+        )
         pdf_second = PdfReader(os.path.join(folder_out, files[0]))
 
         content_first_page = pdf_first.pages[0].extract_text(
@@ -462,7 +466,14 @@ class TestClient(TestCase):
         content_second_page = pdf_second.pages[0].extract_text(
             extraction_mode='layout'
         )
-        print(content_first_page)
+        content_third_page = pdf_first.pages[2].extract_text(
+            extraction_mode='layout'
+        )
+        content_fourth_page = pdf_first.pages[3].extract_text(
+            extraction_mode='layout'
+        )
+        assert 'Title: child1' in content_third_page
+        assert 'Title: child2' in content_fourth_page
 
         assert f'Project URL: {url}' in content_first_page
         assert 'Project URL:' not in content_second_page

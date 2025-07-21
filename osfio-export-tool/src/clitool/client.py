@@ -731,7 +731,7 @@ def pull_projects(pat, dryrun, folder, url=''):
     projects, root_projects = get_project_data(pat, dryrun, project_url=url)
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
-    write_pdfs(projects, folder)
+    write_pdfs(projects, root_projects, folder)
 
 
 @click.command()
