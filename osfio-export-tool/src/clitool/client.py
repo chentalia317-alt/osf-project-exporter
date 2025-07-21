@@ -102,7 +102,7 @@ class PDF(FPDF):
     
     def __init__(self, url=''):
         super().__init__()
-        self.date_printed = datetime.datetime.now()
+        self.date_printed = datetime.datetime.now().astimezone()
         self.url = url
 
     def footer(self):
@@ -112,7 +112,7 @@ class PDF(FPDF):
         self.cell(0, 10, f"Page: {self.page_no()}", align="C")
         self.set_x(10)
         self.cell(0, 10, f"Printed: {self.date_printed.strftime(
-            '%Y-%m-%d %H:%M:%S'
+            '%Y-%m-%d %H:%M:%S %Z'
         )}", align="L")
         self.set_x(10)
         self.set_y(-25)
