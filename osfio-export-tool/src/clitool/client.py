@@ -516,7 +516,7 @@ def get_project_data(pat, dryrun, project_url=''):
     return projects, root_nodes
 
 
-def write_pdfs(projects, folder=''):
+def write_pdfs(projects, root_nodes, folder=''):
     """Make PDF for each project.
 
     Parameters
@@ -533,7 +533,7 @@ def write_pdfs(projects, folder=''):
             List of created PDF files.
     """
 
-    def write_list_section(key, fielddict):
+    def write_list_section(key, fielddict, pdf):
         """Handle writing fields based on their type to PDF.
         Possible types are lists or strings."""
 
@@ -576,16 +576,14 @@ def write_pdfs(projects, folder=''):
                 align='L',
                 markdown=True
             )
-
-    pdfs = []
-    for project in projects:
-        pdf = PDF()
+        
+    def write_project_body(pdf, project):
         pdf.add_page()
         pdf.set_line_width(0.05)
         pdf.set_left_margin(10)
         pdf.set_right_margin(10)
         pdf.set_font('Times', size=12)
-        wikis = project.pop('wikis')
+        wikis = project['wikis']
 
         # Write header section
         title = project['metadata']['title']
@@ -611,7 +609,7 @@ def write_pdfs(projects, folder=''):
         pdf.multi_cell(0, h=0, text='1. Project Metadata\n', align='L')
         pdf.set_font('Times', size=12)
         for key in project['metadata']:
-            write_list_section(key, project['metadata'])
+            write_list_section(key, project['metadata'], pdf)
         pdf.write(0, '\n')
         pdf.write(0, '\n')
 
@@ -663,7 +661,6 @@ def write_pdfs(projects, folder=''):
                         datum = 'N/A'
                     row.cell(datum)
 
-        # Write wikis separately to more easily handle Markdown parsing
         pdf.ln()
         pdf.set_font('Times', size=18, style='B')
         pdf.multi_cell(0, h=0, text='4. Wiki\n', align='L')
@@ -676,7 +673,35 @@ def write_pdfs(projects, folder=''):
             pdf.write_html(html)
             if i < len(wikis.keys())-1:
                 pdf.add_page()
+        
+        return pdf
+    
 
+    def explore_project_tree(project, projects, pdf=None):
+        # For base, no pdf - make one
+        if not pdf:
+            pdf = PDF()
+        
+        # Add current project to PDF
+        pdf = write_project_body(pdf, project)
+
+        # 
+        children = project['children']
+        for child_id in children:
+            child_project = next(
+                (p for p in projects if p['metadata']['id'] == child_id), None
+            )
+            if child_project:
+                pdf = explore_project_tree(child_project, projects, pdf=pdf)
+        
+        return pdf
+        
+    
+    pdfs = []
+    for idx in root_nodes:
+        curr_project = projects[idx]
+        title = curr_project['metadata']['title']
+        pdf = explore_project_tree(curr_project, projects)
         filename = f'{title}_export.pdf'
         pdf.output(os.path.join(folder, filename))
         pdfs.append(pdf)

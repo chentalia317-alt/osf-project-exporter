@@ -3,7 +3,7 @@ from unittest import TestCase
 import os
 import shutil
 import json
-# import pdb  # Use pdb.set_trace() to help with debugging
+import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
 
 from click.testing import CliRunner
@@ -374,6 +374,7 @@ class TestClient(TestCase):
             {
                 'metadata': {
                     "title": "Second Project in new PDF",
+                    "id": "c"
                 },
                 'contributors': [
                     ('Short Name', True, 'email'),
@@ -444,12 +445,13 @@ class TestClient(TestCase):
         url = projects[0]['metadata']['url']
 
         # Do we write only one PDF per project?
-        pdfs = write_pdfs(projects, folder_out)
+        #pdb.set_trace()
+        pdfs = write_pdfs(projects, root_nodes, folder_out)
         assert len(pdfs) == 2
 
         # Can we specify where to write PDFs?
         files = os.listdir(folder_out)
-        assert len(files) == len(projects)
+        assert len(files) == 2
 
         pdf_first = PdfReader(os.path.join(folder_out, files[1]))
         pdf_second = PdfReader(os.path.join(folder_out, files[0]))
