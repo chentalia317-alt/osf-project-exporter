@@ -55,7 +55,17 @@ class TestAPI(TestCase):
         node = json.loads(data.read())['data'][0]
         link = node['links']['html']
         projects, root_projects = get_project_data(os.getenv('TEST_PAT', ''), False, link)
+        
+        expected_child_count = len(
+            json.loads(
+                call_api(
+                    f'{API_HOST}/nodes/{node["id"]}/children/',
+                    os.getenv('TEST_PAT', '')
+                ).read()
+            )['data']
+        )
         assert len(root_projects) == 1
+        assert len(projects) == expected_child_count + 1
         assert projects[0]['metadata']['title'] == node['attributes']['title']
 
     def test_filter_by_api(self):
