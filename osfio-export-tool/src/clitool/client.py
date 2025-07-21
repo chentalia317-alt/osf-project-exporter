@@ -2,9 +2,10 @@ import json
 import os
 import datetime
 import urllib.request as webhelper
+import io
 
 import click
-from fpdf import FPDF
+from fpdf import FPDF, Align
 from fpdf.fonts import FontFace
 from mistletoe import markdown
 
@@ -112,6 +113,15 @@ class PDF(FPDF):
         self.cell(0, 10, f"Printed: {self.date_printed.strftime(
             '%Y-%m-%d %H:%M:%S'
         )}", align="L")
+
+
+def generate_qr_code(url):
+    import qrcode
+    qr = qrcode.make(url)
+    img_byte_arr = io.BytesIO()
+    qr.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
+    return img_byte_arr
 
 
 # Reduce response size by applying filters on fields
@@ -565,6 +575,10 @@ def write_pdfs(projects, folder=''):
                 text=f'Project URL: {url}\n',
                 align='L'
             )
+        qr_img = generate_qr_code(url)
+        pdf.image(qr_img, w=30, x=Align.C)
+
+        
         pdf.ln()
 
         # Write title for metadata section, then actual fields
