@@ -1,5 +1,7 @@
+import datetime
 from unittest import TestCase
 import os
+import shutil
 import json
 # import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
@@ -9,15 +11,15 @@ from pypdf import PdfReader
 
 from clitool import (
     cli, call_api, get_project_data,
-    explore_file_tree, explore_wikis
+    explore_file_tree, explore_wikis,
+    write_pdfs
 )
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
-input_path = os.path.join('tests', TEST_PDF_FOLDER, TEST_INPUT)
-test_data = os.path.join('tests', 'myprojects.txt')
+folder_out = os.path.join('tests', 'outfolder')
 
 # Run tests in docker container
 # with 'python -m unittest <tests.test_clitool.TESTCLASS>'
@@ -54,7 +56,7 @@ class TestAPI(TestCase):
         link = node['links']['html']
         projects = get_project_data(os.getenv('TEST_PAT', ''), False, link)
         assert len(projects) == 1
-        assert projects[0]['title'] == node['attributes']['title']
+        assert projects[0]['metadata']['title'] == node['attributes']['title']
 
     def test_filter_by_api(self):
         """Test if we use query params in API calls."""
@@ -90,8 +92,10 @@ class TestAPI(TestCase):
     def test_pull_projects_command(self):
         """Test we can successfully pull projects using the OSF API"""
 
-        if os.path.exists(input_path):
-            os.remove(input_path)
+        folder_out = os.path.join('tests', 'outfolder')
+        if os.path.exists(folder_out):
+            shutil.rmtree(folder_out)
+        os.mkdir(folder_out)
 
         runner = CliRunner()
 
@@ -100,11 +104,10 @@ class TestAPI(TestCase):
             cli, ['pull-projects'], input='', terminal_width=60
         )
         assert result.exception
-        assert not os.path.exists(input_path)
 
         # Use PAT to find user projects
         result = runner.invoke(
-            cli, ['pull-projects', '--filename', input_path],
+            cli, ['pull-projects', '--folder', folder_out],
             input=os.getenv('TEST_PAT', ''),
             terminal_width=60
         )
@@ -112,10 +115,6 @@ class TestAPI(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
-        assert os.path.exists(input_path)
-
-        if os.path.exists(input_path):
-            os.remove(input_path)
 
 
 class TestClient(TestCase):
@@ -167,69 +166,90 @@ class TestClient(TestCase):
         assert len(projects) == 4, (
             'Expected 4 projects in the stub data'
         )
-        assert projects[0]['title'] == 'Test1', (
+        assert projects[0]['metadata']['title'] == 'Test1', (
             'Expected title Test1, got: ',
-            projects[0]['title']
+            projects[0]['metadata']['title']
         )
-        assert projects[0]['id'] == 'x', (
+        assert projects[0]['metadata']['id'] == 'x', (
             'Expected ID x, got: ',
-            projects[0]['id']
+            projects[0]['metadata']['id']
         )
-        assert projects[1]['title'] == 'Test2', (
+        assert projects[1]['metadata']['title'] == 'Test2', (
             'Expected title Test2, got: ',
-            projects[1]['title']
+            projects[1]['metadata']['title']
         )
-        assert projects[0]['license'] == 'mynewlicense', (
+        assert projects[0]['metadata']['license'] == 'mynewlicense', (
             'Expected mynewlicense, got: ',
-            projects[0]['license']
+            projects[0]['metadata']['license']
         )
-        assert projects[0]['description'] == 'Test1 Description', (
+        assert projects[0]['metadata']['description'] == 'Test1 Description', (
             'Expected description Test1 Description, got: ',
-            projects[0]['description']
+            projects[0]['metadata']['description']
         )
-        assert projects[1]['description'] == 'Test2 Description', (
+        assert projects[1]['metadata']['description'] == 'Test2 Description', (
             'Expected description Test2 Description, got: ',
             projects[1]['description']
         )
         expected_date = '2000-01-01 14:18:00.376705+00:00'
-        assert str(projects[0]['date_created']) == expected_date, (
+        assert str(
+            projects[0]['metadata']['date_created']
+        ) == expected_date, (
             f'Expected date_created {expected_date}, got: ',
-            projects[0]['date_created']
+            projects[0]['metadata']['date_created']
         )
-        assert str(projects[0]['date_modified']) == expected_date, (
+        assert str(
+            projects[0]['metadata']['date_modified']
+        ) == expected_date, (
             f'Expected date_modified {expected_date}, got: ',
-            projects[0]['date_modified']
+            projects[0]['metadata']['date_modified']
         )
-        assert projects[0]['tags'] == 'test1, test2, test3', (
+        assert projects[0]['metadata']['tags'] == 'test1, test2, test3', (
             'Expected tags test1, test2, test3, got: ',
-            projects[0]['tags']
+            projects[0]['metadata']['tags']
         )
-        assert projects[1]['tags'] == 'NA', (
+        assert projects[1]['metadata']['tags'] == 'NA', (
             'Expected tags NA, got: ',
-            projects[1]['tags']
+            projects[1]['metadata']['tags']
         )
-        assert projects[0]['contributors'] == 'Test User 1, Test User 2', (
-            'Expected contributors Test User 1, Test User 2, got: ',
-            projects[0]['contributors']
+        assert projects[0]['contributors'][0] == (
+            'Test User 1', False, 'N/A'
+        ), (
+            "Expected contributor ('Test User 1', False, 'N/A'), got: ",
+            projects[0]['contributors'][0]
         )
-        assert projects[0]['identifiers'] == '10.4-2-6-25/OSF.IO/74PAD', (
+        assert projects[0]['contributors'][1] == (
+            'Test User 2', False, 'N/A'
+        ), (
+            "Expected contributor ('Test User 2', False, 'N/A'), got: ",
+            projects[0]['contributors'][1]
+        )
+        doi = projects[0]['metadata']['identifiers']
+        assert doi == '10.4-2-6-25/OSF.IO/74PAD', (
             'Expected identifiers 10.4-2-6-25/OSF.IO/74PAD, got: ',
-            projects[0]['identifiers']
+            doi
         )
-        assert projects[0]['resource_type'] == 'Other', (
+        assert projects[0]['metadata']['resource_type'] == 'Other', (
             'Expected resource_type Other, got: ',
-            projects[0]['resource_type']
+            projects[0]['metadata']['resource_type']
         )
-        assert projects[0]['resource_lang'] == 'eng', (
+        assert projects[0]['metadata']['resource_lang'] == 'eng', (
             'Expected resource_lang eng, got: ',
-            projects[0]['resource_lang']
+            projects[0]['metadata']['resource_lang']
         )
-        assert '/helloworld.txt.txt' in projects[0]['files']
-        assert '/tf1/helloworld.txt.txt' in projects[0]['files']
-        assert '/tf1/tf2/file.txt' in projects[0]['files']
-        assert projects[0]['subjects'] == 'Education, Literature, Geography', (
+        assert len(projects[0]['files']) == 5
+        assert '/helloworld.txt.txt' in projects[0]['files'][4][0], (
+            projects[0]['files'][4][0]
+        )
+        assert '/tf1/helloworld.txt.txt' in projects[0]['files'][1][0], (
+            projects[0]['files'][1][0]
+        )
+        assert '/tf1/tf2/file.txt' in projects[0]['files'][0][0], (
+            projects[0]['files'][0][0]
+        )
+        subjects = projects[0]['metadata']['subjects']
+        assert subjects == 'Education, Literature, Geography', (
             'Expected Education, Literature, Geography, got: ',
-            projects[0]['subjects']
+            subjects
         )
         assert len(projects[0]['wikis']) == 3
 
@@ -246,27 +266,170 @@ class TestClient(TestCase):
             'https://osf.io/x/'
         )
         assert len(projects) == 1
-        assert projects[0]['id'] == 'x'
+        assert projects[0]['metadata']['id'] == 'x'
 
         projects = get_project_data(
             os.getenv('TEST_PAT', ''), True,
             'https://api.test.osf.io/v2/nodes/x/'
         )
         assert len(projects) == 1
-        assert projects[0]['id'] == 'x'
+        assert projects[0]['metadata']['id'] == 'x'
 
-    def test_generate_pdf(self):
+    def test_write_pdfs_from_dict(self):
+        # Put PDFs in a folder to keep things tidy
+        folder_out = os.path.join('tests', 'outfolder')
+        if os.path.exists(folder_out):
+            shutil.rmtree(folder_out)
+        os.mkdir(folder_out)
+
+        projects = [
+            {
+                'metadata': {
+                    'title': 'My Project Title',
+                    'id': 'id',
+                    'url': 'https://test.osf.io/',
+                    'description': 'This is a description of the project',
+                    'date_created': datetime.datetime.fromisoformat(
+                        '2025-06-12T15:54:42.105112Z'
+                    ),
+                    'date_modified': datetime.datetime.fromisoformat(
+                        '2001-01-01T01:01:01.105112Z'
+                    ),
+                    'tags': 'tag1, tag2, tag3',
+                    'resource_type': 'na',
+                    'resource_lang': 'english',
+                    'affiliated_institutions': 'University of Manchester',
+                    'identifiers': 'N/A',
+                    'license': 'Apache 2.0',
+                    'subjects': 'sub1, sub2, sub3',
+                },
+                'contributors': [
+                    ('Pineapple Pizza', True, 'email'),
+                    ('Margarita', True, 'email'),
+                    ('Margarine', True, 'email')
+                ],
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
+                'funders': [],
+                'wikis': {
+                    'Home': 'hello world',
+                    'Page2': 'another page'
+                }
+            },
+            {
+                'metadata': {
+                    "title": "Second Project in new PDF",
+                },
+                'contributors': [
+                    ('Short Name', True, 'email'),
+                    (
+                        'Long Double-Barrelled Name and Surname', True,
+                        (
+                            'Long Double-Barrelled Name and Surname@'
+                            'Long Double-Barrelled Name and Surname.com'
+                        )
+                    ),
+                    (
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            'Long Double-Barrelled Name and Surname'
+                        ), True,
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            '@Long Double-Barrelled Name and Surname.com'
+                        )
+                    )
+                ],
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
+                'wikis': {}
+            }
+        ]
+        # Do we write only one PDF per project?
+        pdfs = write_pdfs(projects, folder_out)
+        assert len(pdfs) == len(projects)
+
+        # Can we specify where to write PDFs?
+        files = os.listdir(folder_out)
+        assert len(files) == len(projects)
+
+        pdf_first = PdfReader(os.path.join(folder_out, files[1]))
+        pdf_second = PdfReader(os.path.join(folder_out, files[0]))
+        assert len(pdf_first.pages) == 2
+        assert len(pdf_second.pages) == 1
+
+        content_first_page = pdf_first.pages[0].extract_text(
+            extraction_mode='layout'
+        )
+        content_second_page = pdf_second.pages[0].extract_text(
+            extraction_mode='layout'
+        )
+        url = projects[0]['metadata']['url']
+        assert f'Project URL: {url}' in content_first_page
+        assert 'Project URL:' not in content_second_page
+
+        # This way of string formatting compresses line lengths used
+        # End of headers and table rows marked by \n\n
+        contributors_table = (
+            'Subjects: sub1, sub2, sub3\n\n'
+            '2. Contributors\n\n'
+            'Name                                              '
+            'Bibliographic?           '
+            'Email (if available)\n\n'
+            'Pineapple Pizza                                   '
+            'Yes                      '
+            'email\n\n'
+            'Margarine                                         '
+            'Yes                      '
+            'email\n\n'
+            '3. Files in Main Project'
+        ).join('')
+
+        assert contributors_table in content_first_page, (
+            contributors_table,
+            content_first_page
+        )
+
+        # This way of string formatting compresses line lengths used
+        # End of headers and table rows marked by \n\n
+        files_table = (
+            '3. Files in Main Project\n\n'
+            'OSF Storage\n\n'
+            'File Name                                         '
+            'Size (MB)                '
+            'Download Link\n\n'
+            'file1.txt                                         '
+            'N/A                      '
+            'N/A\n\n'
+            'file2.txt                                         '
+            'N/A                      '
+            'N/A\n\n'
+            '4. Wiki'
+        ).join('')
+
+        assert files_table in content_first_page, (
+            files_table,
+            content_first_page
+        )
+
+    def test_get_mock_projects_and_write_pdfs(self):
         """Test generating a PDF from parsed project data.
         This assumes the JSON parsing works correctly."""
 
-        if os.path.exists(input_path):
-            os.remove(input_path)
+        folder_out = os.path.join('tests', 'outfolder')
+        if os.path.exists(folder_out):
+            shutil.rmtree(folder_out)
+        os.mkdir(folder_out)
 
         runner = CliRunner()
         result = runner.invoke(
             cli, [
                 'pull-projects', '--dryrun',
-                '--filename', input_path,
+                '--folder', folder_out,
                 '--url', ''
             ],
             input=os.getenv('TEST_PAT', ''),
@@ -276,22 +439,19 @@ class TestClient(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
-        assert os.path.exists(input_path)
 
-        # Compare content of created PDF with reference PDF
-        # reader_created = PdfReader(input_path)
-        # reader_reference = PdfReader(os.path.join(
-        #     'tests', TEST_PDF_FOLDER, 'osf_projects_stub.pdf'
-        # ))
-        # for p1, p2 in zip(reader_created.pages, reader_reference.pages):
-        #     text_generated = p1.extract_text(extraction_mode='layout')
-        #     text_reference = p2.extract_text(extraction_mode='layout')
-        #     assert text_generated == text_reference, (
-        #         f'Generated text does not match reference text:\n'
-        #         f'Generated: {text_generated}\n'
-        #         f'Reference: {text_reference}'
-        #     )
-        #     assert all(x == y for x, y in zip(p1.images, p2.images))
+        files = os.listdir(folder_out)
+        for f in files:
+            # Compare content of created PDF with reference PDF
+            pdf_made = PdfReader(os.path.join(folder_out, f))
+            pdf_ref = PdfReader(os.path.join('tests', TEST_PDF_FOLDER, f))
 
-        # if os.path.exists(input_path):
-        #     os.remove(input_path)
+            for p1, p2 in zip(pdf_made.pages, pdf_ref.pages):
+                text_generated = p1.extract_text(extraction_mode='layout')
+                text_reference = p2.extract_text(extraction_mode='layout')
+                assert text_generated == text_reference, (
+                    f'Generated text does not match reference text:\n'
+                    f'Generated: {text_generated}\n'
+                    f'Reference: {text_reference}'
+                )
+                assert all(x == y for x, y in zip(p1.images, p2.images))
