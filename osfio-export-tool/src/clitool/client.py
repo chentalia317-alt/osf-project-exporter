@@ -2,9 +2,10 @@ import json
 import os
 import datetime
 import urllib.request as webhelper
+import io
 
 import click
-from fpdf import FPDF
+from fpdf import FPDF, Align
 from fpdf.fonts import FontFace
 from mistletoe import markdown
 
@@ -99,6 +100,37 @@ class MockAPIResponse:
                 return file.read()
         else:
             return {}
+
+
+class PDF(FPDF):
+    
+    def __init__(self, url=''):
+        super().__init__()
+        self.date_printed = datetime.datetime.now().astimezone()
+        self.url = url
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_x(-30)
+        self.set_font('Times', size=10)
+        self.cell(0, 10, f"Page: {self.page_no()}", align="C")
+        self.set_x(10)
+        self.cell(0, 10, f"Printed: {self.date_printed.strftime(
+            '%Y-%m-%d %H:%M:%S %Z'
+        )}", align="L")
+        self.set_x(10)
+        self.set_y(-25)
+        qr_img = generate_qr_code(self.url)
+        self.image(qr_img, w=15, h=15, x=Align.C)
+
+
+def generate_qr_code(url):
+    import qrcode
+    qr = qrcode.make(url)
+    img_byte_arr = io.BytesIO()
+    qr.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
+    return img_byte_arr
 
 
 # Reduce response size by applying filters on fields
@@ -344,11 +376,14 @@ def get_project_data(pat, dryrun, project_url=''):
             'metadata': {
                 'title': project['attributes']['title'],
                 'id': project['id'],
+                'url': project['links']['html'],
                 'description': project['attributes']['description'],
                 'date_created': datetime.datetime.fromisoformat(
-                    project['attributes']['date_created']),
+                    project['attributes']['date_created']
+                ).astimezone().strftime('%Y-%m-%d'),
                 'date_modified': datetime.datetime.fromisoformat(
-                    project['attributes']['date_modified']),
+                    project['attributes']['date_modified']
+                ).astimezone().strftime('%Y-%m-%d'),
                 'tags': ', '.join(project['attributes']['tags'])
                 if project['attributes']['tags'] else 'NA',
                 'resource_type': 'NA',
@@ -542,7 +577,7 @@ def write_pdfs(projects, folder=''):
 
     pdfs = []
     for project in projects:
-        pdf = FPDF()
+        pdf = PDF()
         pdf.add_page()
         pdf.set_line_width(0.05)
         pdf.set_left_margin(10)
@@ -555,12 +590,18 @@ def write_pdfs(projects, folder=''):
         pdf.set_font('Times', size=18, style='B')
         pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
         pdf.set_font('Times', size=12)
-        if 'url' in project['metadata'].keys():
+        url = project['metadata'].pop('url', '')
+        if url:
             pdf.multi_cell(
                 0, h=0,
-                text=f'Project URL: {project['metadata']['url']}\n',
+                text=f'Project URL: {url}\n',
                 align='L'
             )
+            pdf.url = url
+        qr_img = generate_qr_code(url)
+        pdf.image(qr_img, w=30, x=Align.C)
+
+        
         pdf.ln()
 
         # Write title for metadata section, then actual fields

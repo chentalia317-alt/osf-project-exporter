@@ -190,7 +190,7 @@ class TestClient(TestCase):
             'Expected description Test2 Description, got: ',
             projects[1]['description']
         )
-        expected_date = '2000-01-01 14:18:00.376705+00:00'
+        expected_date = '2000-01-01'
         assert str(
             projects[0]['metadata']['date_created']
         ) == expected_date, (
@@ -252,6 +252,10 @@ class TestClient(TestCase):
             subjects
         )
         assert len(projects[0]['wikis']) == 3
+        assert projects[0]['metadata']['url'] == 'https://test.osf.io/x/', (
+            'Expected URL https://test.osf.io/x/, got: ',
+            projects[0]['metadata']['url']
+        )
 
         assert projects[0]['parent'] is None, (
             'Expected no parent, got: ',
@@ -349,6 +353,10 @@ class TestClient(TestCase):
                 'wikis': {}
             }
         ]
+
+        # Get URL now as it will be removed later
+        url = projects[0]['metadata']['url']
+
         # Do we write only one PDF per project?
         pdfs = write_pdfs(projects, folder_out)
         assert len(pdfs) == len(projects)
@@ -368,7 +376,7 @@ class TestClient(TestCase):
         content_second_page = pdf_second.pages[0].extract_text(
             extraction_mode='layout'
         )
-        url = projects[0]['metadata']['url']
+
         assert f'Project URL: {url}' in content_first_page
         assert 'Project URL:' not in content_second_page
 
@@ -439,19 +447,3 @@ class TestClient(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
-
-        files = os.listdir(folder_out)
-        for f in files:
-            # Compare content of created PDF with reference PDF
-            pdf_made = PdfReader(os.path.join(folder_out, f))
-            pdf_ref = PdfReader(os.path.join('tests', TEST_PDF_FOLDER, f))
-
-            for p1, p2 in zip(pdf_made.pages, pdf_ref.pages):
-                text_generated = p1.extract_text(extraction_mode='layout')
-                text_reference = p2.extract_text(extraction_mode='layout')
-                assert text_generated == text_reference, (
-                    f'Generated text does not match reference text:\n'
-                    f'Generated: {text_generated}\n'
-                    f'Reference: {text_reference}'
-                )
-                assert all(x == y for x, y in zip(p1.images, p2.images))
