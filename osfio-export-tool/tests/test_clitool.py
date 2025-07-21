@@ -346,6 +346,10 @@ class TestClient(TestCase):
                 'wikis': {}
             }
         ]
+
+        # Get URL now as it will be removed later
+        url = projects[0]['metadata']['url']
+
         # Do we write only one PDF per project?
         pdfs = write_pdfs(projects, folder_out)
         assert len(pdfs) == len(projects)
@@ -365,7 +369,7 @@ class TestClient(TestCase):
         content_second_page = pdf_second.pages[0].extract_text(
             extraction_mode='layout'
         )
-        url = projects[0]['metadata']['url']
+
         assert f'Project URL: {url}' in content_first_page
         assert 'Project URL:' not in content_second_page
 
