@@ -624,7 +624,7 @@
                 }
             },
             "links": {
-                "html": "https://test.osf.io/x/",
+                "html": "https://test.osf.io/y/",
                 "self": "https://api.test.osf.io/v2/nodes/x/",
                 "iri": "https://test.osf.io/x"
             }
@@ -941,7 +941,7 @@
                 }
             },
             "links": {
-                "html": "https://test.osf.io/x/",
+                "html": "https://test.osf.io/a/",
                 "self": "https://api.test.osf.io/v2/nodes/x/",
                 "iri": "https://test.osf.io/x"
             }
@@ -1258,7 +1258,7 @@
                 }
             },
             "links": {
-                "html": "https://test.osf.io/x/",
+                "html": "https://test.osf.io/b/",
                 "self": "https://api.test.osf.io/v2/nodes/x/",
                 "iri": "https://test.osf.io/x"
             }
