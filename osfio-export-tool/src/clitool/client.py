@@ -141,7 +141,7 @@ URL_FILTERS = {
 }
 
 
-def call_api(url, pat, method='GET', per_page=None, filters={}, is_json=True):
+def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     """Call OSF v2 API methods.
 
     Parameters
