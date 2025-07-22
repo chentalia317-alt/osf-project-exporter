@@ -104,10 +104,23 @@ class MockAPIResponse:
 
 
 class PDF(FPDF):
+    """Extend FPDF class for customisation.
+    :param url: str
+        Current URL to make QR codes with.
+    :param date_printed: datetime
+        Date and time when the PDF was printed."""
+
     def __init__(self, url=''):
         super().__init__()
         self.date_printed = datetime.datetime.now().astimezone()
         self.url = url
+
+    def generate_qr_code(self):
+        qr = qrcode.make(self.url)
+        img_byte_arr = io.BytesIO()
+        qr.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+        return img_byte_arr
 
     def footer(self):
         self.set_y(-15)
@@ -120,16 +133,8 @@ class PDF(FPDF):
         )}", align="L")
         self.set_x(10)
         self.set_y(-25)
-        qr_img = generate_qr_code(self.url)
+        qr_img = self.generate_qr_code()
         self.image(qr_img, w=15, h=15, x=Align.C)
-
-
-def generate_qr_code(url):
-    qr = qrcode.make(url)
-    img_byte_arr = io.BytesIO()
-    qr.save(img_byte_arr, format='PNG')
-    img_byte_arr.seek(0)
-    return img_byte_arr
 
 
 # Reduce response size by applying filters on fields
@@ -218,7 +223,6 @@ def explore_file_tree(curr_link, pat, dryrun=True):
 
     is_last_page_folders = False
     while not is_last_page_folders:
-        # Use Mock JSON if unit/integration testing
         if dryrun:
             folders = MockAPIResponse.read(f"{curr_link}_folder")
         else:
@@ -238,7 +242,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         except KeyError:
             pass
 
-        # Now find files in current folder
+        # For each folder, loop through pages for its files
         is_last_page_files = False
         while not is_last_page_files:
             if dryrun:
@@ -255,12 +259,10 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                     filenames.append(file['attributes']['materialized_path'])
             except KeyError:
                 pass
-            # Need to go to next page of files if response paginated
             curr_link = files['links']['next']
             if curr_link is None:
                 is_last_page_files = True
 
-        # Need to go to next page of folders if response paginated
         curr_link = folders['links']['next']
         if curr_link is None:
             is_last_page_folders = True
@@ -518,14 +520,14 @@ def get_project_data(pat, dryrun, project_url=''):
         if dryrun:
             children = MockAPIResponse.read(children_link)
         else:
-            json.loads(
+            children = json.loads(
                 call_api(children_link, pat).read()
             )
         project_data['children'] = []
         for child in children['data']:
             project_data['children'].append(child['id'])
-            # Have to manually add children to list of nodes
-            # if we start with just one, otherwise they won't be parsed
+            # Have to manually add children to nodes list
+            # Otherwise they won't be parsed
             if project_url:
                 nodes['data'].append(child)
 
@@ -556,7 +558,16 @@ def write_pdfs(projects, root_nodes, folder=''):
 
     def write_list_section(key, fielddict, pdf):
         """Handle writing fields based on their type to PDF.
-        Possible types are lists or strings."""
+        Possible types are lists or strings.
+
+        Parameters
+        -----------
+            key: str
+                Name of the field to write.
+            fielddict: dict
+                Dictionary containing the field data.
+            pdf: PDF
+                PDF object to write to."""
 
         # Set nicer display names for certain PDF fields
         pdf_display_names = {
@@ -599,7 +610,17 @@ def write_pdfs(projects, root_nodes, folder=''):
             )
 
     def write_project_body(pdf, project):
-        """Write the body of a project to the PDF."""
+        """Write the body of a project to the PDF.
+
+        Parameters
+        -----------
+            pdf: PDF
+                PDF object to write to.
+            project: dict
+                Dictionary containing project data to write.
+        Returns
+        -----------
+            pdf: PDF"""
         pdf.add_page()
         pdf.set_line_width(0.05)
         pdf.set_left_margin(10)
@@ -620,7 +641,7 @@ def write_pdfs(projects, root_nodes, folder=''):
                 align='L'
             )
             pdf.url = url
-        qr_img = generate_qr_code(url)
+        qr_img = pdf.generate_qr_code()
         pdf.image(qr_img, w=30, x=Align.C)
 
         pdf.ln()
@@ -698,7 +719,21 @@ def write_pdfs(projects, root_nodes, folder=''):
         return pdf
 
     def explore_project_tree(project, projects, pdf=None):
-        """Recursively find child projects and write them to the PDF."""
+        """Recursively find child projects and write them to the PDF.
+
+        Parameters
+        -----------
+            project: dict
+                Dictionary containing project data to write.
+            projects: list[dict]
+                List of all projects to explore.
+            pdf: PDF
+                PDF object to write to. If None, a new PDF will be created.
+
+        Returns
+        -----------
+            pdf: PDF
+                PDF object with the project and its children written to it."""
 
         # Start with no PDF at root projects
         if not pdf:
