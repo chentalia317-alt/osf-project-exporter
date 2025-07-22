@@ -3,7 +3,7 @@ from unittest import TestCase
 import os
 import shutil
 import json
-import pdb  # Use pdb.set_trace() to help with debugging
+# import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
 
 from click.testing import CliRunner
@@ -17,9 +17,7 @@ from clitool import (
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
-TEST_PDF_FOLDER = 'good-pdfs'
-TEST_INPUT = 'test_pdf.pdf'
-folder_out = os.path.join('tests', 'outfolder')
+FOLDER_OUT = os.path.join('tests', 'outfolder')
 
 # Run tests in docker container
 # with 'python -m unittest <tests.test_clitool.TESTCLASS>'
@@ -28,7 +26,7 @@ folder_out = os.path.join('tests', 'outfolder')
 class TestAPI(TestCase):
     """Tests for interacting with the OSF API."""
 
-    def test_get_projects_api(self):
+    def test_basic_api_call_works(self):
         """Test for if JSON for user's projects are loaded correctly"""
 
         data = call_api(
@@ -45,7 +43,7 @@ class TestAPI(TestCase):
             data['meta']['version']
         )
 
-    def test_single_project_json_is_as_expected(self):
+    def test_parse_single_project_json_as_expected(self):
         # Use first public project available for this test
         data = call_api(
             f'{API_HOST}/nodes/',
@@ -54,8 +52,10 @@ class TestAPI(TestCase):
         )
         node = json.loads(data.read())['data'][0]
         link = node['links']['html']
-        projects, root_projects = get_project_data(os.getenv('TEST_PAT', ''), False, link)
-        
+        projects, root_projects = get_project_data(
+            os.getenv('TEST_PAT', ''), False, link
+        )
+
         expected_child_count = len(
             json.loads(
                 call_api(
@@ -99,13 +99,12 @@ class TestAPI(TestCase):
         else:
             print("No nodes available, consider making a test project.")
 
-    def test_pull_projects_command(self):
+    def test_pull_projects_command_using_api(self):
         """Test we can successfully pull projects using the OSF API"""
 
-        folder_out = os.path.join('tests', 'outfolder')
-        if os.path.exists(folder_out):
-            shutil.rmtree(folder_out)
-        os.mkdir(folder_out)
+        if os.path.exists(FOLDER_OUT):
+            shutil.rmtree(FOLDER_OUT)
+        os.mkdir(FOLDER_OUT)
 
         runner = CliRunner()
 
@@ -117,7 +116,7 @@ class TestAPI(TestCase):
 
         # Use PAT to find user projects
         result = runner.invoke(
-            cli, ['pull-projects', '--folder', folder_out],
+            cli, ['pull-projects', '--folder', FOLDER_OUT],
             input=os.getenv('TEST_PAT', ''),
             terminal_width=60
         )
@@ -125,7 +124,6 @@ class TestAPI(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
-    
 
 
 class TestClient(TestCase):
@@ -143,7 +141,7 @@ class TestClient(TestCase):
         assert '/tf1/tf2-second/secondpage.txt' in files
         assert '/tf1/tf2-second/thirdpage.txt' in files
 
-    def test_get_latest_wiki_version(self):
+    def test_get_latest_mock_wiki_version(self):
         """Test getting the latest version of a mock wiki"""
 
         link = 'wiki'
@@ -168,11 +166,13 @@ class TestClient(TestCase):
             wikis['home']
         )
 
-    def test_parse_api_responses(self):
+    def test_parse_mock_api_responses(self):
         """Using JSON stubs to simulate API responses,
         test we can parse them correctly"""
 
-        projects, root_nodes = get_project_data(os.getenv('TEST_PAT', ''), True)
+        projects, root_nodes = get_project_data(
+            os.getenv('TEST_PAT', ''), True
+        )
 
         assert len(projects) == 4, (
             'Expected 4 projects in the stub data'
@@ -307,12 +307,11 @@ class TestClient(TestCase):
         assert len(projects) == 3
         assert projects[0]['metadata']['id'] == 'x'
 
-    def test_write_pdfs_from_dict(self):
+    def test_write_pdfs_from_mock_projects(self):
         # Put PDFs in a folder to keep things tidy
-        folder_out = os.path.join('tests', 'outfolder')
-        if os.path.exists(folder_out):
-            shutil.rmtree(folder_out)
-        os.mkdir(folder_out)
+        if os.path.exists(FOLDER_OUT):
+            shutil.rmtree(FOLDER_OUT)
+        os.mkdir(FOLDER_OUT)
 
         projects = [
             {
@@ -459,20 +458,20 @@ class TestClient(TestCase):
         url = projects[0]['metadata']['url']
 
         # Do we write only one PDF per project?
-        #pdb.set_trace()
-        pdfs = write_pdfs(projects, root_nodes, folder_out)
+        # pdb.set_trace()
+        pdfs = write_pdfs(projects, root_nodes, FOLDER_OUT)
         assert len(pdfs) == 2
 
         # Can we specify where to write PDFs?
-        files = os.listdir(folder_out)
+        files = os.listdir(FOLDER_OUT)
         assert len(files) == 2
 
-        pdf_first = PdfReader(os.path.join(folder_out, files[1]))
+        pdf_first = PdfReader(os.path.join(FOLDER_OUT, files[1]))
         assert len(pdf_first.pages) == 4, (
             'Expected 4 pages in the first PDF, got: ',
             len(pdf_first.pages)
         )
-        pdf_second = PdfReader(os.path.join(folder_out, files[0]))
+        pdf_second = PdfReader(os.path.join(FOLDER_OUT, files[0]))
 
         content_first_page = pdf_first.pages[0].extract_text(
             extraction_mode='layout'
@@ -536,20 +535,19 @@ class TestClient(TestCase):
             content_first_page
         )
 
-    def test_get_mock_projects_and_write_pdfs(self):
+    def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
         This assumes the JSON parsing works correctly."""
 
-        folder_out = os.path.join('tests', 'outfolder')
-        if os.path.exists(folder_out):
-            shutil.rmtree(folder_out)
-        os.mkdir(folder_out)
+        if os.path.exists(FOLDER_OUT):
+            shutil.rmtree(FOLDER_OUT)
+        os.mkdir(FOLDER_OUT)
 
         runner = CliRunner()
         result = runner.invoke(
             cli, [
                 'pull-projects', '--dryrun',
-                '--folder', folder_out,
+                '--folder', FOLDER_OUT,
                 '--url', ''
             ],
             input=os.getenv('TEST_PAT', ''),
