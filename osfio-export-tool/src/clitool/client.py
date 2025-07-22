@@ -347,10 +347,14 @@ def get_project_data(pat, dryrun, project_url=''):
             if '/' in project_id:
                 # Need extra processing for API links
                 project_id = project_id.split('/')[-1]
+            click.echo(f"Exporting project with ID: {project_id}")
         except Exception:
-            click.echo("Project URL is invalid! PLease try another")
+            click.echo("Project URL is invalid! Please try another")
             return []
-
+    else:
+        click.echo("No project URL provided, exporting all projects.")
+    
+    click.echo("Getting project(s) data...")
     if not dryrun:
         if project_id:
             result = call_api(
@@ -370,6 +374,7 @@ def get_project_data(pat, dryrun, project_url=''):
         else:
             nodes = MockAPIResponse.read('nodes')
 
+    click.echo(f"Parsing results...")
     projects = []
     root_nodes = []  # Track position of root nodes for quick access when PDF writing
     added_node_ids = set()  # Track added node IDs to avoid duplicates
@@ -523,7 +528,7 @@ def get_project_data(pat, dryrun, project_url=''):
                 nodes['data'].append(child)
 
         projects.append(project_data)
-
+    
     return projects, root_nodes
 
 
@@ -717,9 +722,11 @@ def write_pdfs(projects, root_nodes, folder=''):
     for idx in root_nodes:
         curr_project = projects[idx]
         title = curr_project['metadata']['title']
+        click.echo(f'Exporting to PDF project: {title}')
         pdf = explore_project_tree(curr_project, projects)
         filename = f'{title}_export.pdf'
         pdf.output(os.path.join(folder, filename))
+        click.echo(f'Export for {title} completed.')
         pdfs.append(pdf)
 
     return pdfs
@@ -745,8 +752,7 @@ def pull_projects(pat, dryrun, folder, url=''):
     with the --url option."""
 
     projects, root_projects = get_project_data(pat, dryrun, project_url=url)
-    click.echo(f'Found {len(projects)} projects.')
-    click.echo('Generating PDF...')
+    click.echo(f'Found {len(projects)} projects and components.')
     write_pdfs(projects, root_projects, folder)
 
 
