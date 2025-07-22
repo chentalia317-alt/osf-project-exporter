@@ -8,6 +8,7 @@ import click
 from fpdf import FPDF, Align
 from fpdf.fonts import FontFace
 from mistletoe import markdown
+import qrcode
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
@@ -103,7 +104,6 @@ class MockAPIResponse:
 
 
 class PDF(FPDF):
-    
     def __init__(self, url=''):
         super().__init__()
         self.date_printed = datetime.datetime.now().astimezone()
@@ -125,7 +125,6 @@ class PDF(FPDF):
 
 
 def generate_qr_code(url):
-    import qrcode
     qr = qrcode.make(url)
     img_byte_arr = io.BytesIO()
     qr.save(img_byte_arr, format='PNG')
@@ -353,7 +352,7 @@ def get_project_data(pat, dryrun, project_url=''):
             return []
     else:
         click.echo("No project URL provided, exporting all projects.")
-    
+
     click.echo("Getting project(s) data...")
     if not dryrun:
         if project_id:
@@ -374,9 +373,9 @@ def get_project_data(pat, dryrun, project_url=''):
         else:
             nodes = MockAPIResponse.read('nodes')
 
-    click.echo(f"Parsing results...")
+    click.echo("Parsing results...")
     projects = []
-    root_nodes = []  # Track position of root nodes for quick access when PDF writing
+    root_nodes = []  # Track indexes of root nodes for quick access
     added_node_ids = set()  # Track added node IDs to avoid duplicates
 
     for idx, project in enumerate(nodes['data']):
@@ -516,9 +515,12 @@ def get_project_data(pat, dryrun, project_url=''):
             project_data['parent'] = None
             root_nodes.append(idx)
         children_link = relations['children']['links']['related']['href']
-        children = MockAPIResponse.read(children_link) if dryrun else json.loads(
-            call_api(children_link, pat).read()
-        )
+        if dryrun:
+            children = MockAPIResponse.read(children_link)
+        else:
+            json.loads(
+                call_api(children_link, pat).read()
+            )
         project_data['children'] = []
         for child in children['data']:
             project_data['children'].append(child['id'])
@@ -528,7 +530,7 @@ def get_project_data(pat, dryrun, project_url=''):
                 nodes['data'].append(child)
 
         projects.append(project_data)
-    
+
     return projects, root_nodes
 
 
@@ -595,7 +597,7 @@ def write_pdfs(projects, root_nodes, folder=''):
                 align='L',
                 markdown=True
             )
-        
+
     def write_project_body(pdf, project):
         """Write the body of a project to the PDF."""
         pdf.add_page()
@@ -621,7 +623,6 @@ def write_pdfs(projects, root_nodes, folder=''):
         qr_img = generate_qr_code(url)
         pdf.image(qr_img, w=30, x=Align.C)
 
-        
         pdf.ln()
 
         # Write title for metadata section, then actual fields
@@ -693,9 +694,8 @@ def write_pdfs(projects, root_nodes, folder=''):
             pdf.write_html(html)
             if i < len(wikis.keys())-1:
                 pdf.add_page()
-        
+
         return pdf
-    
 
     def explore_project_tree(project, projects, pdf=None):
         """Recursively find child projects and write them to the PDF."""
@@ -703,7 +703,7 @@ def write_pdfs(projects, root_nodes, folder=''):
         # Start with no PDF at root projects
         if not pdf:
             pdf = PDF()
-        
+
         # Add current project to PDF
         pdf = write_project_body(pdf, project)
 
@@ -715,9 +715,9 @@ def write_pdfs(projects, root_nodes, folder=''):
             )
             if child_project:
                 pdf = explore_project_tree(child_project, projects, pdf=pdf)
-        
+
         return pdf
-    
+
     pdfs = []
     for idx in root_nodes:
         curr_project = projects[idx]
