@@ -609,7 +609,7 @@ def write_pdfs(projects, root_nodes, folder=''):
                 markdown=True
             )
 
-    def write_project_body(pdf, project):
+    def write_project_body(pdf, project, parent_title=''):
         """Write the body of a project to the PDF.
 
         Parameters
@@ -618,6 +618,8 @@ def write_pdfs(projects, root_nodes, folder=''):
                 PDF object to write to.
             project: dict
                 Dictionary containing project data to write.
+            parent_title: str
+                Title of the parent project.
         Returns
         -----------
             pdf: PDF"""
@@ -631,7 +633,10 @@ def write_pdfs(projects, root_nodes, folder=''):
         # Write header section
         title = project['metadata']['title']
         pdf.set_font('Times', size=18, style='B')
-        pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
+        if parent_title:
+            pdf.multi_cell(0, h=0, text=f'{parent_title} / {title}\n', align='L')
+        else:
+            pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
         pdf.set_font('Times', size=12)
         url = project['metadata'].pop('url', '')
         if url:
@@ -718,7 +723,7 @@ def write_pdfs(projects, root_nodes, folder=''):
 
         return pdf
 
-    def explore_project_tree(project, projects, pdf=None):
+    def explore_project_tree(project, projects, pdf=None, parent_title=''):
         """Recursively find child projects and write them to the PDF.
 
         Parameters
@@ -729,6 +734,8 @@ def write_pdfs(projects, root_nodes, folder=''):
                 List of all projects to explore.
             pdf: PDF
                 PDF object to write to. If None, a new PDF will be created.
+            parent_title: str
+                Title of the parent project.
 
         Returns
         -----------
@@ -740,7 +747,7 @@ def write_pdfs(projects, root_nodes, folder=''):
             pdf = PDF()
 
         # Add current project to PDF
-        pdf = write_project_body(pdf, project)
+        pdf = write_project_body(pdf, project, parent_title=parent_title)
 
         # Do children last so that come at end of the PDF
         children = project['children']
@@ -749,7 +756,9 @@ def write_pdfs(projects, root_nodes, folder=''):
                 (p for p in projects if p['metadata']['id'] == child_id), None
             )
             if child_project:
-                pdf = explore_project_tree(child_project, projects, pdf=pdf)
+                # Pass current title to include in component header
+                parent_title = project['metadata']['title']
+                pdf = explore_project_tree(child_project, projects, pdf=pdf, parent_title=parent_title)
 
         return pdf
 
