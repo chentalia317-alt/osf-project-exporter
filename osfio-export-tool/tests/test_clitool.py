@@ -488,6 +488,8 @@ class TestClient(TestCase):
         content_fourth_page = pdf_first.pages[3].extract_text(
             extraction_mode='layout'
         )
+        assert 'My Project Title / child1' in content_third_page
+        assert 'child1 / child2' in content_fourth_page
         assert 'Title: child1' in content_third_page
         assert 'Title: child2' in content_fourth_page
 
