@@ -757,7 +757,9 @@ def write_pdfs(projects, root_nodes, folder=''):
             if child_project:
                 # Pass current title to include in component header
                 parent_title = project['metadata']['title']
-                pdf = explore_project_tree(child_project, projects, pdf=pdf, parent_title=parent_title)
+                pdf = explore_project_tree(
+                    child_project, projects, pdf=pdf, parent_title=parent_title
+                )
 
         return pdf
 
