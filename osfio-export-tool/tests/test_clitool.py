@@ -281,6 +281,9 @@ class TestClient(TestCase):
             'Expected URL https://test.osf.io/x/, got: ',
             projects[0]['metadata']['url']
         )
+        assert projects[1]['metadata']['url'] != 'https://test.osf.io/x/', (
+            'Repeated project URL'
+        )
 
         assert projects[0]['parent'] is None, (
             'Expected no parent, got: ',
