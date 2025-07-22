@@ -634,9 +634,8 @@ def write_pdfs(projects, root_nodes, folder=''):
         title = project['metadata']['title']
         pdf.set_font('Times', size=18, style='B')
         if parent_title:
-            pdf.multi_cell(0, h=0, text=f'{parent_title} / {title}\n', align='L')
-        else:
-            pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
+            pdf.multi_cell(0, h=0, text=f'{parent_title} /\n', align='L')
+        pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
         pdf.set_font('Times', size=12)
         url = project['metadata'].pop('url', '')
         if url:
