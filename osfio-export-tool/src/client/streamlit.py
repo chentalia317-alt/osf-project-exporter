@@ -17,9 +17,12 @@
 ##      Select API environment: Production or Test                                                ##
 ##      Token Source: Provided via .env file or entering the OSF API token.                       ##
 ##      OSF API Key: Allows users to enter (paste) the API key for private repositories           ##
-## Running App locally: After setting up the docker container                                     ##
-##    $ docker compose run -p 8501:8501 cli streamlit <script>                                    ##                                                   ##
+## Running App locally                                                                            ##
+#   In docker:                                                                                    ##
+##    $ docker compose run -p 8501:8501 cli streamlit <script>                                    ##
 ##                                                                                                ##
+##  In virtual environment:                                                                       ##
+##    $ streamlit run <path-to-file>/streamlit.py --server.port 8501                              ##
 ## =================================================================================================
 '''
 
