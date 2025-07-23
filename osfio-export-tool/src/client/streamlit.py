@@ -78,4 +78,4 @@ if project_type == "Private":
     else:
         osf_token = os.getenv("TEST_PAT")
 
-st.write(exporter.MockAPIResponse.read('x'))
+st.write(exporter.MockAPIResponse.MARKDOWN_FILES)
