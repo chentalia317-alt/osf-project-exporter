@@ -356,6 +356,12 @@ def get_project_data(pat, dryrun, project_url=''):
         click.echo("No project URL provided, exporting all projects.")
 
     click.echo("Getting project(s) data...")
+
+    # Reduce query size by getting root nodes only
+    node_filter = {
+        'parent': '',
+    }
+
     if not dryrun:
         if project_id:
             result = call_api(
@@ -365,7 +371,8 @@ def get_project_data(pat, dryrun, project_url=''):
             nodes = {'data': [json.loads(result.read())['data']]}
         else:
             result = call_api(
-                f'{API_HOST}/users/me/nodes/', pat
+                f'{API_HOST}/users/me/nodes/', pat,
+                filters=node_filter
             )
             nodes = json.loads(result.read())
     else:
