@@ -7,9 +7,14 @@ import traceback
 from click.testing import CliRunner
 from pypdf import PdfReader
 
+from exporter import (
+    call_api,
+    get_project_data,
+    explore_file_tree,
+    explore_wikis
+)
 from clitool import (
-    cli, call_api, get_project_data,
-    explore_file_tree, explore_wikis
+    cli
 )
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
