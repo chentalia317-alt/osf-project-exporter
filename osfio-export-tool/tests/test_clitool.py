@@ -13,7 +13,7 @@ from exporter import (
     explore_file_tree,
     explore_wikis
 )
-from clitool import (
+from client import (
     cli
 )
 

@@ -12,14 +12,14 @@ dependencies = [
 
 [project.scripts]
 # Executable scripts, names are commands
-clirun = "clitool.client:cli"
+clirun = "client.cli:cli"
 
 [build-system]
 requires = ["flit_core<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.module]
-name = "clitool"
+name = "client"
 
 [tool.black]
 line-length=88

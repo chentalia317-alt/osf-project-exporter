@@ -1,4 +1,4 @@
-from .client import (
+from .cli import (
     cli
 )
 
