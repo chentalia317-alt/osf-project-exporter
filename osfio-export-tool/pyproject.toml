@@ -2,7 +2,7 @@
 name = "osfio-export-tool"
 version = "0.0.1"
 description = "OSF Export CLI tool"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "click>=8.1",
     "fpdf2==2.8.3",
