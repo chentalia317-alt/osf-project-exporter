@@ -440,31 +440,9 @@ def get_project_data(pat, dryrun, project_url=''):
 
     return projects
 
-
-@click.command()
-@click.option('--pat', type=str, default='',
-              prompt=True, hide_input=True,
-              help='Personal Access Token to authorise OSF account access.')
-@click.option('--dryrun', is_flag=True, default=False,
-              help='If enabled, use mock responses in place of the API.')
-@click.option('--filename', type=str, default='osf_projects.pdf',
-              help='Name of the PDF file to export to.')
-@click.option('--url', type=str, default='',
-              help="""A link to one project you want to export.
-
-              For example: https://osf.io/dry9j/
-
-              Leave blank to export all projects you have access to.""")
-def pull_projects(pat, dryrun, filename, url=''):
-    """Pull and export OSF projects to a PDF file.
-    You can export all projects you have access to, or one specific one
-    with the --url option."""
-
-    projects = get_project_data(pat, dryrun, project_url=url)
-    click.echo(f'Found {len(projects)} projects.')
-    click.echo('Generating PDF...')
-
-    # Set nicer display names for certian PDF fields
+def generate_pdf(projects, filename='osf_projects.pdf'):
+    
+    # Set nicer display names for certain PDF fields
     pdf_display_names = {
         'identifiers': 'DOI',
         'funders': 'Support/Funding Information'
@@ -513,6 +491,31 @@ def pull_projects(pat, dryrun, filename, url=''):
             pdf.write_html(html)
             pdf.add_page()
     pdf.output(filename)
+
+
+@click.command()
+@click.option('--pat', type=str, default='',
+              prompt=True, hide_input=True,
+              help='Personal Access Token to authorise OSF account access.')
+@click.option('--dryrun', is_flag=True, default=False,
+              help='If enabled, use mock responses in place of the API.')
+@click.option('--filename', type=str, default='osf_projects.pdf',
+              help='Name of the PDF file to export to.')
+@click.option('--url', type=str, default='',
+              help="""A link to one project you want to export.
+
+              For example: https://osf.io/dry9j/
+
+              Leave blank to export all projects you have access to.""")
+def pull_projects(pat, dryrun, filename, url=''):
+    """Pull and export OSF projects to a PDF file.
+    You can export all projects you have access to, or one specific one
+    with the --url option."""
+
+    projects = get_project_data(pat, dryrun, project_url=url)
+    click.echo(f'Found {len(projects)} projects.')
+    click.echo('Generating PDF...')
+    generate_pdf(projects, filename)
 
 
 @click.command()
