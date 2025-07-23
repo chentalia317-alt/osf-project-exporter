@@ -13,3 +13,6 @@ RUN pip install -U pip setuptools \
     && pip install --no-cache-dir -r /code/app/requirements.core.txt \
     && pip install -e .
 
+# Default port for Streamlit
+EXPOSE 8501
+
