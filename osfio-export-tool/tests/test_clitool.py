@@ -1,7 +1,7 @@
 from unittest import TestCase
 import os
 import json
-# import pdb  # Use pdb.set_trace() to help with debugging
+import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
 
 from click.testing import CliRunner
@@ -57,7 +57,11 @@ class TestAPI(TestCase):
         )
         node = json.loads(data.read())['data'][0]
         link = node['links']['html']
-        projects = get_project_data(os.getenv('TEST_PAT', ''), False, link)
+        id = extract_project_id(node['links']['html'])
+        projects = get_project_data(
+            os.getenv('TEST_PAT', ''), False,
+            project_id=id
+        )
         assert len(projects) == 1
         assert projects[0]['title'] == node['attributes']['title']
 
@@ -241,14 +245,7 @@ class TestClient(TestCase):
     def test_get_single_mock_project(self):
         projects = get_project_data(
             os.getenv('TEST_PAT', ''), True,
-            'https://osf.io/x/'
-        )
-        assert len(projects) == 1
-        assert projects[0]['id'] == 'x'
-
-        projects = get_project_data(
-            os.getenv('TEST_PAT', ''), True,
-            'https://api.test.osf.io/v2/nodes/x/'
+            'x'
         )
         assert len(projects) == 1
         assert projects[0]['id'] == 'x'
