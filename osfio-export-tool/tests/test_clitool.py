@@ -14,7 +14,7 @@ from exporter import (
     explore_wikis
 )
 from client import (
-    cli
+    cli, extract_project_id
 )
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
@@ -293,3 +293,20 @@ class TestClient(TestCase):
 
         if os.path.exists(input_path):
             os.remove(input_path)
+    
+    def test_extract_project_id(self):
+        """Test extracting project ID from various URL formats."""
+        
+        url = 'https://osf.io/x/'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        url = 'https://api.test.osf.io/v2/nodes/x/'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        url = 'x'
+        self.assertRaises(
+            ValueError, extract_project_id, url
+        )
+
