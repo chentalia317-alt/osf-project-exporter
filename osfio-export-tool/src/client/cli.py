@@ -56,13 +56,15 @@ def pull_projects(pat, dryrun, filename, url=''):
     You can export all projects you have access to, or one specific one
     with the --url option."""
 
-    try:
-        project_id = extract_project_id(url)
-    except ValueError as e:
-        click.echo(str(e))
-        return
+    project_id = ''
+    if url:
+        try:
+            project_id = extract_project_id(url)
+        except ValueError as e:
+            click.echo(str(e))
+            return
 
-    projects = exporter.get_project_data(pat, dryrun, project_url=url)
+    projects = exporter.get_project_data(pat, dryrun, project_id=project_id)
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
     exporter.generate_pdf(projects, filename)

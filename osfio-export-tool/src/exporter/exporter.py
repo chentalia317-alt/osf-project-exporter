@@ -280,7 +280,7 @@ def explore_wikis(link, pat, dryrun=True):
     return wiki_content
 
 
-def get_project_data(pat, dryrun, project_url=''):
+def get_project_data(pat, dryrun, project_id=''):
     """Pull and list projects for a user from the OSF.
 
     Parameters
@@ -289,26 +289,14 @@ def get_project_data(pat, dryrun, project_url=''):
         Personal Access Token to authorise a user with.
     dryrun: bool
         If True, use test data from JSON stubs to mock API calls.
-    project_url: str
-        Optional URL to a specific OSF project, of form <URL>.io/<project_id>/
+    project_id: str
+        Optional ID for a specific OSF project to export.
 
     Returns
     ----------
         projects: list[dict]
             List of dictionaries representing projects.
     """
-
-    # Don't get other projects if user gives valid/invalid URL to save time
-    project_id = None
-    if project_url != '':
-        try:
-            project_id = project_url.split(".io/")[1].strip("/")
-            if '/' in project_id:
-                # Need extra processing for API links
-                project_id = project_id.split('/')[-1]
-        except Exception:
-            click.echo("Project URL is invalid! PLease try another")
-            return []
 
     if not dryrun:
         if project_id:
