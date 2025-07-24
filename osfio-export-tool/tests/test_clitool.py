@@ -59,8 +59,8 @@ class TestAPI(TestCase):
         link = node['links']['html']
         id = extract_project_id(node['links']['html'])
         projects = get_project_data(
-            os.getenv('TEST_PAT', ''), False,
-            project_id=id
+            os.getenv('TEST_PAT', ''), dryrun=False,
+            usetest=True, project_id=id
         )
         assert len(projects) == 1
         assert projects[0]['title'] == node['attributes']['title']
@@ -113,7 +113,11 @@ class TestAPI(TestCase):
 
         # Use PAT to find user projects
         result = runner.invoke(
-            cli, ['pull-projects', '--filename', input_path],
+            cli, [
+                'pull-projects',
+                '--filename', input_path,
+                '--usetest'
+            ],
             input=os.getenv('TEST_PAT', ''),
             terminal_width=60
         )
@@ -171,7 +175,10 @@ class TestClient(TestCase):
         """Using JSON stubs to simulate API responses,
         test we can parse them correctly"""
 
-        projects = get_project_data(os.getenv('TEST_PAT', ''), True)
+        projects = get_project_data(
+            os.getenv('TEST_PAT', ''),
+            dryrun=True
+        )
 
         assert len(projects) == 2, (
             'Expected 2 projects in the stub data'
@@ -244,8 +251,8 @@ class TestClient(TestCase):
 
     def test_get_single_mock_project(self):
         projects = get_project_data(
-            os.getenv('TEST_PAT', ''), True,
-            'x'
+            os.getenv('TEST_PAT', ''), dryrun=True,
+            project_id='x'
         )
         assert len(projects) == 1
         assert projects[0]['id'] == 'x'
