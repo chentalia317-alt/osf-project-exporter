@@ -319,8 +319,6 @@ def get_project_data(pat, dryrun, project_id=''):
 
     projects = []
     for project in nodes['data']:
-        if project['attributes']['category'] != 'project':
-            continue
         project_data = {
             'title': project['attributes']['title'],
             'id': project['id'],

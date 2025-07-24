@@ -628,15 +628,6 @@
                 "self": "https://api.test.osf.io/v2/nodes/x/",
                 "iri": "https://test.osf.io/x"
             }
-        },
-        {
-            "id": "x",
-            "type": "nodes",
-            "attributes": {
-                "title": "Test2",
-                "description": "Test2 Description",
-                "category": "preprint"
-            }
         }
     ]
 }
