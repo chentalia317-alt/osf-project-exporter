@@ -7,7 +7,8 @@ from mistletoe import markdown
 
 import exporter as exporter
 
-API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
+API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
+API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
 
 def extract_project_id(url):
     """Extract project ID from a given OSF project URL.
@@ -74,10 +75,19 @@ def pull_projects(pat, dryrun, filename, url=''):
 @click.option('--pat', type=str, default='',
               prompt=True, hide_input=True,
               help='Personal Access Token to authorise OSF account access.')
-def get_user_details(pat):
-    """Get details for a specific OSF user."""
+@click.option('--usetest', is_flag=True, default=False,
+              help="""Use this to connect to the test API environment.
+              Otherwise, the production environment will be used.""")
+def show_welcome(pat, usetest):
+    """Get a welcome message from the OSF site.
+    This is for testing if we can connect to the API."""
 
-    request = webhelper.Request(f'{API_HOST}/', method='GET')
+    if usetest:
+        api_host = API_HOST_TEST
+    else:
+        api_host = API_HOST_PROD
+
+    request = webhelper.Request(f'{api_host}/', method='GET')
     request.add_header('Authorization', f'Bearer {pat}')
     result = webhelper.urlopen(request)
     click.echo(result.read())
@@ -91,4 +101,4 @@ def cli():
 
 
 cli.add_command(pull_projects)
-cli.add_command(get_user_details)
+cli.add_command(show_welcome)
