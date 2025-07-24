@@ -13,9 +13,13 @@ You can setup a Docker container with this tool installed as a Python package:
 3. On the OSF website, create or log in to your account.  Set up a personal access token (PAT) by going into your account settings, selecting "Personal access tokens" in the left side menu, and clicking "Create token". You should give the token a name that helps you remember why you made it, like "PDF export", and choose the "osf.full_read" scope - this allows this token to read all public and private projects on your account. You can delete this token once you have finished exporting your projects.
 4. Create a `.env` file and add your personal access token to it (see `.env.template`.)
 5. In the root of this repository, run `docker compose up --build -d` to setup a container.
-6. Use `docker compose exec -it cli <commands>` to run CLI tool commands (e.g. `pull-projects`) or run unit tests (i.e. `python -m unittest`.)
+6. Use `docker compose exec -it cli <commands>` to run CLI tool commands (e.g. `export-projects`) or run unit tests (i.e. `python -m unittest`.)
 
 ### Virtual Environment
+
+#### Known Issues
+
+- The `--dryrun` flag currently does not work when running in a virtual environment, likely due to an issue with how the Python package is setup.
 
 You could also setup a Python virtual environment (e.g. using virtualenv):
 
@@ -27,5 +31,5 @@ You could also setup a Python virtual environment (e.g. using virtualenv):
 ## Usage
 
 - Run `clirun` to get a list of basic commands you can use.
-- To see what a command needs as input, type `--help` after the command name (e.g. `clirun pull-projects --help`; `clirun --help`)
-- To export all your projects from the OSF into a PDF, run `clirun pull-projects`.
+- To see what a command needs as input, type `--help` after the command name (e.g. `clirun show-welcome --help`; `clirun --help`)
+- To export all your projects from the OSF into a PDF, run `clirun export-projects`.

@@ -55,7 +55,7 @@ def extract_project_id(url):
               For example: https://osf.io/dry9j/
 
               Leave blank to export all projects you have access to.""")
-def pull_projects(pat, filename, dryrun=False, url='', usetest=False):
+def export_projects(pat, filename, dryrun=False, url='', usetest=False):
     """Pull and export OSF projects to a PDF file.
     You can export all projects you have access to, or one specific one
     with the --url option."""
@@ -105,5 +105,5 @@ def cli():
     pass
 
 
-cli.add_command(pull_projects)
+cli.add_command(export_projects)
 cli.add_command(show_welcome)

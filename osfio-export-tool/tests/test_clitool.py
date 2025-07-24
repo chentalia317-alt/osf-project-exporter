@@ -96,7 +96,7 @@ class TestAPI(TestCase):
         else:
             print("No nodes available, consider making a test project.")
 
-    def test_pull_projects_command(self):
+    def test_export_projects_command(self):
         """Test we can successfully pull projects using the OSF API"""
 
         if os.path.exists(input_path):
@@ -106,7 +106,7 @@ class TestAPI(TestCase):
 
         # No PAT given - exception
         result = runner.invoke(
-            cli, ['pull-projects'], input='', terminal_width=60
+            cli, ['export-projects'], input='', terminal_width=60
         )
         assert result.exception
         assert not os.path.exists(input_path)
@@ -114,7 +114,7 @@ class TestAPI(TestCase):
         # Use PAT to find user projects
         result = runner.invoke(
             cli, [
-                'pull-projects',
+                'export-projects',
                 '--filename', input_path,
                 '--usetest'
             ],
@@ -267,7 +267,7 @@ class TestClient(TestCase):
         runner = CliRunner()
         result = runner.invoke(
             cli, [
-                'pull-projects', '--dryrun',
+                'export-projects', '--dryrun',
                 '--filename', input_path,
                 '--url', ''
             ],
