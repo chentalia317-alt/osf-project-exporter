@@ -17,8 +17,6 @@ from client import (
     cli, extract_project_id
 )
 
-API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
-
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
 input_path = os.path.join('tests', TEST_PDF_FOLDER, TEST_INPUT)
@@ -31,11 +29,13 @@ test_data = os.path.join('tests', 'myprojects.txt')
 class TestAPI(TestCase):
     """Tests for interacting with the OSF API."""
 
+    API_HOST = 'https://api.test.osf.io/v2'
+
     def test_get_projects_api(self):
         """Test for if JSON for user's projects are loaded correctly"""
 
         data = call_api(
-            f'{API_HOST}/users/me/nodes/',
+            f'{TestAPI.API_HOST}/users/me/nodes/',
             os.getenv('TEST_PAT', '')
         )
         assert data.status == 200
@@ -51,7 +51,7 @@ class TestAPI(TestCase):
     def test_single_project_json_is_as_expected(self):
         # Use first public project available for this test
         data = call_api(
-            f'{API_HOST}/nodes/',
+            f'{TestAPI.API_HOST}/nodes/',
             os.getenv('TEST_PAT', ''),
             per_page=1
         )
@@ -73,7 +73,7 @@ class TestAPI(TestCase):
             'title': 'ttt',
         }
         data = call_api(
-            f'{API_HOST}/nodes/',
+            f'{TestAPI.API_HOST}/nodes/',
             os.getenv('TEST_PAT', ''),
             per_page=12, filters=filters
         )
@@ -83,12 +83,12 @@ class TestAPI(TestCase):
         """Test using API to filter and search file links."""
 
         data = call_api(
-            f'{API_HOST}/users/me/nodes/',
+            f'{TestAPI.API_HOST}/users/me/nodes/',
             os.getenv('TEST_PAT', '')
         )
         nodes = json.loads(data.read())['data']
         if len(nodes) > 0:
-            link = f'{API_HOST}/nodes/{nodes[0]['id']}/files/osfstorage/'
+            link = f'{TestAPI.API_HOST}/nodes/{nodes[0]['id']}/files/osfstorage/'
             files = explore_file_tree(
                 link, os.getenv('TEST_PAT', ''), dryrun=False
             )
