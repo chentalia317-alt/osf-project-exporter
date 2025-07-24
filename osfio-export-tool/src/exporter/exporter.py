@@ -7,7 +7,24 @@ import click
 from fpdf import FPDF
 from mistletoe import markdown
 
-API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
+API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
+API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
+
+def get_host(is_test):
+    """Get API host based on flag.
+    
+    Parameters
+    ----------
+    is_test: bool
+        If True, return test API host, otherwise return production host.
+    
+    Returns
+    -------
+    str
+        API host URL for the test site or production site.
+    """
+
+    return API_HOST_TEST if is_test else API_HOST_PROD
 
 
 class MockAPIResponse:
@@ -280,7 +297,7 @@ def explore_wikis(link, pat, dryrun=True):
     return wiki_content
 
 
-def get_project_data(pat, dryrun, project_id=''):
+def get_project_data(pat, dryrun=False, project_id='', usetest=False):
     """Pull and list projects for a user from the OSF.
 
     Parameters
@@ -291,6 +308,8 @@ def get_project_data(pat, dryrun, project_id=''):
         If True, use test data from JSON stubs to mock API calls.
     project_id: str
         Optional ID for a specific OSF project to export.
+    usetest: bool
+        If True, use test API host, otherwise use production host.
 
     Returns
     ----------
@@ -298,16 +317,18 @@ def get_project_data(pat, dryrun, project_id=''):
             List of dictionaries representing projects.
     """
 
+    api_host = get_host(usetest)
+
     if not dryrun:
         if project_id:
             result = call_api(
-                f'{API_HOST}/nodes/{project_id}/', pat
+                f'{api_host}/nodes/{project_id}/', pat
             )
             # Put data into same format as if multiple nodes found
             nodes = {'data': [json.loads(result.read())['data']]}
         else:
             result = call_api(
-                f'{API_HOST}/users/me/nodes/', pat
+                f'{api_host}/users/me/nodes/', pat
             )
             nodes = json.loads(result.read())
     else:
@@ -337,7 +358,7 @@ def get_project_data(pat, dryrun, project_id=''):
             metadata = MockAPIResponse.read('custom_metadata')
         else:
             metadata = json.loads(call_api(
-                f"{API_HOST}/custom_item_metadata_records/{project['id']}/",
+                f"{api_host}/custom_item_metadata_records/{project['id']}/",
                 pat
             ).read())
         metadata = metadata['data']['attributes']
@@ -418,7 +439,7 @@ def get_project_data(pat, dryrun, project_id=''):
             project_data[key] = values
 
         project_data['wikis'] = explore_wikis(
-            f'{API_HOST}/nodes/{project_data['id']}/wikis/',
+            f'{api_host}/nodes/{project_data['id']}/wikis/',
             pat=pat, dryrun=dryrun
         )
 
