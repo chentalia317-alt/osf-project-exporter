@@ -9,6 +9,34 @@ import exporter as exporter
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
+def extract_project_id(url):
+    """Extract project ID from a given OSF project URL.
+
+    Parameters
+    ----------
+    url: str
+        URL of the OSF project.
+
+    Returns
+    -------
+    str
+        Project ID extracted from the URL.
+    """
+    try:
+        project_id = url.split(".io/")[1].strip("/")
+        if '/' in project_id:
+            # Need extra processing for API links
+            project_id = project_id.split('/')[-1]
+        return project_id
+    except Exception:
+        raise ValueError(
+            """
+            Invalid OSF project URL.
+            Please provide a valid URL in the format:
+            https://osf.io/<project_id>/")
+            """
+        )
+
 @click.command()
 @click.option('--pat', type=str, default='',
               prompt=True, hide_input=True,
@@ -27,6 +55,12 @@ def pull_projects(pat, dryrun, filename, url=''):
     """Pull and export OSF projects to a PDF file.
     You can export all projects you have access to, or one specific one
     with the --url option."""
+
+    try:
+        project_id = extract_project_id(url)
+    except ValueError as e:
+        click.echo(str(e))
+        return
 
     projects = exporter.get_project_data(pat, dryrun, project_url=url)
     click.echo(f'Found {len(projects)} projects.')

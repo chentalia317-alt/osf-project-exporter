@@ -1,7 +1,8 @@
 from .cli import (
-    cli
+    cli, extract_project_id
 )
 
 __all__ = [
-    'cli'
+    'cli',
+    'extract_project_id'
 ]
