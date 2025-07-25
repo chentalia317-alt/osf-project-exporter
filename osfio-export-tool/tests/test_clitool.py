@@ -126,11 +126,12 @@ class TestClient(TestCase):
         files = explore_file_tree(
             'root', os.getenv('TEST_PAT', ''), dryrun=True
         )
-        assert '/helloworld.txt.txt' in files
-        assert '/tf1/helloworld.txt.txt' in files
-        assert '/tf1/tf2/file.txt' in files
-        assert '/tf1/tf2-second/secondpage.txt' in files
-        assert '/tf1/tf2-second/thirdpage.txt' in files
+
+        assert '/helloworld.txt.txt' == files[4][0]
+        assert '/tf1/helloworld.txt.txt' == files[1][0]
+        assert '/tf1/tf2/file.txt' == files[0][0]
+        assert '/tf1/tf2-second/secondpage.txt' == files[2][0]
+        assert '/tf1/tf2-second/thirdpage.txt' == files[3][0]
 
     def test_get_latest_wiki_version(self):
         """Test getting the latest version of a mock wiki"""
@@ -237,13 +238,13 @@ class TestClient(TestCase):
             projects[0]['metadata']['resource_lang']
         )
         assert len(projects[0]['files']) == 5
-        assert '/helloworld.txt.txt' in projects[0]['files'][4][0], (
+        assert '/helloworld.txt.txt' == projects[0]['files'][4][0], (
             projects[0]['files'][4][0]
         )
-        assert '/tf1/helloworld.txt.txt' in projects[0]['files'][1][0], (
+        assert '/tf1/helloworld.txt.txt' == projects[0]['files'][1][0], (
             projects[0]['files'][1][0]
         )
-        assert '/tf1/tf2/file.txt' in projects[0]['files'][0][0], (
+        assert '/tf1/tf2/file.txt' == projects[0]['files'][0][0], (
             projects[0]['files'][0][0]
         )
         subjects = projects[0]['metadata']['subjects']
