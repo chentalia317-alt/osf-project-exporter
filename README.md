@@ -2,7 +2,7 @@
 
 This is a CLI tool for exporting research project data and files from the [OSF website](https://osf.io/). This is to prototype tool to export projects from the OSF website to a PDF, allowing users to back up, share or document their OSF projects in an offline medium.
 
-## Installation
+## Development Setup
 
 ### Docker
 
@@ -16,10 +16,6 @@ You can setup a Docker container with this tool installed as a Python package:
 6. Use `docker compose exec -it cli <commands>` to run CLI tool commands (e.g. `export-projects`) or run unit tests (i.e. `python -m unittest`.)
 
 ### Virtual Environment
-
-#### Known Issues
-
-- The `--dryrun` flag currently does not work when running in a virtual environment, likely due to an issue with how the Python package is setup.
 
 You could also setup a Python virtual environment (e.g. using virtualenv):
 
