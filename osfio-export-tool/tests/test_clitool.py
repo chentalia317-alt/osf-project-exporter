@@ -56,7 +56,6 @@ class TestAPI(TestCase):
             per_page=1
         )
         node = json.loads(data.read())['data'][0]
-        link = node['links']['html']
         id = extract_project_id(node['links']['html'])
         projects = get_project_data(
             os.getenv('TEST_PAT', ''), dryrun=False,
@@ -88,7 +87,8 @@ class TestAPI(TestCase):
         )
         nodes = json.loads(data.read())['data']
         if len(nodes) > 0:
-            link = f'{TestAPI.API_HOST}/nodes/{nodes[0]['id']}/files/osfstorage/'
+            node_id = nodes[0]['id']
+            link = f'{TestAPI.API_HOST}/nodes/{node_id}/files/osfstorage/'
             files = explore_file_tree(
                 link, os.getenv('TEST_PAT', ''), dryrun=False
             )
@@ -297,10 +297,10 @@ class TestClient(TestCase):
 
         if os.path.exists(input_path):
             os.remove(input_path)
-    
+
     def test_extract_project_id(self):
         """Test extracting project ID from various URL formats."""
-        
+
         url = 'https://osf.io/x/'
         project_id = extract_project_id(url)
         assert project_id == 'x', f'Expected "x", got {project_id}'
@@ -313,4 +313,3 @@ class TestClient(TestCase):
         self.assertRaises(
             ValueError, extract_project_id, url
         )
-

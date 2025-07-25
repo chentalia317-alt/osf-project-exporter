@@ -3,21 +3,21 @@ import os
 import datetime
 import urllib.request as webhelper
 
-import click
 from fpdf import FPDF
 from mistletoe import markdown
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
 
+
 def get_host(is_test):
     """Get API host based on flag.
-    
+
     Parameters
     ----------
     is_test: bool
         If True, return test API host, otherwise return production host.
-    
+
     Returns
     -------
     str
@@ -447,8 +447,17 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
 
     return projects
 
+
 def generate_pdf(projects, filename='osf_projects.pdf'):
-    
+    """Generate a PDF file with OSF project data.
+    Parameters
+    ----------
+    projects: list[dict]
+        List of dictionaries representing OSF projects.
+    filename: str
+        Name of the output PDF file. Default is 'osf_projects.pdf'.
+    """
+
     # Set nicer display names for certain PDF fields
     pdf_display_names = {
         'identifiers': 'DOI',
@@ -498,5 +507,3 @@ def generate_pdf(projects, filename='osf_projects.pdf'):
             pdf.write_html(html)
             pdf.add_page()
     pdf.output(filename)
-
-

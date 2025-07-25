@@ -2,13 +2,12 @@ import os
 import urllib.request as webhelper
 
 import click
-from fpdf import FPDF
-from mistletoe import markdown
 
 import exporter as exporter
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
+
 
 def extract_project_id(url):
     """Extract project ID from a given OSF project URL.
@@ -37,6 +36,7 @@ def extract_project_id(url):
             https://osf.io/<project_id>/")
             """
         )
+
 
 @click.command()
 @click.option('--pat', type=str, default='',
