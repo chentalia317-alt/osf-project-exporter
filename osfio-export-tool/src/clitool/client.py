@@ -200,7 +200,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
 
     Returns
     ----------
-        filenames: list[str]
+        files_found: list[str]
             List of file paths found in the project."""
 
     FILE_FILTER = {
@@ -211,7 +211,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     }
     per_page = 100
 
-    filenames = []
+    files_found = []
 
     is_last_page_folders = False
     while not is_last_page_folders:
@@ -231,7 +231,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
             for folder in folders['data']:
                 links = folder['relationships']['files']['links']
                 link = links['related']['href']
-                filenames += explore_file_tree(link, pat, dryrun=dryrun)
+                files_found += explore_file_tree(link, pat, dryrun=dryrun)
         except KeyError:
             pass
 
@@ -249,7 +249,13 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                 )
             try:
                 for file in files['data']:
-                    filenames.append(file['attributes']['materialized_path'])
+                    # TODO: Get data for size and download link
+                    data = (
+                        file['attributes']['materialized_path'],
+                        None,
+                        None
+                    )
+                    files_found.append(data)
             except KeyError:
                 pass
             # Need to go to next page of files if response paginated
@@ -262,7 +268,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         if curr_link is None:
             is_last_page_folders = True
 
-    return filenames
+    return files_found
 
 
 def explore_wikis(link, pat, dryrun=True):
@@ -413,16 +419,13 @@ def get_project_data(pat, dryrun, project_url=''):
 
         # Get list of files in project
         if dryrun:
-            files = explore_file_tree('root', pat, dryrun=True)
-            for f in files:
-                project_data['files'].append((f, None, None))
+            link = 'root'
+            use_mocks = True
         else:
-            # Get files hosted on OSF storage
             link = relations['files']['links']['related']['href']
-            link += 'osfstorage/'
-            project_data['files'] = ', '.join(
-                explore_file_tree(link, pat, dryrun=False)
-            )
+            link += 'osfstorage/' # ID for OSF Storage
+            use_mocks = False
+        project_data['files'] = explore_file_tree(link, pat, dryrun=use_mocks)
 
         # These attributes need link traversal to get their data
         # Most should be part of the project metadata
