@@ -658,7 +658,9 @@ def write_pdfs(projects, folder=''):
                         row.cell(datum)
         else:
             pdf.write(0, '\n')
-            pdf.multi_cell(0, h=0, text='No files found for this project.\n', align='L')
+            pdf.multi_cell(
+                0, h=0, text='No files found for this project.\n', align='L'
+            )
             pdf.write(0, '\n')
 
         # Write wikis separately to more easily handle Markdown parsing
