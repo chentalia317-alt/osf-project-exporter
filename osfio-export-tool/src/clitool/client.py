@@ -99,6 +99,14 @@ class MockAPIResponse:
 
 
 class PDF(FPDF):
+    """Custom PDF class to implement extra customisation.
+    Attributes:
+        date_printed: datetime
+            Date and time when the project was exported.
+        url: str
+            URL to include in QR codes.
+    """
+
     def __init__(self, url=''):
         super().__init__()
         self.date_printed = datetime.datetime.now().astimezone()
