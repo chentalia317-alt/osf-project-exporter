@@ -313,3 +313,38 @@ class TestClient(TestCase):
         self.assertRaises(
             ValueError, extract_project_id, url
         )
+    
+    def test_use_dryrun_in_user_default_dir(self):
+        """Regression test for using --dryrun in user's default directory."""
+
+        filename = 'lol.pdf'
+        cwd = os.getcwd()
+        
+        try:
+            # Go to user's home directory in cross-platform way
+            os.chdir(os.path.expanduser("~"))
+            
+            runner = CliRunner()
+            result = runner.invoke(
+                cli, [
+                    'export-projects', '--dryrun',
+                    '--filename', filename,
+                    '--usetest'
+                ],
+                input=os.getenv('TEST_PAT', ''),
+                terminal_width=60
+            )
+            assert not result.exception, (
+                result.exc_info,
+                traceback.format_tb(result.exc_info[2])
+            )
+            assert os.path.exists(filename)
+        except Exception as e:
+            raise e
+        finally:
+            # Reverse state changes for reproducibility
+            file_path = os.path.join(os.path.expanduser("~"), filename)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            os.chdir(cwd)
+            assert os.getcwd() == cwd
