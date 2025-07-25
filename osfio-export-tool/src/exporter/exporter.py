@@ -9,6 +9,10 @@ from mistletoe import markdown
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
 
+STUBS_DIR = os.path.join(
+    os.path.dirname(__file__), 'stubs'
+)
+
 
 def get_host(is_test):
     """Get API host based on flag.
@@ -32,56 +36,56 @@ class MockAPIResponse:
 
     JSON_FILES = {
         'nodes': os.path.join(
-            'tests', 'stubs', 'nodestubs.json'),
+            STUBS_DIR, 'nodestubs.json'),
         'x': os.path.join(
-            'tests', 'stubs', 'singlenode.json'),
+            STUBS_DIR, 'singlenode.json'),
         'affiliated_institutions': os.path.join(
-            'tests', 'stubs', 'institutionstubs.json'),
+            STUBS_DIR, 'institutionstubs.json'),
         'contributors': os.path.join(
-            'tests', 'stubs', 'contributorstubs.json'),
+            STUBS_DIR, 'contributorstubs.json'),
         'identifiers': os.path.join(
-            'tests', 'stubs', 'doistubs.json'),
+            STUBS_DIR, 'doistubs.json'),
         'custom_metadata': os.path.join(
-            'tests', 'stubs', 'custommetadatastub.json'),
+            STUBS_DIR, 'custommetadatastub.json'),
         'root_folder': os.path.join(
-            'tests', 'stubs', 'files', 'rootfolders.json'),
+            STUBS_DIR, 'files', 'rootfolders.json'),
         'root_files': os.path.join(
-            'tests', 'stubs', 'files', 'rootfiles.json'),
+            STUBS_DIR, 'files', 'rootfiles.json'),
         'tf1_folder': os.path.join(
-            'tests', 'stubs', 'files', 'tf1folders.json'),
+            STUBS_DIR, 'files', 'tf1folders.json'),
         'tf1-2_folder': os.path.join(
-            'tests', 'stubs', 'files', 'tf1folders-2.json'),
+            STUBS_DIR, 'files', 'tf1folders-2.json'),
         'tf1-2_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf2-second-folders.json'),
+            STUBS_DIR, 'files', 'tf2-second-folders.json'),
         'tf1_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf1files.json'),
+            STUBS_DIR, 'files', 'tf1files.json'),
         'tf2_folder': os.path.join(
-            'tests', 'stubs', 'files', 'tf2folders.json'),
+            STUBS_DIR, 'files', 'tf2folders.json'),
         'tf2-second_folder': os.path.join(
-            'tests', 'stubs', 'files', 'tf2-second-folders.json'),
+            STUBS_DIR, 'files', 'tf2-second-folders.json'),
         'tf2_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf2files.json'),
+            STUBS_DIR, 'files', 'tf2files.json'),
         'tf2-second_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf2-second-files.json'),
+            STUBS_DIR, 'files', 'tf2-second-files.json'),
         'tf2-second-2_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf2-second-files-2.json'),
+            STUBS_DIR, 'files', 'tf2-second-files-2.json'),
         'license': os.path.join(
-            'tests', 'stubs', 'licensestub.json'),
+            STUBS_DIR, 'licensestub.json'),
         'subjects': os.path.join(
-            'tests', 'stubs', 'subjectsstub.json'),
+            STUBS_DIR, 'subjectsstub.json'),
         'wikis': os.path.join(
-            'tests', 'stubs', 'wikis', 'wikistubs.json'),
+            STUBS_DIR, 'wikis', 'wikistubs.json'),
         'wikis2': os.path.join(
-            'tests', 'stubs', 'wikis', 'wikis2stubs.json')
+            STUBS_DIR, 'wikis', 'wikis2stubs.json')
     }
 
     MARKDOWN_FILES = {
         'helloworld': os.path.join(
-            'tests', 'stubs', 'wikis', 'helloworld.md'),
+            STUBS_DIR, 'wikis', 'helloworld.md'),
         'home': os.path.join(
-            'tests', 'stubs', 'wikis', 'home.md'),
+            STUBS_DIR, 'wikis', 'home.md'),
         'anotherone': os.path.join(
-            'tests', 'stubs', 'wikis', 'anotherone.md'),
+            STUBS_DIR, 'wikis', 'anotherone.md'),
     }
 
     @staticmethod
