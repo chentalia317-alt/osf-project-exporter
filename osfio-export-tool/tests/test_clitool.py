@@ -132,6 +132,8 @@ class TestClient(TestCase):
         assert '/tf1/tf2/file.txt' == files[0][0]
         assert '/tf1/tf2-second/secondpage.txt' == files[2][0]
         assert '/tf1/tf2-second/thirdpage.txt' == files[3][0]
+        assert files[0][1] == "2.1", (files[0][1])
+        assert isinstance(files[0][2], str)
 
     def test_get_latest_wiki_version(self):
         """Test getting the latest version of a mock wiki"""
