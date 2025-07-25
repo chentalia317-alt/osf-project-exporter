@@ -256,11 +256,12 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                 )
             try:
                 for file in files['data']:
-                    # TODO: Get data for size and download link
+                    size = file['attributes']['size']
+                    size_mb = size / (1024 ** 2)  # Convert bytes to MB
                     data = (
                         file['attributes']['materialized_path'],
-                        None,
-                        None
+                        str(round(size_mb, 2)),
+                        file['links']['download']
                     )
                     files_found.append(data)
             except KeyError:
