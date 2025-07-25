@@ -99,7 +99,6 @@ class MockAPIResponse:
 
 
 class PDF(FPDF):
-    
     def __init__(self, url=''):
         super().__init__()
         self.date_printed = datetime.datetime.now().astimezone()
@@ -423,7 +422,7 @@ def get_project_data(pat, dryrun, project_url=''):
             use_mocks = True
         else:
             link = relations['files']['links']['related']['href']
-            link += 'osfstorage/' # ID for OSF Storage
+            link += 'osfstorage/'  # ID for OSF Storage
             use_mocks = False
         project_data['files'] = explore_file_tree(link, pat, dryrun=use_mocks)
 
@@ -589,7 +588,6 @@ def write_pdfs(projects, folder=''):
         qr_img = generate_qr_code(url)
         pdf.image(qr_img, w=30, x=Align.C)
 
-        
         pdf.ln()
 
         # Write title for metadata section, then actual fields
