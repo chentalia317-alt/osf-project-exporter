@@ -792,6 +792,7 @@ def write_pdf(projects, root_idx, folder=''):
     title = curr_project['metadata']['title']
     pdf = explore_project_tree(curr_project, projects)
     filename = f'{title}_export.pdf'
-    pdf.output(os.path.join(folder, filename))
+    path = os.path.join(folder, filename)
+    pdf.output(path)
 
-    return pdf
+    return pdf, path
