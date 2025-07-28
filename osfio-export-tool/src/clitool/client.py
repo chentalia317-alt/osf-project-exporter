@@ -104,11 +104,13 @@ class MockAPIResponse:
 
 
 class PDF(FPDF):
-    """Extend FPDF class for customisation.
-    :param url: str
-        Current URL to make QR codes with.
-    :param date_printed: datetime
-        Date and time when the PDF was printed."""
+    """Custom PDF class to implement extra customisation.
+    Attributes:
+        date_printed: datetime
+            Date and time when the project was exported.
+        url: str
+            URL to include in QR codes.
+    """
 
     def __init__(self, url=''):
         super().__init__()
@@ -208,7 +210,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
 
     Returns
     ----------
-        filenames: list[str]
+        files_found: list[str]
             List of file paths found in the project."""
 
     FILE_FILTER = {
@@ -219,7 +221,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     }
     per_page = 100
 
-    filenames = []
+    files_found = []
 
     is_last_page_folders = False
     while not is_last_page_folders:
@@ -238,7 +240,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
             for folder in folders['data']:
                 links = folder['relationships']['files']['links']
                 link = links['related']['href']
-                filenames += explore_file_tree(link, pat, dryrun=dryrun)
+                files_found += explore_file_tree(link, pat, dryrun=dryrun)
         except KeyError:
             pass
 
@@ -256,7 +258,14 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                 )
             try:
                 for file in files['data']:
-                    filenames.append(file['attributes']['materialized_path'])
+                    size = file['attributes']['size']
+                    size_mb = size / (1024 ** 2)  # Convert bytes to MB
+                    data = (
+                        file['attributes']['materialized_path'],
+                        str(round(size_mb, 2)),
+                        file['links']['download']
+                    )
+                    files_found.append(data)
             except KeyError:
                 pass
             curr_link = files['links']['next']
@@ -267,7 +276,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         if curr_link is None:
             is_last_page_folders = True
 
-    return filenames
+    return files_found
 
 
 def explore_wikis(link, pat, dryrun=True):
@@ -436,16 +445,13 @@ def get_project_data(pat, dryrun, project_url=''):
 
         # Get list of files in project
         if dryrun:
-            files = explore_file_tree('root', pat, dryrun=True)
-            for f in files:
-                project_data['files'].append((f, None, None))
+            link = 'root'
+            use_mocks = True
         else:
-            # Get files hosted on OSF storage
             link = relations['files']['links']['related']['href']
-            link += 'osfstorage/'
-            project_data['files'] = ', '.join(
-                explore_file_tree(link, pat, dryrun=False)
-            )
+            link += 'osfstorage/'  # ID for OSF Storage
+            use_mocks = False
+        project_data['files'] = explore_file_tree(link, pat, dryrun=use_mocks)
 
         # These attributes need link traversal to get their data
         # Most should be part of the project metadata
@@ -714,6 +720,7 @@ def write_pdfs(projects, root_nodes, folder=''):
                         datum = 'N/A'
                     row.cell(datum)
 
+        # Write wikis separately to more easily handle Markdown parsing
         pdf.ln()
         pdf.set_font('Times', size=18, style='B')
         pdf.multi_cell(0, h=0, text='4. Wiki\n', align='L')

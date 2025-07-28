@@ -17,6 +17,8 @@ from clitool import (
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
+TEST_PDF_FOLDER = 'good-pdfs'
+TEST_INPUT = 'test_pdf.pdf'
 FOLDER_OUT = os.path.join('tests', 'outfolder')
 
 # Run tests in docker container
@@ -135,11 +137,14 @@ class TestClient(TestCase):
         files = explore_file_tree(
             'root', os.getenv('TEST_PAT', ''), dryrun=True
         )
-        assert '/helloworld.txt.txt' in files
-        assert '/tf1/helloworld.txt.txt' in files
-        assert '/tf1/tf2/file.txt' in files
-        assert '/tf1/tf2-second/secondpage.txt' in files
-        assert '/tf1/tf2-second/thirdpage.txt' in files
+
+        assert '/helloworld.txt.txt' == files[4][0]
+        assert '/tf1/helloworld.txt.txt' == files[1][0]
+        assert '/tf1/tf2/file.txt' == files[0][0]
+        assert '/tf1/tf2-second/secondpage.txt' == files[2][0]
+        assert '/tf1/tf2-second/thirdpage.txt' == files[3][0]
+        assert files[0][1] == "2.1", (files[0][1])
+        assert isinstance(files[0][2], str)
 
     def test_get_latest_mock_wiki_version(self):
         """Test getting the latest version of a mock wiki"""
@@ -262,13 +267,13 @@ class TestClient(TestCase):
             projects[0]['metadata']['resource_lang']
         )
         assert len(projects[0]['files']) == 5
-        assert '/helloworld.txt.txt' in projects[0]['files'][4][0], (
+        assert '/helloworld.txt.txt' == projects[0]['files'][4][0], (
             projects[0]['files'][4][0]
         )
-        assert '/tf1/helloworld.txt.txt' in projects[0]['files'][1][0], (
+        assert '/tf1/helloworld.txt.txt' == projects[0]['files'][1][0], (
             projects[0]['files'][1][0]
         )
-        assert '/tf1/tf2/file.txt' in projects[0]['files'][0][0], (
+        assert '/tf1/tf2/file.txt' == projects[0]['files'][0][0], (
             projects[0]['files'][0][0]
         )
         subjects = projects[0]['metadata']['subjects']
@@ -469,12 +474,16 @@ class TestClient(TestCase):
         files = os.listdir(FOLDER_OUT)
         assert len(files) == 2
 
-        pdf_first = PdfReader(os.path.join(FOLDER_OUT, files[1]))
+        pdf_first = PdfReader(os.path.join(
+            FOLDER_OUT, "My Project Title_export.pdf"
+        ))
+        pdf_second = PdfReader(os.path.join(
+            FOLDER_OUT, "Second Project in new PDF_export.pdf"
+        ))
         assert len(pdf_first.pages) == 4, (
             'Expected 4 pages in the first PDF, got: ',
             len(pdf_first.pages)
         )
-        pdf_second = PdfReader(os.path.join(FOLDER_OUT, files[0]))
 
         content_first_page = pdf_first.pages[0].extract_text(
             extraction_mode='layout'
