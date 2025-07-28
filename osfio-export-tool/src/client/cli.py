@@ -21,18 +21,22 @@ def extract_project_id(url):
     -------
     str
         Project ID extracted from the URL.
+
+    Raises
+    ------------
+        ValueError: Invalid URL/ID.
     """
     try:
-        project_id = url.split(".io/")[1].strip("/")
-        if '/' in project_id:
-            # Need extra processing for API links
-            project_id = project_id.split('/')[-1]
+        project_id = url.split("/")[-1]
+        # Account for potential extra slash at end
+        if not project_id:
+            project_id = url.split("/")[-2]
         return project_id
     except Exception:
         raise ValueError(
             """
             Invalid OSF project URL.
-            Please provide a valid URL in the format:
+            Please provide a valid URL e.g. in the format:
             https://osf.io/<project_id>/")
             """
         )
@@ -51,6 +55,7 @@ def extract_project_id(url):
               help='The folder path to export PDFs to.')
 @click.option('--url', type=str, default='',
               help="""A link to one project you want to export.
+              The project ID should be at the end.
 
               For example: https://osf.io/dry9j/
 

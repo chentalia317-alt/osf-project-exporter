@@ -598,6 +598,10 @@ class TestClient(TestCase):
         assert project_id == 'x', f'Expected "x", got {project_id}'
 
         url = 'x'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        url = ''
         self.assertRaises(
             ValueError, extract_project_id, url
         )
