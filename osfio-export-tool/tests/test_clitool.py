@@ -584,6 +584,7 @@ class TestClient(TestCase):
             traceback.format_tb(result.exc_info[2])
         )
 
+
     def test_extract_project_id(self):
         """Test extracting project ID from various URL formats."""
 
@@ -614,3 +615,36 @@ class TestClient(TestCase):
             # Reverse state changes for reproducibility
             os.chdir(cwd)
             assert os.getcwd() == cwd
+    
+    def test_write_pdf_in_new_folder(self):
+                # Create folder if it doesn't exist
+        import random
+        import string
+
+        folder = ''.join(
+            random.choice(string.ascii_letters + string.digits)
+            for _ in range(10)
+        )
+        if os.path.exists(folder):
+            shutil.rmtree(folder)
+        
+        try:
+            runner = CliRunner()
+            result = runner.invoke(
+                cli, [
+                    'export-projects', '--dryrun',
+                    '--folder', folder,
+                    '--url', ''
+                ],
+                input=os.getenv('TEST_PAT', ''),
+                terminal_width=60
+            )
+            assert not result.exception, (
+                result.exc_info,
+                traceback.format_tb(result.exc_info[2])
+            )
+        except Exception as e:
+            raise e
+        finally:
+            if os.path.exists(folder):
+                shutil.rmtree(folder)
