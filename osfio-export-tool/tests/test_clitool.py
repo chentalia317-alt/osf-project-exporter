@@ -19,6 +19,7 @@ API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
+FOLDER_OUT = os.path.join('tests', 'outfolder')
 
 # Run tests in docker container
 # with 'python -m unittest <tests.test_clitool.TESTCLASS>'
@@ -27,7 +28,7 @@ TEST_INPUT = 'test_pdf.pdf'
 class TestAPI(TestCase):
     """Tests for interacting with the OSF API."""
 
-    def test_get_projects_api(self):
+    def test_basic_api_call_works(self):
         """Test for if JSON for user's projects are loaded correctly"""
 
         data = call_api(
@@ -44,7 +45,7 @@ class TestAPI(TestCase):
             data['meta']['version']
         )
 
-    def test_single_project_json_is_as_expected(self):
+    def test_parse_single_project_json_as_expected(self):
         # Use first public project available for this test
         data = call_api(
             f'{API_HOST}/nodes/',
@@ -53,8 +54,20 @@ class TestAPI(TestCase):
         )
         node = json.loads(data.read())['data'][0]
         link = node['links']['html']
-        projects = get_project_data(os.getenv('TEST_PAT', ''), False, link)
-        assert len(projects) == 1
+        projects, root_projects = get_project_data(
+            os.getenv('TEST_PAT', ''), False, link
+        )
+
+        expected_child_count = len(
+            json.loads(
+                call_api(
+                    f'{API_HOST}/nodes/{node["id"]}/children/',
+                    os.getenv('TEST_PAT', '')
+                ).read()
+            )['data']
+        )
+        assert len(root_projects) == 1
+        assert len(projects) == expected_child_count + 1
         assert projects[0]['metadata']['title'] == node['attributes']['title']
 
     def test_filter_by_api(self):
@@ -88,13 +101,12 @@ class TestAPI(TestCase):
         else:
             print("No nodes available, consider making a test project.")
 
-    def test_pull_projects_command(self):
+    def test_pull_projects_command_using_api(self):
         """Test we can successfully pull projects using the OSF API"""
 
-        folder_out = os.path.join('tests', 'outfolder')
-        if os.path.exists(folder_out):
-            shutil.rmtree(folder_out)
-        os.mkdir(folder_out)
+        if os.path.exists(FOLDER_OUT):
+            shutil.rmtree(FOLDER_OUT)
+        os.mkdir(FOLDER_OUT)
 
         runner = CliRunner()
 
@@ -106,7 +118,7 @@ class TestAPI(TestCase):
 
         # Use PAT to find user projects
         result = runner.invoke(
-            cli, ['pull-projects', '--folder', folder_out],
+            cli, ['pull-projects', '--folder', FOLDER_OUT],
             input=os.getenv('TEST_PAT', ''),
             terminal_width=60
         )
@@ -134,7 +146,7 @@ class TestClient(TestCase):
         assert files[0][1] == "2.1", (files[0][1])
         assert isinstance(files[0][2], str)
 
-    def test_get_latest_wiki_version(self):
+    def test_get_latest_mock_wiki_version(self):
         """Test getting the latest version of a mock wiki"""
 
         link = 'wiki'
@@ -159,15 +171,31 @@ class TestClient(TestCase):
             wikis['home']
         )
 
-    def test_parse_api_responses(self):
+    def test_parse_mock_api_responses(self):
         """Using JSON stubs to simulate API responses,
         test we can parse them correctly"""
 
-        projects = get_project_data(os.getenv('TEST_PAT', ''), True)
-
-        assert len(projects) == 2, (
-            'Expected 2 projects in the stub data'
+        projects, root_nodes = get_project_data(
+            os.getenv('TEST_PAT', ''), True
         )
+
+        assert len(projects) == 4, (
+            'Expected 4 projects in the stub data'
+        )
+        assert len(root_nodes) == 2, (
+            'Expected 2 root nodes in the stub data'
+        )
+        assert root_nodes[0] == 0
+        assert root_nodes[1] == 1
+        assert projects[root_nodes[0]]['metadata']['id'] == 'x', (
+            'Expected ID x, got: ',
+            projects[root_nodes[0]]['metadata']['id']
+        )
+        assert projects[root_nodes[1]]['metadata']['id'] == 'y', (
+            'Expected ID y, got: ',
+            projects[root_nodes[1]]['metadata']['id']
+        )
+
         assert projects[0]['metadata']['title'] == 'Test1', (
             'Expected title Test1, got: ',
             projects[0]['metadata']['title']
@@ -258,28 +286,40 @@ class TestClient(TestCase):
             'Expected URL https://test.osf.io/x/, got: ',
             projects[0]['metadata']['url']
         )
+        assert projects[1]['metadata']['url'] != 'https://test.osf.io/x/', (
+            'Repeated project URL'
+        )
+
+        assert projects[0]['parent'] is None, (
+            'Expected no parent, got: ',
+            projects[0]['parent']
+        )
+        assert 'a' in projects[0]['children']
+        assert 'b' in projects[0]['children']
 
     def test_get_single_mock_project(self):
-        projects = get_project_data(
+        projects, roots = get_project_data(
             os.getenv('TEST_PAT', ''), True,
             'https://osf.io/x/'
         )
-        assert len(projects) == 1
+        assert len(roots) == 1
+        assert len(projects) == 3
         assert projects[0]['metadata']['id'] == 'x'
+        assert projects[0]['children'] == ['a', 'b']
 
-        projects = get_project_data(
+        projects, roots = get_project_data(
             os.getenv('TEST_PAT', ''), True,
             'https://api.test.osf.io/v2/nodes/x/'
         )
-        assert len(projects) == 1
+        assert len(roots) == 1
+        assert len(projects) == 3
         assert projects[0]['metadata']['id'] == 'x'
 
-    def test_write_pdfs_from_dict(self):
+    def test_write_pdfs_from_mock_projects(self):
         # Put PDFs in a folder to keep things tidy
-        folder_out = os.path.join('tests', 'outfolder')
-        if os.path.exists(folder_out):
-            shutil.rmtree(folder_out)
-        os.mkdir(folder_out)
+        if os.path.exists(FOLDER_OUT):
+            shutil.rmtree(FOLDER_OUT)
+        os.mkdir(FOLDER_OUT)
 
         projects = [
             {
@@ -315,11 +355,14 @@ class TestClient(TestCase):
                 'wikis': {
                     'Home': 'hello world',
                     'Page2': 'another page'
-                }
+                },
+                "parent": None,
+                'children': ['a']
             },
             {
                 'metadata': {
-                    "title": "Second Project in new PDF",
+                    "title": "child1",
+                    "id": "a",
                 },
                 'contributors': [
                     ('Short Name', True, 'email'),
@@ -345,29 +388,102 @@ class TestClient(TestCase):
                     ('file1.txt', None, None),
                     ('file2.txt', None, None),
                 ],
-                'wikis': {}
-            }
+                'wikis': {},
+                "parent": 'id',
+                'children': ['b']
+            },
+            {
+                'metadata': {
+                    "title": "Second Project in new PDF",
+                    "id": "c"
+                },
+                'contributors': [
+                    ('Short Name', True, 'email'),
+                    (
+                        'Long Double-Barrelled Name and Surname', True,
+                        (
+                            'Long Double-Barrelled Name and Surname@'
+                            'Long Double-Barrelled Name and Surname.com'
+                        )
+                    ),
+                    (
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            'Long Double-Barrelled Name and Surname'
+                        ), True,
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            '@Long Double-Barrelled Name and Surname.com'
+                        )
+                    )
+                ],
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
+                'wikis': {},
+                "parent": None,
+                'children': []
+            },
+            {
+                'metadata': {
+                    "title": "child2",
+                    "id": "b",
+                },
+                'contributors': [
+                    ('Short Name', True, 'email'),
+                    (
+                        'Long Double-Barrelled Name and Surname', True,
+                        (
+                            'Long Double-Barrelled Name and Surname@'
+                            'Long Double-Barrelled Name and Surname.com'
+                        )
+                    ),
+                    (
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            'Long Double-Barrelled Name and Surname'
+                        ), True,
+                        (
+                            'Long Double-Barrelled Name and Surname'
+                            '@Long Double-Barrelled Name and Surname.com'
+                        )
+                    )
+                ],
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
+                'wikis': {},
+                "parent": 'a',
+                'children': []
+            },
         ]
+
+        root_nodes = [0, 2]  # Indices of root nodes in projects list
 
         # Get URL now as it will be removed later
         url = projects[0]['metadata']['url']
 
         # Do we write only one PDF per project?
-        pdfs = write_pdfs(projects, folder_out)
-        assert len(pdfs) == len(projects)
+        # pdb.set_trace()
+        pdfs = write_pdfs(projects, root_nodes, FOLDER_OUT)
+        assert len(pdfs) == 2
 
         # Can we specify where to write PDFs?
-        files = os.listdir(folder_out)
-        assert len(files) == len(projects)
+        files = os.listdir(FOLDER_OUT)
+        assert len(files) == 2
 
         pdf_first = PdfReader(os.path.join(
-            folder_out, "My Project Title_export.pdf"
+            FOLDER_OUT, "My Project Title_export.pdf"
         ))
         pdf_second = PdfReader(os.path.join(
-            folder_out, "Second Project in new PDF_export.pdf"
+            FOLDER_OUT, "Second Project in new PDF_export.pdf"
         ))
-        assert len(pdf_first.pages) == 2
-        assert len(pdf_second.pages) == 1
+        assert len(pdf_first.pages) == 4, (
+            'Expected 4 pages in the first PDF, got: ',
+            len(pdf_first.pages)
+        )
 
         content_first_page = pdf_first.pages[0].extract_text(
             extraction_mode='layout'
@@ -375,6 +491,16 @@ class TestClient(TestCase):
         content_second_page = pdf_second.pages[0].extract_text(
             extraction_mode='layout'
         )
+        content_third_page = pdf_first.pages[2].extract_text(
+            extraction_mode='layout'
+        )
+        content_fourth_page = pdf_first.pages[3].extract_text(
+            extraction_mode='layout'
+        )
+        assert 'My Project Title /\nchild1' in content_third_page
+        assert 'child1 /\nchild2' in content_fourth_page
+        assert 'Title: child1' in content_third_page
+        assert 'Title: child2' in content_fourth_page
 
         assert f'Project URL: {url}' in content_first_page
         assert 'Project URL:' not in content_second_page
@@ -423,20 +549,19 @@ class TestClient(TestCase):
             content_first_page
         )
 
-    def test_get_mock_projects_and_write_pdfs(self):
+    def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
         This assumes the JSON parsing works correctly."""
 
-        folder_out = os.path.join('tests', 'outfolder')
-        if os.path.exists(folder_out):
-            shutil.rmtree(folder_out)
-        os.mkdir(folder_out)
+        if os.path.exists(FOLDER_OUT):
+            shutil.rmtree(FOLDER_OUT)
+        os.mkdir(FOLDER_OUT)
 
         runner = CliRunner()
         result = runner.invoke(
             cli, [
                 'pull-projects', '--dryrun',
-                '--folder', folder_out,
+                '--folder', FOLDER_OUT,
                 '--url', ''
             ],
             input=os.getenv('TEST_PAT', ''),

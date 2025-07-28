@@ -8,6 +8,7 @@ import click
 from fpdf import FPDF, Align
 from fpdf.fonts import FontFace
 from mistletoe import markdown
+import qrcode
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
@@ -61,7 +62,11 @@ class MockAPIResponse:
         'wikis': os.path.join(
             'tests', 'stubs', 'wikis', 'wikistubs.json'),
         'wikis2': os.path.join(
-            'tests', 'stubs', 'wikis', 'wikis2stubs.json')
+            'tests', 'stubs', 'wikis', 'wikis2stubs.json'),
+        'x-children': os.path.join(
+            'tests', 'stubs', 'components', 'x-children.json'),
+        'empty-children': os.path.join(
+            'tests', 'stubs', 'components', 'empty-children.json'),
     }
 
     MARKDOWN_FILES = {
@@ -112,6 +117,13 @@ class PDF(FPDF):
         self.date_printed = datetime.datetime.now().astimezone()
         self.url = url
 
+    def generate_qr_code(self):
+        qr = qrcode.make(self.url)
+        img_byte_arr = io.BytesIO()
+        qr.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+        return img_byte_arr
+
     def footer(self):
         self.set_y(-15)
         self.set_x(-30)
@@ -123,17 +135,8 @@ class PDF(FPDF):
         )}", align="L")
         self.set_x(10)
         self.set_y(-25)
-        qr_img = generate_qr_code(self.url)
+        qr_img = self.generate_qr_code()
         self.image(qr_img, w=15, h=15, x=Align.C)
-
-
-def generate_qr_code(url):
-    import qrcode
-    qr = qrcode.make(url)
-    img_byte_arr = io.BytesIO()
-    qr.save(img_byte_arr, format='PNG')
-    img_byte_arr.seek(0)
-    return img_byte_arr
 
 
 # Reduce response size by applying filters on fields
@@ -144,7 +147,7 @@ URL_FILTERS = {
 }
 
 
-def call_api(url, pat, method='GET', per_page=None, filters={}, is_json=True):
+def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     """Call OSF v2 API methods.
 
     Parameters
@@ -222,7 +225,6 @@ def explore_file_tree(curr_link, pat, dryrun=True):
 
     is_last_page_folders = False
     while not is_last_page_folders:
-        # Use Mock JSON if unit/integration testing
         if dryrun:
             folders = MockAPIResponse.read(f"{curr_link}_folder")
         else:
@@ -242,7 +244,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         except KeyError:
             pass
 
-        # Now find files in current folder
+        # For each folder, loop through pages for its files
         is_last_page_files = False
         while not is_last_page_files:
             if dryrun:
@@ -266,12 +268,10 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                     files_found.append(data)
             except KeyError:
                 pass
-            # Need to go to next page of files if response paginated
             curr_link = files['links']['next']
             if curr_link is None:
                 is_last_page_files = True
 
-        # Need to go to next page of folders if response paginated
         curr_link = folders['links']['next']
         if curr_link is None:
             is_last_page_folders = True
@@ -357,9 +357,19 @@ def get_project_data(pat, dryrun, project_url=''):
             if '/' in project_id:
                 # Need extra processing for API links
                 project_id = project_id.split('/')[-1]
+            click.echo(f"Exporting project with ID: {project_id}")
         except Exception:
-            click.echo("Project URL is invalid! PLease try another")
+            click.echo("Project URL is invalid! Please try another")
             return []
+    else:
+        click.echo("No project URL provided, exporting all projects.")
+
+    click.echo("Getting project(s) data...")
+
+    # Reduce query size by getting root nodes only
+    node_filter = {
+        'parent': '',
+    }
 
     if not dryrun:
         if project_id:
@@ -370,7 +380,8 @@ def get_project_data(pat, dryrun, project_url=''):
             nodes = {'data': [json.loads(result.read())['data']]}
         else:
             result = call_api(
-                f'{API_HOST}/users/me/nodes/', pat
+                f'{API_HOST}/users/me/nodes/', pat,
+                filters=node_filter
             )
             nodes = json.loads(result.read())
     else:
@@ -380,10 +391,17 @@ def get_project_data(pat, dryrun, project_url=''):
         else:
             nodes = MockAPIResponse.read('nodes')
 
+    click.echo("Parsing results...")
     projects = []
-    for project in nodes['data']:
-        if project['attributes']['category'] != 'project':
+    root_nodes = []  # Track indexes of root nodes for quick access
+    added_node_ids = set()  # Track added node IDs to avoid duplicates
+
+    for idx, project in enumerate(nodes['data']):
+        if project['id'] in added_node_ids:
             continue
+        else:
+            added_node_ids.add(project['id'])
+
         project_data = {
             'metadata': {
                 'title': project['attributes']['title'],
@@ -505,18 +523,42 @@ def get_project_data(pat, dryrun, project_url=''):
             pat=pat, dryrun=dryrun
         )
 
+        if 'links' in project['relationships']['parent']:
+            project_data['parent'] = project['relationships']['parent'][
+                'links']['related']['href'].split('/')[-1]
+        else:
+            project_data['parent'] = None
+            root_nodes.append(idx)
+        children_link = relations['children']['links']['related']['href']
+        if dryrun:
+            children = MockAPIResponse.read(children_link)
+        else:
+            children = json.loads(
+                call_api(children_link, pat).read()
+            )
+        project_data['children'] = []
+        for child in children['data']:
+            project_data['children'].append(child['id'])
+            # Have to manually add children to nodes list
+            # Otherwise they won't be parsed
+            if project_url:
+                nodes['data'].append(child)
+
         projects.append(project_data)
 
-    return projects
+    return projects, root_nodes
 
 
-def write_pdfs(projects, folder=''):
+def write_pdfs(projects, root_nodes, folder=''):
     """Make PDF for each project.
 
     Parameters
     ------------
         projects: dict[str, str|tuple]
             Projects found to export into the PDF.
+        root_nodes: list[int]
+            Positions of root nodes (no parent) in the projects list.
+            This is used for accessing root projects without sorting the list.
         folder: str
             The path to the folder to output the project PDFs in.
             Default is the current working directory.
@@ -527,9 +569,18 @@ def write_pdfs(projects, folder=''):
             List of created PDF files.
     """
 
-    def write_list_section(key, fielddict):
+    def write_list_section(key, fielddict, pdf):
         """Handle writing fields based on their type to PDF.
-        Possible types are lists or strings."""
+        Possible types are lists or strings.
+
+        Parameters
+        -----------
+            key: str
+                Name of the field to write.
+            fielddict: dict
+                Dictionary containing the field data.
+            pdf: PDF
+                PDF object to write to."""
 
         # Set nicer display names for certain PDF fields
         pdf_display_names = {
@@ -571,19 +622,32 @@ def write_pdfs(projects, folder=''):
                 markdown=True
             )
 
-    pdfs = []
-    for project in projects:
-        pdf = PDF()
+    def write_project_body(pdf, project, parent_title=''):
+        """Write the body of a project to the PDF.
+
+        Parameters
+        -----------
+            pdf: PDF
+                PDF object to write to.
+            project: dict
+                Dictionary containing project data to write.
+            parent_title: str
+                Title of the parent project.
+        Returns
+        -----------
+            pdf: PDF"""
         pdf.add_page()
         pdf.set_line_width(0.05)
         pdf.set_left_margin(10)
         pdf.set_right_margin(10)
         pdf.set_font('Times', size=12)
-        wikis = project.pop('wikis')
+        wikis = project['wikis']
 
         # Write header section
         title = project['metadata']['title']
         pdf.set_font('Times', size=18, style='B')
+        if parent_title:
+            pdf.multi_cell(0, h=0, text=f'{parent_title} /\n', align='L')
         pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
         pdf.set_font('Times', size=12)
         url = project['metadata'].pop('url', '')
@@ -594,7 +658,7 @@ def write_pdfs(projects, folder=''):
                 align='L'
             )
             pdf.url = url
-        qr_img = generate_qr_code(url)
+        qr_img = pdf.generate_qr_code()
         pdf.image(qr_img, w=30, x=Align.C)
 
         pdf.ln()
@@ -604,7 +668,7 @@ def write_pdfs(projects, folder=''):
         pdf.multi_cell(0, h=0, text='1. Project Metadata\n', align='L')
         pdf.set_font('Times', size=12)
         for key in project['metadata']:
-            write_list_section(key, project['metadata'])
+            write_list_section(key, project['metadata'], pdf)
         pdf.write(0, '\n')
         pdf.write(0, '\n')
 
@@ -677,8 +741,58 @@ def write_pdfs(projects, folder=''):
             if i < len(wikis.keys())-1:
                 pdf.add_page()
 
+        return pdf
+
+    def explore_project_tree(project, projects, pdf=None, parent_title=''):
+        """Recursively find child projects and write them to the PDF.
+
+        Parameters
+        -----------
+            project: dict
+                Dictionary containing project data to write.
+            projects: list[dict]
+                List of all projects to explore.
+            pdf: PDF
+                PDF object to write to. If None, a new PDF will be created.
+            parent_title: str
+                Title of the parent project.
+
+        Returns
+        -----------
+            pdf: PDF
+                PDF object with the project and its children written to it."""
+
+        # Start with no PDF at root projects
+        if not pdf:
+            pdf = PDF()
+
+        # Add current project to PDF
+        pdf = write_project_body(pdf, project, parent_title=parent_title)
+
+        # Do children last so that come at end of the PDF
+        children = project['children']
+        for child_id in children:
+            child_project = next(
+                (p for p in projects if p['metadata']['id'] == child_id), None
+            )
+            if child_project:
+                # Pass current title to include in component header
+                parent_title = project['metadata']['title']
+                pdf = explore_project_tree(
+                    child_project, projects, pdf=pdf, parent_title=parent_title
+                )
+
+        return pdf
+
+    pdfs = []
+    for idx in root_nodes:
+        curr_project = projects[idx]
+        title = curr_project['metadata']['title']
+        click.echo(f'Exporting to PDF project: {title}')
+        pdf = explore_project_tree(curr_project, projects)
         filename = f'{title}_export.pdf'
         pdf.output(os.path.join(folder, filename))
+        click.echo(f'Export for {title} completed.')
         pdfs.append(pdf)
 
     return pdfs
@@ -703,10 +817,9 @@ def pull_projects(pat, dryrun, folder, url=''):
     You can export all projects you have access to, or one specific one
     with the --url option."""
 
-    projects = get_project_data(pat, dryrun, project_url=url)
-    click.echo(f'Found {len(projects)} projects.')
-    click.echo('Generating PDF...')
-    write_pdfs(projects, folder)
+    projects, root_projects = get_project_data(pat, dryrun, project_url=url)
+    click.echo(f'Found {len(projects)} projects and components.')
+    write_pdfs(projects, root_projects, folder)
 
 
 @click.command()
