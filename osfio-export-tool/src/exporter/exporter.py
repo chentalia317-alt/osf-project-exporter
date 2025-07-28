@@ -791,7 +791,12 @@ def write_pdf(projects, root_idx, folder=''):
     curr_project = projects[root_idx]
     title = curr_project['metadata']['title']
     pdf = explore_project_tree(curr_project, projects)
+    
+    # Be flexible for users by allowing saving in new folders
+    # and displaying the path the PDF is located at
     filename = f'{title}_export.pdf'
+    if not os.path.exists(folder):
+        os.mkdir(folder)
     path = os.path.join(folder, filename)
     pdf.output(path)
 
