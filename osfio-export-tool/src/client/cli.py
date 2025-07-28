@@ -21,19 +21,8 @@ def extract_project_id(url):
     -------
     str
         Project ID extracted from the URL.
-
-    Raises
-    ------------
-        ValueError: Invalid URL/ID.
     """
-    if not url:
-        raise ValueError(
-            """
-            No OSF URL or ID given.
-            Please provide a valid URL with an ID
-            E.g. https://osf.io/<project_id>/")
-            """
-        )
+
     project_id = url.strip("/").split("/")[-1]
     return project_id
 
@@ -63,11 +52,10 @@ def export_projects(pat, folder, dryrun=False, url='', usetest=False):
 
     project_id = ''
     if url:
-        try:
-            project_id = extract_project_id(url)
-        except ValueError as e:
-            click.echo(str(e))
-            return
+        project_id = extract_project_id(url)
+        click.echo(f'Extracting project with ID: {project_id}')
+    else:
+        click.echo('No project ID provided, extracting all projects.')
 
     click.echo('Downloading project data...')
     projects, root_nodes = exporter.get_project_data(

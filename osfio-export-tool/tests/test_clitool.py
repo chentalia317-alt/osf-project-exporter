@@ -604,10 +604,9 @@ class TestClient(TestCase):
         project_id = extract_project_id(url)
         assert project_id == 'x', f'Expected "x", got {project_id}'
 
+        # Should just run normally
         url = ''
-        self.assertRaises(
-            ValueError, extract_project_id, url
-        )
+        project_id = extract_project_id(url)
 
     def test_use_dryrun_in_user_default_dir(self):
         """Regression test for using --dryrun in user's default directory."""
