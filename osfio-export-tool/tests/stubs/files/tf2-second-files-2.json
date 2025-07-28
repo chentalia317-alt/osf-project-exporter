@@ -9,7 +9,7 @@
                 "name": "file.txt",
                 "kind": "file",
                 "path": "/x",
-                "size": 12,
+                "size": 2202010,
                 "provider": "osfstorage",
                 "materialized_path": "/tf1/tf2-second/thirdpage.txt",
                 "last_touched": null,

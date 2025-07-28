@@ -2,12 +2,18 @@ import json
 import os
 import datetime
 import urllib.request as webhelper
+import io
 
 import click
-from fpdf import FPDF
+from fpdf import FPDF, Align
+from fpdf.fonts import FontFace
 from mistletoe import markdown
 
 API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
+
+# Global styles for PDF
+BLUE = (173, 216, 230)
+HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
 
 
 class MockAPIResponse:
@@ -92,6 +98,44 @@ class MockAPIResponse:
             return {}
 
 
+class PDF(FPDF):
+    """Custom PDF class to implement extra customisation.
+    Attributes:
+        date_printed: datetime
+            Date and time when the project was exported.
+        url: str
+            URL to include in QR codes.
+    """
+
+    def __init__(self, url=''):
+        super().__init__()
+        self.date_printed = datetime.datetime.now().astimezone()
+        self.url = url
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_x(-30)
+        self.set_font('Times', size=10)
+        self.cell(0, 10, f"Page: {self.page_no()}", align="C")
+        self.set_x(10)
+        self.cell(0, 10, f"Printed: {self.date_printed.strftime(
+            '%Y-%m-%d %H:%M:%S %Z'
+        )}", align="L")
+        self.set_x(10)
+        self.set_y(-25)
+        qr_img = generate_qr_code(self.url)
+        self.image(qr_img, w=15, h=15, x=Align.C)
+
+
+def generate_qr_code(url):
+    import qrcode
+    qr = qrcode.make(url)
+    img_byte_arr = io.BytesIO()
+    qr.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
+    return img_byte_arr
+
+
 # Reduce response size by applying filters on fields
 URL_FILTERS = {
     'identifiers': {
@@ -163,7 +207,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
 
     Returns
     ----------
-        filenames: list[str]
+        files_found: list[str]
             List of file paths found in the project."""
 
     FILE_FILTER = {
@@ -174,7 +218,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
     }
     per_page = 100
 
-    filenames = []
+    files_found = []
 
     is_last_page_folders = False
     while not is_last_page_folders:
@@ -194,7 +238,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
             for folder in folders['data']:
                 links = folder['relationships']['files']['links']
                 link = links['related']['href']
-                filenames += explore_file_tree(link, pat, dryrun=dryrun)
+                files_found += explore_file_tree(link, pat, dryrun=dryrun)
         except KeyError:
             pass
 
@@ -212,7 +256,14 @@ def explore_file_tree(curr_link, pat, dryrun=True):
                 )
             try:
                 for file in files['data']:
-                    filenames.append(file['attributes']['materialized_path'])
+                    size = file['attributes']['size']
+                    size_mb = size / (1024 ** 2)  # Convert bytes to MB
+                    data = (
+                        file['attributes']['materialized_path'],
+                        str(round(size_mb, 2)),
+                        file['links']['download']
+                    )
+                    files_found.append(data)
             except KeyError:
                 pass
             # Need to go to next page of files if response paginated
@@ -225,7 +276,7 @@ def explore_file_tree(curr_link, pat, dryrun=True):
         if curr_link is None:
             is_last_page_folders = True
 
-    return filenames
+    return files_found
 
 
 def explore_wikis(link, pat, dryrun=True):
@@ -334,15 +385,25 @@ def get_project_data(pat, dryrun, project_url=''):
         if project['attributes']['category'] != 'project':
             continue
         project_data = {
-            'title': project['attributes']['title'],
-            'id': project['id'],
-            'description': project['attributes']['description'],
-            'date_created': datetime.datetime.fromisoformat(
-                project['attributes']['date_created']),
-            'date_modified': datetime.datetime.fromisoformat(
-                project['attributes']['date_modified']),
-            'tags': ', '.join(project['attributes']['tags'])
-            if project['attributes']['tags'] else 'NA',
+            'metadata': {
+                'title': project['attributes']['title'],
+                'id': project['id'],
+                'url': project['links']['html'],
+                'description': project['attributes']['description'],
+                'date_created': datetime.datetime.fromisoformat(
+                    project['attributes']['date_created']
+                ).astimezone().strftime('%Y-%m-%d'),
+                'date_modified': datetime.datetime.fromisoformat(
+                    project['attributes']['date_modified']
+                ).astimezone().strftime('%Y-%m-%d'),
+                'tags': ', '.join(project['attributes']['tags'])
+                if project['attributes']['tags'] else 'NA',
+                'resource_type': 'NA',
+                'resource_lang': 'NA',
+                'funders': []
+            },
+            'files': [],
+            'wikis': {}
         }
 
         # Resource type/lang/funding info share specific endpoint
@@ -355,36 +416,34 @@ def get_project_data(pat, dryrun, project_url=''):
                 pat
             ).read())
         metadata = metadata['data']['attributes']
-        project_data['resource_type'] = metadata['resource_type_general']
-        project_data['resource_lang'] = metadata['language']
-        project_data['funders'] = []
+        resource_type = metadata['resource_type_general']
+        resource_lang = metadata['language']
+        project_data['metadata']['resource_type'] = resource_type
+        project_data['metadata']['resource_lang'] = resource_lang
         for funder in metadata['funders']:
-            project_data['funders'].append(funder)
+            project_data['metadata']['funders'].append(funder)
 
         relations = project['relationships']
 
         # Get list of files in project
         if dryrun:
-            project_data['files'] = ', '.join(
-                explore_file_tree('root', pat, dryrun=True)
-            )
+            link = 'root'
+            use_mocks = True
         else:
-            # Get files hosted on OSF storage
             link = relations['files']['links']['related']['href']
-            link += 'osfstorage/'
-            project_data['files'] = ', '.join(
-                explore_file_tree(link, pat, dryrun=False)
-            )
+            link += 'osfstorage/'  # ID for OSF Storage
+            use_mocks = False
+        project_data['files'] = explore_file_tree(link, pat, dryrun=use_mocks)
 
-        # Get links for data for these keys and extract
-        # certain attributes for each one
-        RELATION_KEYS = [
+        # These attributes need link traversal to get their data
+        # Most should be part of the project metadata
+        METADATA_RELATIONS = [
             'affiliated_institutions',
-            'contributors',
             'identifiers',
             'license',
             'subjects',
         ]
+        RELATION_KEYS = METADATA_RELATIONS + ['contributors']
         for key in RELATION_KEYS:
             if not dryrun:
                 # Check relationship exists and can get link to linked data
@@ -428,11 +487,21 @@ def get_project_data(pat, dryrun, project_url=''):
                 values.append(json_data['data']['attributes']['name'])
 
             if isinstance(values, list):
-                values = ', '.join(values)
-            project_data[key] = values
+                if key != 'contributors':
+                    values = ', '.join(values)
+                else:
+                    contributors = []
+                    for c in values:
+                        contributors.append((c, False, 'N/A'))
+                    values = contributors
+
+            if key in METADATA_RELATIONS:
+                project_data['metadata'][key] = values
+            else:
+                project_data[key] = values
 
         project_data['wikis'] = explore_wikis(
-            f'{API_HOST}/nodes/{project_data['id']}/wikis/',
+            f'{API_HOST}/nodes/{project['id']}/wikis/',
             pat=pat, dryrun=dryrun
         )
 
@@ -441,13 +510,187 @@ def get_project_data(pat, dryrun, project_url=''):
     return projects
 
 
+def write_pdfs(projects, folder=''):
+    """Make PDF for each project.
+
+    Parameters
+    ------------
+        projects: dict[str, str|tuple]
+            Projects found to export into the PDF.
+        folder: str
+            The path to the folder to output the project PDFs in.
+            Default is the current working directory.
+
+    Returns
+    ------------
+        pdfs: list
+            List of created PDF files.
+    """
+
+    def write_list_section(key, fielddict):
+        """Handle writing fields based on their type to PDF.
+        Possible types are lists or strings."""
+
+        # Set nicer display names for certain PDF fields
+        pdf_display_names = {
+            'identifiers': 'DOI',
+            'funders': 'Support/Funding Information'
+        }
+        if key in pdf_display_names:
+            field_name = pdf_display_names[key]
+        else:
+            field_name = key.replace('_', ' ').title()
+        if isinstance(fielddict[key], list):
+            pdf.write(0, '\n')
+            pdf.set_font('Times', size=14)
+            pdf.multi_cell(
+                0, h=0,
+                text=f'**{field_name}**\n\n',
+                align='L', markdown=True
+            )
+            pdf.set_font('Times', size=12)
+            for item in fielddict[key]:
+                for subkey in item.keys():
+                    if subkey in pdf_display_names:
+                        field_name = pdf_display_names[subkey]
+                    else:
+                        field_name = subkey.replace('_', ' ').title()
+
+                    pdf.multi_cell(
+                        0, h=0,
+                        text=f'**{field_name}:** {item[subkey]}\n\n',
+                        align='L', markdown=True
+                    )
+                pdf.write(0, '\n')
+        else:
+            pdf.multi_cell(
+                0,
+                h=0,
+                text=f'**{field_name}:** {fielddict[key]}\n\n',
+                align='L',
+                markdown=True
+            )
+
+    pdfs = []
+    for project in projects:
+        pdf = PDF()
+        pdf.add_page()
+        pdf.set_line_width(0.05)
+        pdf.set_left_margin(10)
+        pdf.set_right_margin(10)
+        pdf.set_font('Times', size=12)
+        wikis = project.pop('wikis')
+
+        # Write header section
+        title = project['metadata']['title']
+        pdf.set_font('Times', size=18, style='B')
+        pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
+        pdf.set_font('Times', size=12)
+        url = project['metadata'].pop('url', '')
+        if url:
+            pdf.multi_cell(
+                0, h=0,
+                text=f'Project URL: {url}\n',
+                align='L'
+            )
+            pdf.url = url
+        qr_img = generate_qr_code(url)
+        pdf.image(qr_img, w=30, x=Align.C)
+
+        pdf.ln()
+
+        # Write title for metadata section, then actual fields
+        pdf.set_font('Times', size=16, style='B')
+        pdf.multi_cell(0, h=0, text='1. Project Metadata\n', align='L')
+        pdf.set_font('Times', size=12)
+        for key in project['metadata']:
+            write_list_section(key, project['metadata'])
+        pdf.write(0, '\n')
+        pdf.write(0, '\n')
+
+        # Write Contributors in table
+        pdf.set_font('Times', size=16, style='B')
+        pdf.multi_cell(0, h=0, text='2. Contributors\n', align='L')
+        pdf.set_font('Times', size=12)
+        with pdf.table(
+            headings_style=HEADINGS_STYLE,
+            col_widths=(1, 0.5, 1)
+        ) as table:
+            row = table.row()
+            row.cell('Name')
+            row.cell('Bibliographic?')
+            row.cell('Email (if available)')
+            for data_row in project['contributors']:
+                row = table.row()
+                for datum in data_row:
+                    if datum is True:
+                        datum = 'Yes'
+                    if datum is False:
+                        datum = 'N/A'
+                    row.cell(datum)
+        pdf.write(0, '\n')
+        pdf.write(0, '\n')
+
+        # List files stored in storage providers
+        # For now only OSF Storage is involved
+        pdf.set_font('Times', size=16, style='B')
+        pdf.multi_cell(0, h=0, text='3. Files in Main Project\n', align='L')
+        pdf.write(0, '\n')
+        pdf.set_font('Times', size=14, style='B')
+        pdf.multi_cell(0, h=0, text='OSF Storage\n', align='L')
+        pdf.set_font('Times', size=12)
+        if len(project['files']) > 0:
+            with pdf.table(
+                headings_style=HEADINGS_STYLE,
+                col_widths=(1, 0.5, 1)
+            ) as table:
+                row = table.row()
+                row.cell('File Name')
+                row.cell('Size (MB)')
+                row.cell('Download Link')
+                for data_row in project['files']:
+                    row = table.row()
+                    for datum in data_row:
+                        if datum is True:
+                            datum = 'Yes'
+                        if datum is False or datum is None:
+                            datum = 'N/A'
+                        row.cell(datum)
+        else:
+            pdf.write(0, '\n')
+            pdf.multi_cell(
+                0, h=0, text='No files found for this project.\n', align='L'
+            )
+            pdf.write(0, '\n')
+
+        # Write wikis separately to more easily handle Markdown parsing
+        pdf.ln()
+        pdf.set_font('Times', size=18, style='B')
+        pdf.multi_cell(0, h=0, text='4. Wiki\n', align='L')
+        pdf.ln()
+        for i, wiki in enumerate(wikis.keys()):
+            pdf.set_font('Times', size=16, style='B')
+            pdf.multi_cell(0, h=0, text=f'{wiki}\n')
+            pdf.set_font('Times', size=12)
+            html = markdown(wikis[wiki])
+            pdf.write_html(html)
+            if i < len(wikis.keys())-1:
+                pdf.add_page()
+
+        filename = f'{title}_export.pdf'
+        pdf.output(os.path.join(folder, filename))
+        pdfs.append(pdf)
+
+    return pdfs
+
+
 @click.command()
 @click.option('--pat', type=str, default='',
               prompt=True, hide_input=True,
               help='Personal Access Token to authorise OSF account access.')
 @click.option('--dryrun', is_flag=True, default=False,
               help='If enabled, use mock responses in place of the API.')
-@click.option('--filename', type=str, default='osf_projects.pdf',
+@click.option('--folder', type=str, default='',
               help='Name of the PDF file to export to.')
 @click.option('--url', type=str, default='',
               help="""A link to one project you want to export.
@@ -455,7 +698,7 @@ def get_project_data(pat, dryrun, project_url=''):
               For example: https://osf.io/dry9j/
 
               Leave blank to export all projects you have access to.""")
-def pull_projects(pat, dryrun, filename, url=''):
+def pull_projects(pat, dryrun, folder, url=''):
     """Pull and export OSF projects to a PDF file.
     You can export all projects you have access to, or one specific one
     with the --url option."""
@@ -463,56 +706,7 @@ def pull_projects(pat, dryrun, filename, url=''):
     projects = get_project_data(pat, dryrun, project_url=url)
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
-
-    # Set nicer display names for certian PDF fields
-    pdf_display_names = {
-        'identifiers': 'DOI',
-        'funders': 'Support/Funding Information'
-    }
-
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font('helvetica', size=12)
-    pdf.cell(text='Exported OSF Projects', ln=True, align='C')
-    pdf.write(0, '\n')
-    for project in projects:
-        wikis = project.pop('wikis')
-        for key in projects[0].keys():
-            if key in pdf_display_names:
-                field_name = pdf_display_names[key]
-            else:
-                field_name = key.replace('_', ' ').title()
-            if isinstance(project[key], list):
-                pdf.write(0, '\n')
-                pdf.cell(text=f'{field_name}', ln=True, align='C')
-                for item in project[key]:
-                    for subkey in item.keys():
-                        if subkey in pdf_display_names:
-                            field_name = pdf_display_names[subkey]
-                        else:
-                            field_name = subkey.replace('_', ' ').title()
-                        pdf.cell(
-                            text=f'{field_name}: {item[subkey]}',
-                            ln=True, align='C'
-                        )
-                pdf.write(0, '\n')
-            else:
-                pdf.cell(
-                    text=f'{field_name}: {project[key]}',
-                    ln=True, align='C'
-                )
-
-        # Write wikis separately to more easily handle Markdown parsing
-        pdf.write(0, '\n')
-        pdf.cell(text='Wiki\n', ln=True, align='C')
-        pdf.write(0, '\n')
-        for wiki in wikis.keys():
-            pdf.write(0, f'{wiki}')
-            pdf.write(0, '\n')
-            html = markdown(wikis[wiki])
-            pdf.write_html(html)
-            pdf.add_page()
-    pdf.output(filename)
+    write_pdfs(projects, folder)
 
 
 @click.command()
