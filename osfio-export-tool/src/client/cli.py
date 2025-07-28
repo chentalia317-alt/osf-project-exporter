@@ -29,7 +29,7 @@ def extract_project_id(url):
     if not url:
         raise ValueError(
             """
-            Invalid OSF project URL.
+            No OSF URL or ID given.
             Please provide a valid URL with an ID
             E.g. https://osf.io/<project_id>/")
             """
