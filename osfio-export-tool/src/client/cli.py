@@ -47,15 +47,15 @@ def extract_project_id(url):
 @click.option('--usetest', is_flag=True, default=False,
               help=f"""If passed, set {API_HOST_TEST} as the API hostname.
               Otherwise, {API_HOST_PROD} is the default hostname.""")
-@click.option('--filename', type=str, default='osf_projects.pdf',
-              help='Name of the PDF file to export to.')
+@click.option('--folder', type=str, default='',
+              help='The folder path to export PDFs to.')
 @click.option('--url', type=str, default='',
               help="""A link to one project you want to export.
 
               For example: https://osf.io/dry9j/
 
               Leave blank to export all projects you have access to.""")
-def export_projects(pat, filename, dryrun=False, url='', usetest=False):
+def export_projects(pat, folder, dryrun=False, url='', usetest=False):
     """Pull and export OSF projects to a PDF file.
     You can export all projects you have access to, or one specific one
     with the --url option."""
@@ -73,7 +73,7 @@ def export_projects(pat, filename, dryrun=False, url='', usetest=False):
     )
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
-    exporter.generate_pdf(projects, filename)
+    #exporter.generate_pdf(projects, folder)
 
 
 @click.command()
