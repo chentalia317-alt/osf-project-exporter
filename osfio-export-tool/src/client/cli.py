@@ -68,12 +68,12 @@ def export_projects(pat, folder, dryrun=False, url='', usetest=False):
             click.echo(str(e))
             return
 
-    projects = exporter.get_project_data(
+    projects, root_nodes = exporter.get_project_data(
         pat, dryrun=dryrun, project_id=project_id, usetest=usetest
     )
     click.echo(f'Found {len(projects)} projects.')
     click.echo('Generating PDF...')
-    #exporter.generate_pdf(projects, folder)
+    dfs = exporter.write_pdfs(projects, root_nodes, folder)
 
 
 @click.command()
