@@ -20,6 +20,7 @@ STUBS_DIR = os.path.join(
 BLUE = (173, 216, 230)
 HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
 
+
 def get_host(is_test):
     """Get API host based on flag.
 

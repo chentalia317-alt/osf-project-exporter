@@ -60,10 +60,8 @@ class TestAPI(TestCase):
         node = json.loads(data.read())['data'][0]
         id = extract_project_id(node['links']['html'])
         projects, root_projects = get_project_data(
-            
             os.getenv('TEST_PAT', ''), dryrun=False,
             usetest=True, project_id=id
-        
         )
 
         expected_child_count = len(
@@ -596,7 +594,7 @@ class TestClient(TestCase):
         self.assertRaises(
             ValueError, extract_project_id, url
         )
-    
+
     def test_use_dryrun_in_user_default_dir(self):
         """Regression test for using --dryrun in user's default directory."""
 
