@@ -26,20 +26,16 @@ def extract_project_id(url):
     ------------
         ValueError: Invalid URL/ID.
     """
-    try:
-        project_id = url.split("/")[-1]
-        # Account for potential extra slash at end
-        if not project_id:
-            project_id = url.split("/")[-2]
-        return project_id
-    except Exception:
+    if not url:
         raise ValueError(
             """
             Invalid OSF project URL.
-            Please provide a valid URL e.g. in the format:
-            https://osf.io/<project_id>/")
+            Please provide a valid URL with an ID
+            E.g. https://osf.io/<project_id>/")
             """
         )
+    project_id = url.strip("/").split("/")[-1]
+    return project_id
 
 
 @click.command()
