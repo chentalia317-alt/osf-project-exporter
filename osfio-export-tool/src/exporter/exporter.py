@@ -545,10 +545,7 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
         project_data['children'] = []
         for child in children['data']:
             project_data['children'].append(child['id'])
-            # Have to manually add children to nodes list
-            # Otherwise they won't be parsed
-            if project_id:
-                nodes['data'].append(child)
+            nodes['data'].append(child)
 
         projects.append(project_data)
 
