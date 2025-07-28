@@ -555,15 +555,15 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
     return projects, root_nodes
 
 
-def write_pdfs(projects, root_nodes, folder=''):
+def write_pdf(projects, root_idx, folder=''):
     """Make PDF for each project.
 
     Parameters
     ------------
         projects: dict[str, str|tuple]
             Projects found to export into the PDF.
-        root_nodes: list[int]
-            Positions of root nodes (no parent) in the projects list.
+        root_idx: int
+            Position of root node (no parent) in the projects list.
             This is used for accessing root projects without sorting the list.
         folder: str
             The path to the folder to output the project PDFs in.
@@ -790,13 +790,10 @@ def write_pdfs(projects, root_nodes, folder=''):
 
         return pdf
 
-    pdfs = []
-    for idx in root_nodes:
-        curr_project = projects[idx]
-        title = curr_project['metadata']['title']
-        pdf = explore_project_tree(curr_project, projects)
-        filename = f'{title}_export.pdf'
-        pdf.output(os.path.join(folder, filename))
-        pdfs.append(pdf)
+    curr_project = projects[root_idx]
+    title = curr_project['metadata']['title']
+    pdf = explore_project_tree(curr_project, projects)
+    filename = f'{title}_export.pdf'
+    pdf.output(os.path.join(folder, filename))
 
-    return pdfs
+    return pdf

@@ -72,8 +72,12 @@ def export_projects(pat, folder, dryrun=False, url='', usetest=False):
         pat, dryrun=dryrun, project_id=project_id, usetest=usetest
     )
     click.echo(f'Found {len(projects)} projects.')
-    click.echo('Generating PDF...')
-    dfs = exporter.write_pdfs(projects, root_nodes, folder)
+
+    for idx in root_nodes:
+        title = projects[idx]['metadata']['title']
+        click.echo(f'Generating PDF for {title}...')
+        exporter.write_pdf(projects, idx, folder)
+        click.echo('Project exported!')
 
 
 @click.command()

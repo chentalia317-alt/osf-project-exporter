@@ -1,7 +1,7 @@
 from .exporter import (
     call_api, get_project_data,
     explore_file_tree, explore_wikis,
-    write_pdfs
+    write_pdf
 )
 
 __all__ = [
@@ -9,5 +9,5 @@ __all__ = [
     'get_project_data',
     'explore_file_tree',
     'explore_wikis',
-    'write_pdfs'
+    'write_pdf'
 ]
