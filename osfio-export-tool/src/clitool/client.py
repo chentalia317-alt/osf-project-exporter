@@ -703,22 +703,29 @@ def write_pdfs(projects, root_nodes, folder=''):
         pdf.set_font('Times', size=14, style='B')
         pdf.multi_cell(0, h=0, text='OSF Storage\n', align='L')
         pdf.set_font('Times', size=12)
-        with pdf.table(
-            headings_style=HEADINGS_STYLE,
-            col_widths=(1, 0.5, 1)
-        ) as table:
-            row = table.row()
-            row.cell('File Name')
-            row.cell('Size (MB)')
-            row.cell('Download Link')
-            for data_row in project['files']:
+        if len(project['files']) > 0:
+            with pdf.table(
+                headings_style=HEADINGS_STYLE,
+                col_widths=(1, 0.5, 1)
+            ) as table:
                 row = table.row()
-                for datum in data_row:
-                    if datum is True:
-                        datum = 'Yes'
-                    if datum is False or datum is None:
-                        datum = 'N/A'
-                    row.cell(datum)
+                row.cell('File Name')
+                row.cell('Size (MB)')
+                row.cell('Download Link')
+                for data_row in project['files']:
+                    row = table.row()
+                    for datum in data_row:
+                        if datum is True:
+                            datum = 'Yes'
+                        if datum is False or datum is None:
+                            datum = 'N/A'
+                        row.cell(datum)
+        else:
+            pdf.write(0, '\n')
+            pdf.multi_cell(
+                0, h=0, text='No files found for this project.\n', align='L'
+            )
+            pdf.write(0, '\n')
 
         # Write wikis separately to more easily handle Markdown parsing
         pdf.ln()
