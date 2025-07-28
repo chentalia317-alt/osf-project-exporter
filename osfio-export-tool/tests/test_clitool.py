@@ -19,7 +19,6 @@ API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
-folder_out = os.path.join('tests', 'outfolder')
 
 # Run tests in docker container
 # with 'python -m unittest <tests.test_clitool.TESTCLASS>'
@@ -361,8 +360,12 @@ class TestClient(TestCase):
         files = os.listdir(folder_out)
         assert len(files) == len(projects)
 
-        pdf_first = PdfReader(os.path.join(folder_out, files[1]))
-        pdf_second = PdfReader(os.path.join(folder_out, files[0]))
+        pdf_first = PdfReader(os.path.join(
+            folder_out, "My Project Title_export.pdf"
+        ))
+        pdf_second = PdfReader(os.path.join(
+            folder_out, "Second Project in new PDF_export.pdf"
+        ))
         assert len(pdf_first.pages) == 2
         assert len(pdf_second.pages) == 1
 
