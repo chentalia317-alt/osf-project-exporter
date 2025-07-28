@@ -5,6 +5,8 @@ import shutil
 import json
 import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
+import random
+import string
 
 from click.testing import CliRunner
 from pypdf import PdfReader
@@ -584,7 +586,6 @@ class TestClient(TestCase):
             traceback.format_tb(result.exc_info[2])
         )
 
-
     def test_extract_project_id(self):
         """Test extracting project ID from various URL formats."""
 
@@ -615,19 +616,15 @@ class TestClient(TestCase):
             # Reverse state changes for reproducibility
             os.chdir(cwd)
             assert os.getcwd() == cwd
-    
-    def test_write_pdf_in_new_folder(self):
-                # Create folder if it doesn't exist
-        import random
-        import string
 
+    def test_write_pdf_in_new_folder(self):
         folder = ''.join(
             random.choice(string.ascii_letters + string.digits)
             for _ in range(10)
         )
         if os.path.exists(folder):
             shutil.rmtree(folder)
-        
+
         try:
             runner = CliRunner()
             result = runner.invoke(

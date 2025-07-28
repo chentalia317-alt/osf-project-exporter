@@ -67,18 +67,18 @@ def export_projects(pat, folder, dryrun=False, url='', usetest=False):
         except ValueError as e:
             click.echo(str(e))
             return
-    
+
     click.echo('Downloading project data...')
     projects, root_nodes = exporter.get_project_data(
         pat, dryrun=dryrun, project_id=project_id, usetest=usetest
     )
-    click.echo(f'Found {len(projects)} projects.')
+    click.echo(f'Found {len(root_nodes)} projects.')
 
     for idx in root_nodes:
         title = projects[idx]['metadata']['title']
-        click.echo(f'Generating PDF for {title}...')
+        click.echo(f'Exporting project {title}...')
         pdf, path = exporter.write_pdf(projects, idx, folder)
-        click.echo(f'Project exported to {path}!')
+        click.echo(f'Project exported to {path}')
 
 
 @click.command()
