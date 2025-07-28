@@ -4,17 +4,38 @@ import datetime
 import urllib.request as webhelper
 import io
 
-import click
 from fpdf import FPDF, Align
 from fpdf.fonts import FontFace
 from mistletoe import markdown
 import qrcode
 
-API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
+API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
+API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
+
+STUBS_DIR = os.path.join(
+    os.path.dirname(__file__), 'stubs'
+)
 
 # Global styles for PDF
 BLUE = (173, 216, 230)
 HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
+
+
+def get_host(is_test):
+    """Get API host based on flag.
+
+    Parameters
+    ----------
+    is_test: bool
+        If True, return test API host, otherwise return production host.
+
+    Returns
+    -------
+    str
+        API host URL for the test site or production site.
+    """
+
+    return API_HOST_TEST if is_test else API_HOST_PROD
 
 
 class MockAPIResponse:
@@ -22,60 +43,60 @@ class MockAPIResponse:
 
     JSON_FILES = {
         'nodes': os.path.join(
-            'tests', 'stubs', 'nodestubs.json'),
+            STUBS_DIR, 'nodestubs.json'),
         'x': os.path.join(
-            'tests', 'stubs', 'singlenode.json'),
+            STUBS_DIR, 'singlenode.json'),
         'affiliated_institutions': os.path.join(
-            'tests', 'stubs', 'institutionstubs.json'),
+            STUBS_DIR, 'institutionstubs.json'),
         'contributors': os.path.join(
-            'tests', 'stubs', 'contributorstubs.json'),
+            STUBS_DIR, 'contributorstubs.json'),
         'identifiers': os.path.join(
-            'tests', 'stubs', 'doistubs.json'),
+            STUBS_DIR, 'doistubs.json'),
         'custom_metadata': os.path.join(
-            'tests', 'stubs', 'custommetadatastub.json'),
+            STUBS_DIR, 'custommetadatastub.json'),
         'root_folder': os.path.join(
-            'tests', 'stubs', 'files', 'rootfolders.json'),
+            STUBS_DIR, 'files', 'rootfolders.json'),
         'root_files': os.path.join(
-            'tests', 'stubs', 'files', 'rootfiles.json'),
+            STUBS_DIR, 'files', 'rootfiles.json'),
         'tf1_folder': os.path.join(
-            'tests', 'stubs', 'files', 'tf1folders.json'),
+            STUBS_DIR, 'files', 'tf1folders.json'),
         'tf1-2_folder': os.path.join(
-            'tests', 'stubs', 'files', 'tf1folders-2.json'),
+            STUBS_DIR, 'files', 'tf1folders-2.json'),
         'tf1-2_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf2-second-folders.json'),
+            STUBS_DIR, 'files', 'tf2-second-folders.json'),
         'tf1_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf1files.json'),
+            STUBS_DIR, 'files', 'tf1files.json'),
         'tf2_folder': os.path.join(
-            'tests', 'stubs', 'files', 'tf2folders.json'),
+            STUBS_DIR, 'files', 'tf2folders.json'),
         'tf2-second_folder': os.path.join(
-            'tests', 'stubs', 'files', 'tf2-second-folders.json'),
+            STUBS_DIR, 'files', 'tf2-second-folders.json'),
         'tf2_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf2files.json'),
+            STUBS_DIR, 'files', 'tf2files.json'),
         'tf2-second_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf2-second-files.json'),
+            STUBS_DIR, 'files', 'tf2-second-files.json'),
         'tf2-second-2_files': os.path.join(
-            'tests', 'stubs', 'files', 'tf2-second-files-2.json'),
+            STUBS_DIR, 'files', 'tf2-second-files-2.json'),
         'license': os.path.join(
-            'tests', 'stubs', 'licensestub.json'),
+            STUBS_DIR, 'licensestub.json'),
         'subjects': os.path.join(
-            'tests', 'stubs', 'subjectsstub.json'),
+            STUBS_DIR, 'subjectsstub.json'),
         'wikis': os.path.join(
-            'tests', 'stubs', 'wikis', 'wikistubs.json'),
+            STUBS_DIR, 'wikis', 'wikistubs.json'),
         'wikis2': os.path.join(
-            'tests', 'stubs', 'wikis', 'wikis2stubs.json'),
+            STUBS_DIR, 'wikis', 'wikis2stubs.json'),
         'x-children': os.path.join(
-            'tests', 'stubs', 'components', 'x-children.json'),
+            STUBS_DIR, 'components', 'x-children.json'),
         'empty-children': os.path.join(
-            'tests', 'stubs', 'components', 'empty-children.json'),
+            STUBS_DIR, 'components', 'empty-children.json'),
     }
 
     MARKDOWN_FILES = {
         'helloworld': os.path.join(
-            'tests', 'stubs', 'wikis', 'helloworld.md'),
+            STUBS_DIR, 'wikis', 'helloworld.md'),
         'home': os.path.join(
-            'tests', 'stubs', 'wikis', 'home.md'),
+            STUBS_DIR, 'wikis', 'home.md'),
         'anotherone': os.path.join(
-            'tests', 'stubs', 'wikis', 'anotherone.md'),
+            STUBS_DIR, 'wikis', 'anotherone.md'),
     }
 
     @staticmethod
@@ -331,7 +352,7 @@ def explore_wikis(link, pat, dryrun=True):
     return wiki_content
 
 
-def get_project_data(pat, dryrun, project_url=''):
+def get_project_data(pat, dryrun=False, project_id='', usetest=False):
     """Pull and list projects for a user from the OSF.
 
     Parameters
@@ -340,8 +361,10 @@ def get_project_data(pat, dryrun, project_url=''):
         Personal Access Token to authorise a user with.
     dryrun: bool
         If True, use test data from JSON stubs to mock API calls.
-    project_url: str
-        Optional URL to a specific OSF project, of form <URL>.io/<project_id>/
+    project_id: str
+        Optional ID for a specific OSF project to export.
+    usetest: bool
+        If True, use test API host, otherwise use production host.
 
     Returns
     ----------
@@ -349,22 +372,7 @@ def get_project_data(pat, dryrun, project_url=''):
             List of dictionaries representing projects.
     """
 
-    # Don't get other projects if user gives valid/invalid URL to save time
-    project_id = None
-    if project_url != '':
-        try:
-            project_id = project_url.split(".io/")[1].strip("/")
-            if '/' in project_id:
-                # Need extra processing for API links
-                project_id = project_id.split('/')[-1]
-            click.echo(f"Exporting project with ID: {project_id}")
-        except Exception:
-            click.echo("Project URL is invalid! Please try another")
-            return []
-    else:
-        click.echo("No project URL provided, exporting all projects.")
-
-    click.echo("Getting project(s) data...")
+    api_host = get_host(usetest)
 
     # Reduce query size by getting root nodes only
     node_filter = {
@@ -374,13 +382,13 @@ def get_project_data(pat, dryrun, project_url=''):
     if not dryrun:
         if project_id:
             result = call_api(
-                f'{API_HOST}/nodes/{project_id}/', pat
+                f'{api_host}/nodes/{project_id}/', pat
             )
             # Put data into same format as if multiple nodes found
             nodes = {'data': [json.loads(result.read())['data']]}
         else:
             result = call_api(
-                f'{API_HOST}/users/me/nodes/', pat,
+                f'{api_host}/users/me/nodes/', pat,
                 filters=node_filter
             )
             nodes = json.loads(result.read())
@@ -391,7 +399,6 @@ def get_project_data(pat, dryrun, project_url=''):
         else:
             nodes = MockAPIResponse.read('nodes')
 
-    click.echo("Parsing results...")
     projects = []
     root_nodes = []  # Track indexes of root nodes for quick access
     added_node_ids = set()  # Track added node IDs to avoid duplicates
@@ -430,7 +437,7 @@ def get_project_data(pat, dryrun, project_url=''):
             metadata = MockAPIResponse.read('custom_metadata')
         else:
             metadata = json.loads(call_api(
-                f"{API_HOST}/custom_item_metadata_records/{project['id']}/",
+                f"{api_host}/custom_item_metadata_records/{project['id']}/",
                 pat
             ).read())
         metadata = metadata['data']['attributes']
@@ -519,7 +526,7 @@ def get_project_data(pat, dryrun, project_url=''):
                 project_data[key] = values
 
         project_data['wikis'] = explore_wikis(
-            f'{API_HOST}/nodes/{project['id']}/wikis/',
+            f'{api_host}/nodes/{project['id']}/wikis/',
             pat=pat, dryrun=dryrun
         )
 
@@ -539,25 +546,22 @@ def get_project_data(pat, dryrun, project_url=''):
         project_data['children'] = []
         for child in children['data']:
             project_data['children'].append(child['id'])
-            # Have to manually add children to nodes list
-            # Otherwise they won't be parsed
-            if project_url:
-                nodes['data'].append(child)
+            nodes['data'].append(child)
 
         projects.append(project_data)
 
     return projects, root_nodes
 
 
-def write_pdfs(projects, root_nodes, folder=''):
+def write_pdf(projects, root_idx, folder=''):
     """Make PDF for each project.
 
     Parameters
     ------------
         projects: dict[str, str|tuple]
             Projects found to export into the PDF.
-        root_nodes: list[int]
-            Positions of root nodes (no parent) in the projects list.
+        root_idx: int
+            Position of root node (no parent) in the projects list.
             This is used for accessing root projects without sorting the list.
         folder: str
             The path to the folder to output the project PDFs in.
@@ -784,63 +788,16 @@ def write_pdfs(projects, root_nodes, folder=''):
 
         return pdf
 
-    pdfs = []
-    for idx in root_nodes:
-        curr_project = projects[idx]
-        title = curr_project['metadata']['title']
-        click.echo(f'Exporting to PDF project: {title}')
-        pdf = explore_project_tree(curr_project, projects)
-        filename = f'{title}_export.pdf'
-        pdf.output(os.path.join(folder, filename))
-        click.echo(f'Export for {title} completed.')
-        pdfs.append(pdf)
+    curr_project = projects[root_idx]
+    title = curr_project['metadata']['title']
+    pdf = explore_project_tree(curr_project, projects)
 
-    return pdfs
+    # Be flexible for users by allowing saving in new folders
+    # and displaying the path the PDF is located at
+    filename = f'{title}_export.pdf'
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+    path = os.path.join(folder, filename)
+    pdf.output(path)
 
-
-@click.command()
-@click.option('--pat', type=str, default='',
-              prompt=True, hide_input=True,
-              help='Personal Access Token to authorise OSF account access.')
-@click.option('--dryrun', is_flag=True, default=False,
-              help='If enabled, use mock responses in place of the API.')
-@click.option('--folder', type=str, default='',
-              help='Name of the PDF file to export to.')
-@click.option('--url', type=str, default='',
-              help="""A link to one project you want to export.
-
-              For example: https://osf.io/dry9j/
-
-              Leave blank to export all projects you have access to.""")
-def pull_projects(pat, dryrun, folder, url=''):
-    """Pull and export OSF projects to a PDF file.
-    You can export all projects you have access to, or one specific one
-    with the --url option."""
-
-    projects, root_projects = get_project_data(pat, dryrun, project_url=url)
-    click.echo(f'Found {len(projects)} projects and components.')
-    write_pdfs(projects, root_projects, folder)
-
-
-@click.command()
-@click.option('--pat', type=str, default='',
-              prompt=True, hide_input=True,
-              help='Personal Access Token to authorise OSF account access.')
-def get_user_details(pat):
-    """Get details for a specific OSF user."""
-
-    request = webhelper.Request(f'{API_HOST}/', method='GET')
-    request.add_header('Authorization', f'Bearer {pat}')
-    result = webhelper.urlopen(request)
-    click.echo(result.read())
-    click.echo(result.status)
-
-
-# Group will be used as entry point for CLI
-@click.group()
-def cli():
-    pass
-
-
-cli.add_command(pull_projects)
-cli.add_command(get_user_details)
+    return pdf, path

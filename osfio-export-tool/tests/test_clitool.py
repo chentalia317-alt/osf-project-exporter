@@ -3,19 +3,24 @@ from unittest import TestCase
 import os
 import shutil
 import json
-# import pdb  # Use pdb.set_trace() to help with debugging
+import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
+import random
+import string
 
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from clitool import (
-    cli, call_api, get_project_data,
-    explore_file_tree, explore_wikis,
-    write_pdfs
+from exporter import (
+    call_api,
+    get_project_data,
+    explore_file_tree,
+    explore_wikis,
+    write_pdf
 )
-
-API_HOST = os.getenv('API_HOST', 'https://api.test.osf.io/v2')
+from client import (
+    cli, extract_project_id
+)
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
@@ -28,11 +33,13 @@ FOLDER_OUT = os.path.join('tests', 'outfolder')
 class TestAPI(TestCase):
     """Tests for interacting with the OSF API."""
 
+    API_HOST = 'https://api.test.osf.io/v2'
+
     def test_basic_api_call_works(self):
         """Test for if JSON for user's projects are loaded correctly"""
 
         data = call_api(
-            f'{API_HOST}/users/me/nodes/',
+            f'{TestAPI.API_HOST}/users/me/nodes/',
             os.getenv('TEST_PAT', '')
         )
         assert data.status == 200
@@ -48,20 +55,21 @@ class TestAPI(TestCase):
     def test_parse_single_project_json_as_expected(self):
         # Use first public project available for this test
         data = call_api(
-            f'{API_HOST}/nodes/',
+            f'{TestAPI.API_HOST}/nodes/',
             os.getenv('TEST_PAT', ''),
             per_page=1
         )
         node = json.loads(data.read())['data'][0]
-        link = node['links']['html']
+        id = extract_project_id(node['links']['html'])
         projects, root_projects = get_project_data(
-            os.getenv('TEST_PAT', ''), False, link
+            os.getenv('TEST_PAT', ''), dryrun=False,
+            usetest=True, project_id=id
         )
 
         expected_child_count = len(
             json.loads(
                 call_api(
-                    f'{API_HOST}/nodes/{node["id"]}/children/',
+                    f'{TestAPI.API_HOST}/nodes/{node["id"]}/children/',
                     os.getenv('TEST_PAT', '')
                 ).read()
             )['data']
@@ -78,7 +86,7 @@ class TestAPI(TestCase):
             'title': 'ttt',
         }
         data = call_api(
-            f'{API_HOST}/nodes/',
+            f'{TestAPI.API_HOST}/nodes/',
             os.getenv('TEST_PAT', ''),
             per_page=12, filters=filters
         )
@@ -88,12 +96,13 @@ class TestAPI(TestCase):
         """Test using API to filter and search file links."""
 
         data = call_api(
-            f'{API_HOST}/users/me/nodes/',
+            f'{TestAPI.API_HOST}/users/me/nodes/',
             os.getenv('TEST_PAT', '')
         )
         nodes = json.loads(data.read())['data']
         if len(nodes) > 0:
-            link = f'{API_HOST}/nodes/{nodes[0]['id']}/files/osfstorage/'
+            node_id = nodes[0]['id']
+            link = f'{TestAPI.API_HOST}/nodes/{node_id}/files/osfstorage/'
             files = explore_file_tree(
                 link, os.getenv('TEST_PAT', ''), dryrun=False
             )
@@ -101,7 +110,7 @@ class TestAPI(TestCase):
         else:
             print("No nodes available, consider making a test project.")
 
-    def test_pull_projects_command_using_api(self):
+    def test_export_projects_command(self):
         """Test we can successfully pull projects using the OSF API"""
 
         if os.path.exists(FOLDER_OUT):
@@ -112,13 +121,17 @@ class TestAPI(TestCase):
 
         # No PAT given - exception
         result = runner.invoke(
-            cli, ['pull-projects'], input='', terminal_width=60
+            cli, ['export-projects'], input='', terminal_width=60
         )
         assert result.exception
 
         # Use PAT to find user projects
         result = runner.invoke(
-            cli, ['pull-projects', '--folder', FOLDER_OUT],
+            cli, [
+                'export-projects',
+                '--folder', FOLDER_OUT,
+                '--usetest'
+            ],
             input=os.getenv('TEST_PAT', ''),
             terminal_width=60
         )
@@ -176,7 +189,8 @@ class TestClient(TestCase):
         test we can parse them correctly"""
 
         projects, root_nodes = get_project_data(
-            os.getenv('TEST_PAT', ''), True
+            os.getenv('TEST_PAT', ''),
+            dryrun=True
         )
 
         assert len(projects) == 4, (
@@ -299,21 +313,13 @@ class TestClient(TestCase):
 
     def test_get_single_mock_project(self):
         projects, roots = get_project_data(
-            os.getenv('TEST_PAT', ''), True,
-            'https://osf.io/x/'
+            os.getenv('TEST_PAT', ''), dryrun=True,
+            project_id='x'
         )
         assert len(roots) == 1
         assert len(projects) == 3
         assert projects[0]['metadata']['id'] == 'x'
         assert projects[0]['children'] == ['a', 'b']
-
-        projects, roots = get_project_data(
-            os.getenv('TEST_PAT', ''), True,
-            'https://api.test.osf.io/v2/nodes/x/'
-        )
-        assert len(roots) == 1
-        assert len(projects) == 3
-        assert projects[0]['metadata']['id'] == 'x'
 
     def test_write_pdfs_from_mock_projects(self):
         # Put PDFs in a folder to keep things tidy
@@ -467,7 +473,15 @@ class TestClient(TestCase):
 
         # Do we write only one PDF per project?
         # pdb.set_trace()
-        pdfs = write_pdfs(projects, root_nodes, FOLDER_OUT)
+        pdf_one, path_one = write_pdf(projects, root_nodes[0], FOLDER_OUT)
+        pdf_two, path_two = write_pdf(projects, root_nodes[1], FOLDER_OUT)
+        assert path_one == os.path.join(
+            FOLDER_OUT, f'{projects[0]['metadata']['title']}_export.pdf'
+        )
+        pdfs = [
+            pdf_one,
+            pdf_two
+        ]
         assert len(pdfs) == 2
 
         # Can we specify where to write PDFs?
@@ -560,7 +574,7 @@ class TestClient(TestCase):
         runner = CliRunner()
         result = runner.invoke(
             cli, [
-                'pull-projects', '--dryrun',
+                'export-projects', '--dryrun',
                 '--folder', FOLDER_OUT,
                 '--url', ''
             ],
@@ -571,3 +585,69 @@ class TestClient(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
+
+    def test_extract_project_id(self):
+        """Test extracting project ID from various URL formats."""
+
+        url = 'https://osf.io/x/'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        url = 'https://api.test.osf.io/v2/nodes/x/'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        # TODO: add test for passing a URL for test site when 
+        # we are using production site, and vice versa
+
+        url = 'x'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        # Should just run normally
+        url = ''
+        project_id = extract_project_id(url)
+
+    def test_use_dryrun_in_user_default_dir(self):
+        """Regression test for using --dryrun in user's default directory."""
+
+        cwd = os.getcwd()
+        try:
+            # Go to user's home directory in cross-platform way
+            os.chdir(os.path.expanduser("~"))
+            projects, roots = get_project_data('', dryrun=True, usetest=True)
+        except Exception as e:
+            raise e
+        finally:
+            # Reverse state changes for reproducibility
+            os.chdir(cwd)
+            assert os.getcwd() == cwd
+
+    def test_write_pdf_in_new_folder(self):
+        folder = ''.join(
+            random.choice(string.ascii_letters + string.digits)
+            for _ in range(10)
+        )
+        if os.path.exists(folder):
+            shutil.rmtree(folder)
+
+        try:
+            runner = CliRunner()
+            result = runner.invoke(
+                cli, [
+                    'export-projects', '--dryrun',
+                    '--folder', folder,
+                    '--url', ''
+                ],
+                input=os.getenv('TEST_PAT', ''),
+                terminal_width=60
+            )
+            assert not result.exception, (
+                result.exc_info,
+                traceback.format_tb(result.exc_info[2])
+            )
+        except Exception as e:
+            raise e
+        finally:
+            if os.path.exists(folder):
+                shutil.rmtree(folder)
