@@ -14,7 +14,7 @@ from exporter import (
     get_project_data,
     explore_file_tree,
     explore_wikis,
-    write_pdfs
+    write_pdf
 )
 from client import (
     cli, extract_project_id
@@ -473,7 +473,10 @@ class TestClient(TestCase):
 
         # Do we write only one PDF per project?
         # pdb.set_trace()
-        pdfs = write_pdfs(projects, root_nodes, FOLDER_OUT)
+        pdfs = [
+            write_pdf(projects, root_nodes[0], FOLDER_OUT),
+            write_pdf(projects, root_nodes[1], FOLDER_OUT)
+        ]
         assert len(pdfs) == 2
 
         # Can we specify where to write PDFs?
