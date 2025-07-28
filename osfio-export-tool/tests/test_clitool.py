@@ -471,9 +471,14 @@ class TestClient(TestCase):
 
         # Do we write only one PDF per project?
         # pdb.set_trace()
+        pdf_one, path_one = write_pdf(projects, root_nodes[0], FOLDER_OUT)
+        pdf_two, path_two = write_pdf(projects, root_nodes[1], FOLDER_OUT)
+        assert path_one == os.path.join(
+            FOLDER_OUT, f'{projects[0]['metadata']['title']}_export.pdf'
+        )
         pdfs = [
-            write_pdf(projects, root_nodes[0], FOLDER_OUT),
-            write_pdf(projects, root_nodes[1], FOLDER_OUT)
+            pdf_one,
+            pdf_two
         ]
         assert len(pdfs) == 2
 
