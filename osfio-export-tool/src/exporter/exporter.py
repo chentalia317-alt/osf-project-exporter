@@ -795,8 +795,11 @@ def write_pdf(projects, root_idx, folder=''):
     # Be flexible for users by allowing saving in new folders
     # and displaying the path the PDF is located at
     filename = f'{title}_export.pdf'
-    if not os.path.exists(folder):
-        os.mkdir(folder)
+    if folder:
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+    else:
+        folder = os.getcwd()
     path = os.path.join(folder, filename)
     pdf.output(path)
 
