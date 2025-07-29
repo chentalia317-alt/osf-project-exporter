@@ -521,7 +521,8 @@ class TestClient(TestCase):
         pdf_one, path_one = write_pdf(projects, root_nodes[0], FOLDER_OUT)
         pdf_two, path_two = write_pdf(projects, root_nodes[1], FOLDER_OUT)
         assert path_one == os.path.join(
-            FOLDER_OUT, f'{projects[0]['metadata']['title']}_export.pdf'
+            os.getcwd(), FOLDER_OUT,
+            f'{projects[0]['metadata']['title']}_export.pdf'
         )
         pdfs = [
             pdf_one,
