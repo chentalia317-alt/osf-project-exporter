@@ -320,7 +320,7 @@ class TestClient(TestCase):
         assert len(projects) == 3
         assert projects[0]['metadata']['id'] == 'x'
         assert projects[0]['children'] == ['a', 'b']
-    
+
     def test_write_pdf_without_giving_a_folder(self):
         projects = [
             {
@@ -523,7 +523,6 @@ class TestClient(TestCase):
         files = os.listdir(FOLDER_OUT)
         assert len(files) == 2
 
-        # Get expected formatted titles
         title_one = projects[0]['metadata']['title'].replace(' ', '-')
         title_two = projects[2]['metadata']['title'].replace(' ', '-')
         date_one = pdf_one.date_printed.strftime(
@@ -532,23 +531,21 @@ class TestClient(TestCase):
         date_two = pdf_two.date_printed.strftime(
             '%Y-%m-%d %H:%M:%S %Z'
         ).replace(' ', '-')
-        assert path_one == os.path.join(
+        path_one_real = os.path.join(
             os.getcwd(), FOLDER_OUT,
             f'{title_one}-{date_one}.pdf'
-        ), (
-            path_one,
-            os.path.join(
-            os.getcwd(), FOLDER_OUT,
-            f'{title_one}-{date_one}.pdf')
         )
-        assert path_two == os.path.join(
+        path_two_real = os.path.join(
             os.getcwd(), FOLDER_OUT,
             f'{title_two}-{date_two}.pdf'
-        ), (
+        )
+        assert path_one == path_one_real, (
+            path_one,
+            path_one_real
+        )
+        assert path_two == path_two_real, (
             path_two,
-            os.path.join(
-            os.getcwd(), FOLDER_OUT,
-            f'{title_two}-{date_two}.pdf')
+            path_two_real
         )
 
         pdf_first = PdfReader(os.path.join(
@@ -660,7 +657,7 @@ class TestClient(TestCase):
         project_id = extract_project_id(url)
         assert project_id == 'x', f'Expected "x", got {project_id}'
 
-        # TODO: add test for passing a URL for test site when 
+        # TODO: add test for passing a URL for test site when
         # we are using production site, and vice versa
 
         url = 'x'
