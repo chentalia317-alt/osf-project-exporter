@@ -516,29 +516,46 @@ class TestClient(TestCase):
         # Get URL now as it will be removed later
         url = projects[0]['metadata']['url']
 
-        # Do we write only one PDF per project?
         # pdb.set_trace()
+        # Can we specify where to write PDFs?
         pdf_one, path_one = write_pdf(projects, root_nodes[0], FOLDER_OUT)
         pdf_two, path_two = write_pdf(projects, root_nodes[1], FOLDER_OUT)
-        assert path_one == os.path.join(
-            os.getcwd(), FOLDER_OUT,
-            f'{projects[0]['metadata']['title']}_export.pdf'
-        )
-        pdfs = [
-            pdf_one,
-            pdf_two
-        ]
-        assert len(pdfs) == 2
-
-        # Can we specify where to write PDFs?
         files = os.listdir(FOLDER_OUT)
         assert len(files) == 2
 
+        # Get expected formatted titles
+        title_one = projects[0]['metadata']['title'].replace(' ', '-')
+        title_two = projects[2]['metadata']['title'].replace(' ', '-')
+        date_one = pdf_one.date_printed.strftime(
+            '%Y-%m-%d %H:%M:%S %Z'
+        ).replace(' ', '-')
+        date_two = pdf_two.date_printed.strftime(
+            '%Y-%m-%d %H:%M:%S %Z'
+        ).replace(' ', '-')
+        assert path_one == os.path.join(
+            os.getcwd(), FOLDER_OUT,
+            f'{title_one}-{date_one}.pdf'
+        ), (
+            path_one,
+            os.path.join(
+            os.getcwd(), FOLDER_OUT,
+            f'{title_one}-{date_one}.pdf')
+        )
+        assert path_two == os.path.join(
+            os.getcwd(), FOLDER_OUT,
+            f'{title_two}-{date_two}.pdf'
+        ), (
+            path_two,
+            os.path.join(
+            os.getcwd(), FOLDER_OUT,
+            f'{title_two}-{date_two}.pdf')
+        )
+
         pdf_first = PdfReader(os.path.join(
-            FOLDER_OUT, "My Project Title_export.pdf"
+            FOLDER_OUT, f'{title_one}-{date_one}.pdf'
         ))
         pdf_second = PdfReader(os.path.join(
-            FOLDER_OUT, "Second Project in new PDF_export.pdf"
+            FOLDER_OUT, f'{title_two}-{date_two}.pdf'
         ))
         assert len(pdf_first.pages) == 4, (
             'Expected 4 pages in the first PDF, got: ',
