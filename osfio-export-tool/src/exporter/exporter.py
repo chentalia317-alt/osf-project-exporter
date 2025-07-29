@@ -792,7 +792,13 @@ def write_pdf(projects, root_idx, folder=''):
     title = curr_project['metadata']['title']
     pdf = explore_project_tree(curr_project, projects)
 
-    filename = f'{title}_export.pdf'
+    # Remove spaces in file name for better behaviour on Linux
+    # Add timestamp to allow distinguishing between PDFs at a glance
+    timestamp = pdf.date_printed.strftime(
+        '%Y-%m-%d %H:%M:%S %Z'
+    ).replace(' ', '-')
+    filename = f'{title.replace(' ', '-')}-{timestamp}.pdf'
+
     if folder:
         if not os.path.exists(folder):
             os.mkdir(folder)
