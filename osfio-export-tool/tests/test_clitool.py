@@ -320,6 +320,51 @@ class TestClient(TestCase):
         assert len(projects) == 3
         assert projects[0]['metadata']['id'] == 'x'
         assert projects[0]['children'] == ['a', 'b']
+    
+    def test_write_pdf_without_giving_a_folder(self):
+        projects = [
+            {
+                'metadata': {
+                    'title': 'My Project Title',
+                    'id': 'id',
+                    'url': 'https://test.osf.io/',
+                    'description': 'This is a description of the project',
+                    'date_created': datetime.datetime.fromisoformat(
+                        '2025-06-12T15:54:42.105112Z'
+                    ),
+                    'date_modified': datetime.datetime.fromisoformat(
+                        '2001-01-01T01:01:01.105112Z'
+                    ),
+                    'tags': 'tag1, tag2, tag3',
+                    'resource_type': 'na',
+                    'resource_lang': 'english',
+                    'affiliated_institutions': 'University of Manchester',
+                    'identifiers': 'N/A',
+                    'license': 'Apache 2.0',
+                    'subjects': 'sub1, sub2, sub3',
+                },
+                'contributors': [
+                    ('Pineapple Pizza', True, 'email'),
+                    ('Margarita', True, 'email'),
+                    ('Margarine', True, 'email')
+                ],
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
+                'funders': [],
+                'wikis': {
+                    'Home': 'hello world',
+                    'Page2': 'another page'
+                },
+                "parent": None,
+                'children': ['a']
+            }
+        ]
+        root_nodes = [0]
+        pdf_one, path_one = write_pdf(projects, root_nodes[0], '')
+        filename = f'{projects[0]['metadata']['title']}_export.pdf'
+        assert filename in os.listdir(os.getcwd())
 
     def test_write_pdfs_from_mock_projects(self):
         # Put PDFs in a folder to keep things tidy
