@@ -416,13 +416,21 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
         else:
             added_node_ids.add(project['id'])
 
+        # Define nice representations of categories if needed
+        CATEGORY_STRS = {
+            '': 'Uncategorized',
+            'methods and measures': 'Methods and Measures'
+        }
+
         project_data = {
             'metadata': {
                 'title': project['attributes']['title'],
                 'id': project['id'],
                 'url': project['links']['html'],
                 'description': project['attributes']['description'],
-                'category': project['attributes']['category'],
+                'category': CATEGORY_STRS[project['attributes']['category']]
+                if project['attributes']['category'] in CATEGORY_STRS
+                else project['attributes']['category'].title(),
                 'date_created': datetime.datetime.fromisoformat(
                     project['attributes']['date_created']
                 ).astimezone().strftime('%Y-%m-%d'),
