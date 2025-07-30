@@ -430,6 +430,7 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
                 ).astimezone().strftime('%Y-%m-%d'),
                 'tags': ', '.join(project['attributes']['tags'])
                 if project['attributes']['tags'] else 'NA',
+                'public': project['attributes']['public'],
                 'resource_type': 'NA',
                 'resource_lang': 'NA',
                 'funders': []

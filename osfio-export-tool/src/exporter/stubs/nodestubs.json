@@ -30,7 +30,7 @@
                 "current_user_is_contributor": true,
                 "current_user_is_contributor_or_group_member": true,
                 "wiki_enabled": true,
-                "public": false
+                "public": true
             },
             "relationships": {
                 "license": {
