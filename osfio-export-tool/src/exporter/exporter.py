@@ -422,6 +422,7 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
                 'id': project['id'],
                 'url': project['links']['html'],
                 'description': project['attributes']['description'],
+                'category': project['attributes']['category'],
                 'date_created': datetime.datetime.fromisoformat(
                     project['attributes']['date_created']
                 ).astimezone().strftime('%Y-%m-%d'),
