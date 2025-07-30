@@ -488,27 +488,27 @@ class TestClient(TestCase):
         files = os.listdir(FOLDER_OUT)
         assert len(files) == 2
 
-        pdf_first = PdfReader(os.path.join(
+        import_one = PdfReader(os.path.join(
             FOLDER_OUT, "My Project Title_export.pdf"
         ))
-        pdf_second = PdfReader(os.path.join(
+        import_two = PdfReader(os.path.join(
             FOLDER_OUT, "Second Project in new PDF_export.pdf"
         ))
-        assert len(pdf_first.pages) == 4, (
+        assert len(import_one.pages) == 4, (
             'Expected 4 pages in the first PDF, got: ',
-            len(pdf_first.pages)
+            len(import_one.pages)
         )
 
-        content_first_page = pdf_first.pages[0].extract_text(
+        content_first_page = import_one.pages[0].extract_text(
             extraction_mode='layout'
         )
-        content_second_page = pdf_second.pages[0].extract_text(
+        content_second_page = import_two.pages[0].extract_text(
             extraction_mode='layout'
         )
-        content_third_page = pdf_first.pages[2].extract_text(
+        content_third_page = import_one.pages[2].extract_text(
             extraction_mode='layout'
         )
-        content_fourth_page = pdf_first.pages[3].extract_text(
+        content_fourth_page = import_one.pages[3].extract_text(
             extraction_mode='layout'
         )
         assert 'My Project Title /\nchild1' in content_third_page
@@ -518,6 +518,13 @@ class TestClient(TestCase):
 
         assert f'Project URL: {url}' in content_first_page
         assert 'Project URL:' not in content_second_page
+
+        timestamp = pdf_one.date_printed.strftime(
+            '%Y-%m-%d %H:%M:%S %Z')
+        assert f'Exported: {timestamp}' in content_first_page, (
+            'Actual content:',
+            content_first_page
+        )
 
         # This way of string formatting compresses line lengths used
         # End of headers and table rows marked by \n\n
