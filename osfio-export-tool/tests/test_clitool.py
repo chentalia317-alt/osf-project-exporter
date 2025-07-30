@@ -369,6 +369,7 @@ class TestClient(TestCase):
                 'metadata': {
                     "title": "child1",
                     "id": "a",
+                    'url': 'hdssdadsadsads'
                 },
                 'contributors': [
                     ('Short Name', True, 'email'),
@@ -470,6 +471,7 @@ class TestClient(TestCase):
 
         # Get URL now as it will be removed later
         url = projects[0]['metadata']['url']
+        url_comp = projects[1]['metadata']['url']
 
         # Do we write only one PDF per project?
         # pdb.set_trace()
@@ -511,13 +513,21 @@ class TestClient(TestCase):
         content_fourth_page = import_one.pages[3].extract_text(
             extraction_mode='layout'
         )
-        assert 'My Project Title /\nchild1' in content_third_page
-        assert 'child1 /\nchild2' in content_fourth_page
-        assert 'Title: child1' in content_third_page
-        assert 'Title: child2' in content_fourth_page
+        assert f'{projects[0]['metadata']['title']}' in content_third_page, (
+            content_third_page
+        )
+        assert f'Main Project URL: {url}' in content_third_page, (
+            content_third_page
+        )
+        assert f'{projects[1]['metadata']['title']}' in content_third_page
+        assert f'Component URL: {url_comp}' in content_third_page
 
-        assert f'Project URL: {url}' in content_first_page
-        assert 'Project URL:' not in content_second_page
+        assert f'Main Project URL: {url}' in content_first_page, (
+            content_third_page
+        )
+        assert f'Main Project URL: {url}' not in content_second_page, (
+            content_third_page
+        )
 
         timestamp = pdf_one.date_printed.strftime(
             '%Y-%m-%d %H:%M:%S %Z')
