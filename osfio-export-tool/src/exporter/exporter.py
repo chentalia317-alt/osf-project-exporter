@@ -130,12 +130,18 @@ class PDF(FPDF):
         date_printed: datetime
             Date and time when the project was exported.
         url: str
-            URL to include in QR codes.
+            Current URL to include in QR codes.
+        parent_url: str
+            URL of root project to use in component sections.
+        parent_title: str
+            Title of root project to use in component sections.
     """
 
-    def __init__(self, url=''):
+    def __init__(self, url='', parent_url='', parent_title=''):
         super().__init__()
         self.date_printed = datetime.datetime.now().astimezone()
+        self.parent_url = parent_url
+        self.parent_title = parent_title
         self.url = url
 
     def generate_qr_code(self):
@@ -627,7 +633,7 @@ def write_pdf(projects, root_idx, folder=''):
                 markdown=True
             )
 
-    def write_project_body(pdf, project, root_title='', root_url=''):
+    def write_project_body(pdf, project):
         """Write the body of a project to the PDF.
 
         Parameters
@@ -649,23 +655,34 @@ def write_pdf(projects, root_idx, folder=''):
         wikis = project['wikis']
 
         # Write header section
-        title = project['metadata']['title']
         pdf.set_font('Times', size=18, style='B')
-        if root_title:
-            pdf.multi_cell(0, h=0, text=f'{root_title}\n', align='L')
-        if root_url:
-            pdf.multi_cell(0, h=0, text=f'Main Project URL: {root_url}\n', align='L')
-        pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
-        pdf.set_font('Times', size=12)
+        # Write parent header and title first
+        if pdf.parent_title:
+            pdf.multi_cell(0, h=0, text=f'{pdf.parent_title}\n', align='L')
+        if pdf.parent_url:
+            pdf.set_font('Times', size=12)
+            pdf.multi_cell(
+                0, h=0, text=f'Main Project URL: {pdf.parent_url}\n', align='L'
+            )
+            pdf.write(0, '\n')
+
+        # Check if title, url is of parent's to avoid duplication
+        title = project['metadata']['title']
+        if pdf.parent_title != title:
+            pdf.set_font('Times', size=18, style='B')
+            pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
+        
+        # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')
-        if url:
-            label = 'Component URL' if root_title else 'Main Project URL'
+        
+        pdf.set_font('Times', size=12)
+        if url and pdf.parent_url != url:
             pdf.multi_cell(
                 0, h=0,
-                text=f'{label}: {url}\n',
+                text=f'Component URL: {url}\n',
                 align='L'
             )
-            pdf.url = url
+        pdf.url = url  # Set current URL to use in QR codes
         qr_img = pdf.generate_qr_code()
         pdf.image(qr_img, w=30, x=Align.C)
 
@@ -751,7 +768,7 @@ def write_pdf(projects, root_idx, folder=''):
 
         return pdf
 
-    def explore_project_tree(project, projects, pdf=None, parent_title='', parent_url=''):
+    def explore_project_tree(project, projects, pdf=None):
         """Recursively find child projects and write them to the PDF.
 
         Parameters
@@ -772,12 +789,13 @@ def write_pdf(projects, root_idx, folder=''):
 
         # Start with no PDF at root projects
         if not pdf:
-            pdf = PDF()
-            parent_title = project['metadata']['title']
-            parent_url = project['metadata']['url']
+            pdf = PDF(
+                parent_title=project['metadata']['title'],
+                parent_url=project['metadata']['url']
+            )
 
         # Add current project to PDF
-        pdf = write_project_body(pdf, project, root_title=parent_title, root_url=parent_url)
+        pdf = write_project_body(pdf, project)
 
         # Do children last so that come at end of the PDF
         children = project['children']
@@ -786,10 +804,8 @@ def write_pdf(projects, root_idx, folder=''):
                 (p for p in projects if p['metadata']['id'] == child_id), None
             )
             if child_project:
-                # Pass current title to include in component header
-                parent_title = project['metadata']['title']
                 pdf = explore_project_tree(
-                    child_project, projects, pdf=pdf, parent_title=parent_title, parent_url=parent_url
+                    child_project, projects, pdf=pdf
                 )
 
         return pdf
