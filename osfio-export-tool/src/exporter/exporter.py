@@ -627,7 +627,7 @@ def write_pdf(projects, root_idx, folder=''):
                 markdown=True
             )
 
-    def write_project_body(pdf, project, parent_title=''):
+    def write_project_body(pdf, project, root_title='', root_url=''):
         """Write the body of a project to the PDF.
 
         Parameters
@@ -651,15 +651,18 @@ def write_pdf(projects, root_idx, folder=''):
         # Write header section
         title = project['metadata']['title']
         pdf.set_font('Times', size=18, style='B')
-        if parent_title:
-            pdf.multi_cell(0, h=0, text=f'{parent_title} /\n', align='L')
+        if root_title:
+            pdf.multi_cell(0, h=0, text=f'{root_title}\n', align='L')
+        if root_url:
+            pdf.multi_cell(0, h=0, text=f'Main Project URL: {root_url}\n', align='L')
         pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
         pdf.set_font('Times', size=12)
         url = project['metadata'].pop('url', '')
         if url:
+            label = 'Component URL' if root_title else 'Main Project URL'
             pdf.multi_cell(
                 0, h=0,
-                text=f'Project URL: {url}\n',
+                text=f'{label}: {url}\n',
                 align='L'
             )
             pdf.url = url
@@ -748,7 +751,7 @@ def write_pdf(projects, root_idx, folder=''):
 
         return pdf
 
-    def explore_project_tree(project, projects, pdf=None, parent_title=''):
+    def explore_project_tree(project, projects, pdf=None, parent_title='', parent_url=''):
         """Recursively find child projects and write them to the PDF.
 
         Parameters
@@ -770,9 +773,11 @@ def write_pdf(projects, root_idx, folder=''):
         # Start with no PDF at root projects
         if not pdf:
             pdf = PDF()
+            parent_title = project['metadata']['title']
+            parent_url = project['metadata']['url']
 
         # Add current project to PDF
-        pdf = write_project_body(pdf, project, parent_title=parent_title)
+        pdf = write_project_body(pdf, project, root_title=parent_title, root_url=parent_url)
 
         # Do children last so that come at end of the PDF
         children = project['children']
@@ -784,7 +789,7 @@ def write_pdf(projects, root_idx, folder=''):
                 # Pass current title to include in component header
                 parent_title = project['metadata']['title']
                 pdf = explore_project_tree(
-                    child_project, projects, pdf=pdf, parent_title=parent_title
+                    child_project, projects, pdf=pdf, parent_title=parent_title, parent_url=parent_url
                 )
 
         return pdf

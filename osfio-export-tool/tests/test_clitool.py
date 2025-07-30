@@ -402,7 +402,8 @@ class TestClient(TestCase):
             {
                 'metadata': {
                     "title": "Second Project in new PDF",
-                    "id": "c"
+                    "id": "c",
+                    'url': 'lol'
                 },
                 'contributors': [
                     ('Short Name', True, 'email'),
@@ -436,6 +437,7 @@ class TestClient(TestCase):
                 'metadata': {
                     "title": "child2",
                     "id": "b",
+                    'url': 'dan'
                 },
                 'contributors': [
                     ('Short Name', True, 'email'),
