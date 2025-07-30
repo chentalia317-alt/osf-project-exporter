@@ -314,8 +314,12 @@ class TestClient(TestCase):
         assert projects[0]['metadata']['public']
         assert not projects[1]['metadata']['public']
 
-        assert projects[0]['metadata']['category'] == 'project'
-        assert projects[1]['metadata']['category'] == ''
+        assert projects[0]['metadata']['category'] == 'Methods and Measures', (
+            projects[0]['metadata']['category']
+        )
+        assert projects[1]['metadata']['category'] == 'Uncategorized', (
+            projects[1]['metadata']['category']
+        )
 
     def test_get_single_mock_project(self):
         projects, roots = get_project_data(
@@ -339,6 +343,7 @@ class TestClient(TestCase):
                     'title': 'My Project Title',
                     'id': 'id',
                     'url': 'https://test.osf.io/x',
+                    'category': 'Uncategorized',
                     'description': 'This is a description of the project',
                     'date_created': datetime.datetime.fromisoformat(
                         '2025-06-12T15:54:42.105112Z'
@@ -375,7 +380,7 @@ class TestClient(TestCase):
                 'metadata': {
                     "title": "child1",
                     "id": "a",
-                    'url': 'https://test.osf.io/a'
+                    'url': 'https://test.osf.io/a',
                 },
                 'contributors': [
                     ('Short Name', True, 'email'),
@@ -409,7 +414,8 @@ class TestClient(TestCase):
                 'metadata': {
                     "title": "Second Project in new PDF",
                     "id": "c",
-                    'url': 'lol'
+                    'url': 'lol',
+                    'category': 'Methods and Measures'
                 },
                 'contributors': [
                     ('Short Name', True, 'email'),
@@ -532,6 +538,13 @@ class TestClient(TestCase):
         )
         assert f'Main Project URL: {url}' not in content_second_page, (
             content_third_page
+        )
+
+        assert 'Category: Uncategorized' in content_first_page, (
+            content_first_page
+        )
+        assert 'Category: Methods and Measures' in content_second_page, (
+            content_second_page
         )
 
         timestamp = pdf_one.date_printed.strftime(
