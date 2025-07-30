@@ -332,7 +332,7 @@ class TestClient(TestCase):
                 'metadata': {
                     'title': 'My Project Title',
                     'id': 'id',
-                    'url': 'https://test.osf.io/',
+                    'url': 'https://test.osf.io/x',
                     'description': 'This is a description of the project',
                     'date_created': datetime.datetime.fromisoformat(
                         '2025-06-12T15:54:42.105112Z'
@@ -369,7 +369,7 @@ class TestClient(TestCase):
                 'metadata': {
                     "title": "child1",
                     "id": "a",
-                    'url': 'hdssdadsadsads'
+                    'url': 'https://test.osf.io/a'
                 },
                 'contributors': [
                     ('Short Name', True, 'email'),

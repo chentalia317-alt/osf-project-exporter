@@ -671,10 +671,14 @@ def write_pdf(projects, root_idx, folder=''):
         if pdf.parent_title != title:
             pdf.set_font('Times', size=18, style='B')
             pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
-        
+
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')
-        
+
+        pdf.url = url  # Set current URL to use in QR codes
+        qr_img = pdf.generate_qr_code()
+        pdf.image(qr_img, w=30, x=Align.R, y=5)
+
         pdf.set_font('Times', size=12)
         if url and pdf.parent_url != url:
             pdf.multi_cell(
@@ -682,10 +686,8 @@ def write_pdf(projects, root_idx, folder=''):
                 text=f'Component URL: {url}\n',
                 align='L'
             )
-        pdf.url = url  # Set current URL to use in QR codes
-        qr_img = pdf.generate_qr_code()
-        pdf.image(qr_img, w=30, x=Align.C)
 
+        pdf.ln()
         pdf.ln()
 
         # Write title for metadata section, then actual fields
