@@ -311,6 +311,9 @@ class TestClient(TestCase):
         assert 'a' in projects[0]['children']
         assert 'b' in projects[0]['children']
 
+        assert projects[0]['metadata']['public']
+        assert not projects[1]['metadata']['public']
+
     def test_get_single_mock_project(self):
         projects, roots = get_project_data(
             os.getenv('TEST_PAT', ''), dryrun=True,
