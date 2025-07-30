@@ -151,9 +151,10 @@ class PDF(FPDF):
         self.set_font('Times', size=10)
         self.cell(0, 10, f"Page: {self.page_no()}", align="C")
         self.set_x(10)
-        self.cell(0, 10, f"Printed: {self.date_printed.strftime(
+        timestamp = self.date_printed.strftime(
             '%Y-%m-%d %H:%M:%S %Z'
-        )}", align="L")
+        )
+        self.cell(0, 10, f"Exported: {timestamp}", align="L")
         self.set_x(10)
         self.set_y(-25)
         qr_img = self.generate_qr_code()
