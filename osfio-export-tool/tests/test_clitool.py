@@ -512,9 +512,6 @@ class TestClient(TestCase):
         content_third_page = import_one.pages[2].extract_text(
             extraction_mode='layout'
         )
-        content_fourth_page = import_one.pages[3].extract_text(
-            extraction_mode='layout'
-        )
         assert f'{projects[0]['metadata']['title']}' in content_third_page, (
             content_third_page
         )
@@ -616,7 +613,7 @@ class TestClient(TestCase):
         project_id = extract_project_id(url)
         assert project_id == 'x', f'Expected "x", got {project_id}'
 
-        # TODO: add test for passing a URL for test site when 
+        # TODO: add test for passing a URL for test site when
         # we are using production site, and vice versa
 
         url = 'x'
