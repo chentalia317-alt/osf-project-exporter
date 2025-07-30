@@ -363,8 +363,17 @@ class TestClient(TestCase):
         ]
         root_nodes = [0]
         pdf_one, path_one = write_pdf(projects, root_nodes[0], '')
-        filename = f'{projects[0]['metadata']['title']}_export.pdf'
-        assert filename in os.listdir(os.getcwd())
+        try:
+            title_one = projects[0]['metadata']['title'].replace(' ', '-')
+            date_one = pdf_one.date_printed.strftime(
+                '%Y-%m-%d %H:%M:%S %Z'
+            ).replace(' ', '-')
+            filename = f'{title_one}-{date_one}.pdf'
+            assert filename in os.listdir(os.getcwd())
+        except Exception:
+            raise AssertionError('Unable to create file in current directory.')
+        finally:
+            os.remove(path_one)
 
     def test_write_pdfs_from_mock_projects(self):
         # Put PDFs in a folder to keep things tidy
@@ -622,6 +631,10 @@ class TestClient(TestCase):
             files_table,
             content_first_page
         )
+
+        # Remove files only if all good - keep for debugging otherwise
+        os.remove(path_one)
+        os.remove(path_two)
 
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
