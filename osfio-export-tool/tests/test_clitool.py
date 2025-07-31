@@ -362,18 +362,26 @@ class TestClient(TestCase):
             }
         ]
         root_nodes = [0]
-        pdf_one, path_one = write_pdf(projects, root_nodes[0], '')
+        is_filename_match = False  # Flag for if exported PDF has expected name
         try:
+            pdf_one, path_one = write_pdf(projects, root_nodes[0], '')
+            
             title_one = projects[0]['metadata']['title'].replace(' ', '-')
             date_one = pdf_one.date_printed.strftime(
                 '%Y-%m-%d %H:%M:%S %Z'
             ).replace(' ', '-')
-            filename = f'{title_one}-{date_one}.pdf'
-            assert filename in os.listdir(os.getcwd())
-        except Exception:
-            raise AssertionError('Unable to create file in current directory.')
+            expected_filename = f'{title_one}-{date_one}.pdf'
+            
+            is_filename_match = expected_filename in os.listdir(os.getcwd())
+        except Exception as e:
+            print(e)
         finally:
-            os.remove(path_one)
+            if os.exists(path_one):
+                os.remove(path_one)
+        
+        assert is_filename_match, (
+            'Unable to create file in current directory.'
+        )
 
     def test_write_pdfs_from_mock_projects(self):
         # Put PDFs in a folder to keep things tidy
