@@ -255,18 +255,34 @@ class TestClient(TestCase):
             'Expected tags NA, got: ',
             projects[1]['metadata']['tags']
         )
-        assert projects[0]['contributors'][0] == (
-            'Test User 1', False, 'N/A'
-        ), (
-            "Expected contributor ('Test User 1', False, 'N/A'), got: ",
-            projects[0]['contributors'][0]
+
+        assert projects[0]['contributors'][0][0] == 'Test User 1', (
+            "Expected contributor Test User 1, got: ",
+            projects[0]['contributors'][0][0]
         )
-        assert projects[0]['contributors'][1] == (
-            'Test User 2', False, 'N/A'
-        ), (
-            "Expected contributor ('Test User 2', False, 'N/A'), got: ",
-            projects[0]['contributors'][1]
+        assert not projects[0]['contributors'][0][1], (
+            "Expected contributor status False, got: ",
+            projects[0]['contributors'][0][1]
         )
+        link = 'https://test.osf.io/userid/'
+        link_two = 'https://test.osf.io/userid2/'
+        assert projects[0]['contributors'][0][2] == link, (
+            f"Expected contributor link {link}, got: ",
+            projects[0]['contributors'][0][2]
+        )
+        assert projects[0]['contributors'][1][0] == 'Test User 2', (
+            "Expected contributor Test User 2, got: ",
+            projects[0]['contributors'][1][0]
+        )
+        assert projects[0]['contributors'][1][1], (
+            "Expected contributor status True, got: ",
+            projects[0]['contributors'][1][1]
+        )
+        assert projects[0]['contributors'][1][2] == link_two, (
+            f"Expected contributor link {link_two}, got: ",
+            projects[0]['contributors'][1][2]
+        )
+
         doi = projects[0]['metadata']['identifiers']
         assert doi == '10.4-2-6-25/OSF.IO/74PAD', (
             'Expected identifiers 10.4-2-6-25/OSF.IO/74PAD, got: ',
@@ -311,6 +327,16 @@ class TestClient(TestCase):
         assert 'a' in projects[0]['children']
         assert 'b' in projects[0]['children']
 
+        assert projects[0]['metadata']['public']
+        assert not projects[1]['metadata']['public']
+
+        assert projects[0]['metadata']['category'] == 'Methods and Measures', (
+            projects[0]['metadata']['category']
+        )
+        assert projects[1]['metadata']['category'] == 'Uncategorized', (
+            projects[1]['metadata']['category']
+        )
+
     def test_get_single_mock_project(self):
         projects, roots = get_project_data(
             os.getenv('TEST_PAT', ''), dryrun=True,
@@ -327,7 +353,8 @@ class TestClient(TestCase):
                 'metadata': {
                     'title': 'My Project Title',
                     'id': 'id',
-                    'url': 'https://test.osf.io/',
+                    'url': 'https://test.osf.io/x',
+                    'category': 'Uncategorized',
                     'description': 'This is a description of the project',
                     'date_created': datetime.datetime.fromisoformat(
                         '2025-06-12T15:54:42.105112Z'
@@ -344,12 +371,12 @@ class TestClient(TestCase):
                     'subjects': 'sub1, sub2, sub3',
                 },
                 'contributors': [
-                    ('Pineapple Pizza', True, 'email'),
-                    ('Margarita', True, 'email'),
-                    ('Margarine', True, 'email')
+                    ('Pineapple Pizza', False, 'https://test.osf.io/userid/'),
+                    ('Margarita', True, 'https://test.osf.io/userid/'),
+                    ('Margarine', True, 'https://test.osf.io/userid/')
                 ],
                 'files': [
-                    ('file1.txt', None, None),
+                    ('file1.txt', None, 'https://test.osf.io/userid/'),
                     ('file2.txt', None, None),
                 ],
                 'funders': [],
@@ -394,7 +421,8 @@ class TestClient(TestCase):
                 'metadata': {
                     'title': 'My Project Title',
                     'id': 'id',
-                    'url': 'https://test.osf.io/',
+                    'url': 'https://test.osf.io/x',
+                    'category': 'Uncategorized',
                     'description': 'This is a description of the project',
                     'date_created': datetime.datetime.fromisoformat(
                         '2025-06-12T15:54:42.105112Z'
@@ -411,12 +439,12 @@ class TestClient(TestCase):
                     'subjects': 'sub1, sub2, sub3',
                 },
                 'contributors': [
-                    ('Pineapple Pizza', True, 'email'),
-                    ('Margarita', True, 'email'),
-                    ('Margarine', True, 'email')
+                    ('Pineapple Pizza', False, 'https://test.osf.io/userid/'),
+                    ('Margarita', True, 'https://test.osf.io/userid/'),
+                    ('Margarine', True, 'https://test.osf.io/userid/')
                 ],
                 'files': [
-                    ('file1.txt', None, None),
+                    ('file1.txt', None, 'https://test.osf.io/userid/'),
                     ('file2.txt', None, None),
                 ],
                 'funders': [],
@@ -431,25 +459,18 @@ class TestClient(TestCase):
                 'metadata': {
                     "title": "child1",
                     "id": "a",
+                    'url': 'https://test.osf.io/a',
                 },
                 'contributors': [
-                    ('Short Name', True, 'email'),
                     (
-                        'Long Double-Barrelled Name and Surname', True,
-                        (
-                            'Long Double-Barrelled Name and Surname@'
-                            'Long Double-Barrelled Name and Surname.com'
-                        )
+                        'Long Double-Barrelled Name and Surname',
+                        False, 'https://test.osf.io/userid/'
                     ),
                     (
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            'Long Double-Barrelled Name and Surname'
-                        ), True,
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            '@Long Double-Barrelled Name and Surname.com'
-                        )
+                        'name2', True, 'https://test.osf.io/userid/'
+                    ),
+                    (
+                        'name3', True, 'https://test.osf.io/userid/'
                     )
                 ],
                 'files': [
@@ -463,26 +484,20 @@ class TestClient(TestCase):
             {
                 'metadata': {
                     "title": "Second Project in new PDF",
-                    "id": "c"
+                    "id": "c",
+                    'url': 'lol',
+                    'category': 'Methods and Measures'
                 },
                 'contributors': [
-                    ('Short Name', True, 'email'),
                     (
-                        'Long Double-Barrelled Name and Surname', True,
-                        (
-                            'Long Double-Barrelled Name and Surname@'
-                            'Long Double-Barrelled Name and Surname.com'
-                        )
+                        'Long Double-Barrelled Name and Surname',
+                        False, 'https://test.osf.io/userid/'
                     ),
                     (
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            'Long Double-Barrelled Name and Surname'
-                        ), True,
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            '@Long Double-Barrelled Name and Surname.com'
-                        )
+                        'name2', True, 'https://test.osf.io/userid/'
+                    ),
+                    (
+                        'name3', True, 'https://test.osf.io/userid/'
                     )
                 ],
                 'files': [
@@ -497,25 +512,18 @@ class TestClient(TestCase):
                 'metadata': {
                     "title": "child2",
                     "id": "b",
+                    'url': 'dan'
                 },
                 'contributors': [
-                    ('Short Name', True, 'email'),
                     (
-                        'Long Double-Barrelled Name and Surname', True,
-                        (
-                            'Long Double-Barrelled Name and Surname@'
-                            'Long Double-Barrelled Name and Surname.com'
-                        )
+                        'Long Double-Barrelled Name and Surname',
+                        False, 'https://test.osf.io/userid/'
                     ),
                     (
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            'Long Double-Barrelled Name and Surname'
-                        ), True,
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            '@Long Double-Barrelled Name and Surname.com'
-                        )
+                        'name2', True, 'https://test.osf.io/userid/'
+                    ),
+                    (
+                        'name3', True, 'https://test.osf.io/userid/'
                     )
                 ],
                 'files': [
@@ -532,6 +540,7 @@ class TestClient(TestCase):
 
         # Get URL now as it will be removed later
         url = projects[0]['metadata']['url']
+        url_comp = projects[1]['metadata']['url']
 
         # pdb.set_trace()
         # Can we specify where to write PDFs?
@@ -565,80 +574,91 @@ class TestClient(TestCase):
             path_two_real
         )
 
-        pdf_first = PdfReader(os.path.join(
+        import_one = PdfReader(os.path.join(
             FOLDER_OUT, f'{title_one}-{date_one}.pdf'
         ))
-        pdf_second = PdfReader(os.path.join(
+        import_two = PdfReader(os.path.join(
             FOLDER_OUT, f'{title_two}-{date_two}.pdf'
         ))
-        assert len(pdf_first.pages) == 4, (
+        assert len(import_one.pages) == 4, (
             'Expected 4 pages in the first PDF, got: ',
-            len(pdf_first.pages)
+            len(import_one.pages)
         )
 
-        content_first_page = pdf_first.pages[0].extract_text(
+        content_first_page = import_one.pages[0].extract_text(
             extraction_mode='layout'
         )
-        content_second_page = pdf_second.pages[0].extract_text(
+        content_second_page = import_two.pages[0].extract_text(
             extraction_mode='layout'
         )
-        content_third_page = pdf_first.pages[2].extract_text(
+        content_third_page = import_one.pages[2].extract_text(
             extraction_mode='layout'
         )
-        content_fourth_page = pdf_first.pages[3].extract_text(
-            extraction_mode='layout'
+        assert f'{projects[0]['metadata']['title']}' in content_third_page, (
+            content_third_page
         )
-        assert 'My Project Title /\nchild1' in content_third_page
-        assert 'child1 /\nchild2' in content_fourth_page
-        assert 'Title: child1' in content_third_page
-        assert 'Title: child2' in content_fourth_page
+        assert f'{url}' in content_third_page, (
+            content_third_page
+        )
+        assert f'{projects[1]['metadata']['title']}' in content_third_page
+        assert f'{url_comp}' in content_third_page
 
-        assert f'Project URL: {url}' in content_first_page
-        assert 'Project URL:' not in content_second_page
+        assert f'{url}' in content_first_page, (
+            content_third_page
+        )
+
+        assert 'Category: Uncategorized' in content_first_page, (
+            content_first_page
+        )
+        assert 'Category: Methods and Measures' in content_second_page, (
+            content_second_page
+        )
+
+        timestamp = pdf_one.date_printed.strftime(
+            '%Y-%m-%d %H:%M:%S %Z')
+        assert f'Exported: {timestamp}' in content_first_page, (
+            'Actual content:',
+            content_first_page
+        )
 
         # This way of string formatting compresses line lengths used
         # End of headers and table rows marked by \n\n
         contributors_table = (
             'Subjects: sub1, sub2, sub3\n\n'
             '2. Contributors\n\n'
-            'Name                                              '
-            'Bibliographic?           '
-            'Email (if available)\n\n'
-            'Pineapple Pizza                                   '
-            'Yes                      '
-            'email\n\n'
-            'Margarine                                         '
-            'Yes                      '
-            'email\n\n'
+            'Name                                               '
+            'Bibliographic?            '
+            'Profile Link\n\n'
+            'Pineapple Pizza                                    '
+            'No                        '
+            'https://test.osf.io/userid/\n\n'
+            'Margarita                                          '
+            'Yes                       '
+            'https://test.osf.io/userid/\n\n'
+            'Margarine                                          '
+            'Yes                       '
+            'https://test.osf.io/userid/\n\n'
             '3. Files in Main Project'
-        ).join('')
-
-        assert contributors_table in content_first_page, (
-            contributors_table,
-            content_first_page
         )
+        assert contributors_table in content_first_page
 
         # This way of string formatting compresses line lengths used
         # End of headers and table rows marked by \n\n
         files_table = (
             '3. Files in Main Project\n\n'
             'OSF Storage\n\n'
-            'File Name                                         '
-            'Size (MB)                '
+            'File Name                                          '
+            'Size (MB)                 '
             'Download Link\n\n'
-            'file1.txt                                         '
-            'N/A                      '
-            'N/A\n\n'
-            'file2.txt                                         '
-            'N/A                      '
+            'file1.txt                                          '
+            'N/A                       '
+            'https://test.osf.io/userid/\n\n'
+            'file2.txt                                          '
+            'N/A                       '
             'N/A\n\n'
             '4. Wiki'
-        ).join('')
-
-        assert files_table in content_first_page, (
-            files_table,
-            content_first_page
         )
+        assert files_table in content_first_page
 
         # Remove files only if all good - keep for debugging otherwise
         os.remove(path_one)
