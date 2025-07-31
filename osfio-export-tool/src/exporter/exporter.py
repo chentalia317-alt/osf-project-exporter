@@ -511,10 +511,13 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
                     # Required data can either be embedded or in attributes
                     if 'embeds' in item and key != "subjects":
                         if 'users' in item['embeds']:
-                            values.append(
+                            values.append((
                                 item['embeds']['users']['data']
-                                ['attributes']['full_name']
-                            )
+                                ['attributes']['full_name'],
+                                item['attributes']['bibliographic'],
+                                item['embeds']['users']['data']
+                                ['links']['html']
+                            ))
                         else:
                             values.append(item['embeds']['attributes']['name'])
                     else:
@@ -531,11 +534,6 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
             if isinstance(values, list):
                 if key != 'contributors':
                     values = ', '.join(values)
-                else:
-                    contributors = []
-                    for c in values:
-                        contributors.append((c, False, 'N/A'))
-                    values = contributors
 
             if key in METADATA_RELATIONS:
                 project_data['metadata'][key] = values
