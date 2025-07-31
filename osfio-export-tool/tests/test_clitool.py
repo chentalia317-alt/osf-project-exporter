@@ -255,18 +255,32 @@ class TestClient(TestCase):
             'Expected tags NA, got: ',
             projects[1]['metadata']['tags']
         )
-        assert projects[0]['contributors'][0] == (
-            'Test User 1', False, 'N/A'
-        ), (
-            "Expected contributor ('Test User 1', False, 'N/A'), got: ",
-            projects[0]['contributors'][0]
+
+        assert projects[0]['contributors'][0][0] == 'Test User 1', (
+            "Expected contributor Test User 1, got: ",
+            projects[0]['contributors'][0][0]
         )
-        assert projects[0]['contributors'][1] == (
-            'Test User 2', False, 'N/A'
-        ), (
-            "Expected contributor ('Test User 2', False, 'N/A'), got: ",
-            projects[0]['contributors'][1]
+        assert projects[0]['contributors'][0][1] == False, (
+            "Expected contributor status False, got: ",
+            projects[0]['contributors'][0][1]
         )
+        assert projects[0]['contributors'][0][2] == 'https://test.osf.io/userid/', (
+            "Expected contributor link https://test.osf.io/userid/, got: ",
+            projects[0]['contributors'][0][2]
+        )
+        assert projects[0]['contributors'][1][0] == 'Test User 2', (
+            "Expected contributor Test User 2, got: ",
+            projects[0]['contributors'][1][0]
+        )
+        assert projects[0]['contributors'][1][1] == True, (
+            "Expected contributor status True, got: ",
+            projects[0]['contributors'][1][1]
+        )
+        assert projects[0]['contributors'][1][2] == 'https://test.osf.io/userid2/', (
+            "Expected contributor link https://test.osf.io/userid2/, got: ",
+            projects[0]['contributors'][1][2]
+        )
+        
         doi = projects[0]['metadata']['identifiers']
         assert doi == '10.4-2-6-25/OSF.IO/74PAD', (
             'Expected identifiers 10.4-2-6-25/OSF.IO/74PAD, got: ',
