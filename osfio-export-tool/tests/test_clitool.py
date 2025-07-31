@@ -376,7 +376,7 @@ class TestClient(TestCase):
         except Exception as e:
             print(e)
         finally:
-            if os.exists(path_one):
+            if os.path.exists(path_one):
                 os.remove(path_one)
         
         assert is_filename_match, (
