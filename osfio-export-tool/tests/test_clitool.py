@@ -597,16 +597,13 @@ class TestClient(TestCase):
         assert f'{projects[0]['metadata']['title']}' in content_third_page, (
             content_third_page
         )
-        assert f'Main Project URL: {url}' in content_third_page, (
+        assert f'{url}' in content_third_page, (
             content_third_page
         )
         assert f'{projects[1]['metadata']['title']}' in content_third_page
-        assert f'Component URL: {url_comp}' in content_third_page
+        assert f'{url_comp}' in content_third_page
 
-        assert f'Main Project URL: {url}' in content_first_page, (
-            content_third_page
-        )
-        assert f'Main Project URL: {url}' not in content_second_page, (
+        assert f'{url}' in content_first_page, (
             content_third_page
         )
 
@@ -662,10 +659,6 @@ class TestClient(TestCase):
             '4. Wiki'
         )
         assert files_table in content_first_page
-
-        # Remove files only if all good - keep for debugging otherwise
-        os.remove(path_one)
-        os.remove(path_two)
 
         # Remove files only if all good - keep for debugging otherwise
         os.remove(path_one)

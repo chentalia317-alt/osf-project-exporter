@@ -670,7 +670,7 @@ def write_pdf(projects, root_idx, folder=''):
         if pdf.parent_url:
             pdf.set_font('Times', size=12)
             pdf.cell(
-                text=f'Main Project URL: ', align='L'
+                text=f'Main Project URL:', align='L'
             )
             pdf.cell(
                 text=f'{pdf.parent_url}\n', align='L', link=pdf.parent_url
@@ -693,7 +693,7 @@ def write_pdf(projects, root_idx, folder=''):
         pdf.set_font('Times', size=12)
         if url and pdf.parent_url != url:
             pdf.cell(
-                text=f'Component URL: ',
+                text=f'Component URL:',
                 align='L'
             )
             pdf.cell(
