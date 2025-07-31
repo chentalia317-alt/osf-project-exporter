@@ -64,7 +64,7 @@
                 "contributors": {
                     "links": {
                         "related": {
-                            "href": "https://api.test.osf.io/v2/nodes/x/contributors/",
+                            "href": "contributors",
                             "meta": {}
                         }
                     }
@@ -372,7 +372,7 @@
                 "contributors": {
                     "links": {
                         "related": {
-                            "href": "https://api.test.osf.io/v2/nodes/x/contributors/",
+                            "href": "contributors",
                             "meta": {}
                         }
                     }
@@ -680,7 +680,7 @@
                 "contributors": {
                     "links": {
                         "related": {
-                            "href": "https://api.test.osf.io/v2/nodes/x/contributors/",
+                            "href": "contributors",
                             "meta": {}
                         }
                     }
@@ -997,7 +997,7 @@
                 "contributors": {
                     "links": {
                         "related": {
-                            "href": "https://api.test.osf.io/v2/nodes/x/contributors/",
+                            "href": "contributors/",
                             "meta": {}
                         }
                     }
@@ -1327,7 +1327,7 @@
                 "contributors": {
                     "links": {
                         "related": {
-                            "href": "https://api.test.osf.io/v2/nodes/x/contributors/",
+                            "href": "contributors/",
                             "meta": {}
                         }
                     }

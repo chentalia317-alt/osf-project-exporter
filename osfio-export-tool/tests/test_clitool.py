@@ -260,27 +260,29 @@ class TestClient(TestCase):
             "Expected contributor Test User 1, got: ",
             projects[0]['contributors'][0][0]
         )
-        assert projects[0]['contributors'][0][1] == False, (
+        assert not projects[0]['contributors'][0][1], (
             "Expected contributor status False, got: ",
             projects[0]['contributors'][0][1]
         )
-        assert projects[0]['contributors'][0][2] == 'https://test.osf.io/userid/', (
-            "Expected contributor link https://test.osf.io/userid/, got: ",
+        link = 'https://test.osf.io/userid/'
+        link_two = 'https://test.osf.io/userid2/'
+        assert projects[0]['contributors'][0][2] == link, (
+            f"Expected contributor link {link}, got: ",
             projects[0]['contributors'][0][2]
         )
         assert projects[0]['contributors'][1][0] == 'Test User 2', (
             "Expected contributor Test User 2, got: ",
             projects[0]['contributors'][1][0]
         )
-        assert projects[0]['contributors'][1][1] == True, (
+        assert projects[0]['contributors'][1][1], (
             "Expected contributor status True, got: ",
             projects[0]['contributors'][1][1]
         )
-        assert projects[0]['contributors'][1][2] == 'https://test.osf.io/userid2/', (
-            "Expected contributor link https://test.osf.io/userid2/, got: ",
+        assert projects[0]['contributors'][1][2] == link_two, (
+            f"Expected contributor link {link_two}, got: ",
             projects[0]['contributors'][1][2]
         )
-        
+
         doi = projects[0]['metadata']['identifiers']
         assert doi == '10.4-2-6-25/OSF.IO/74PAD', (
             'Expected identifiers 10.4-2-6-25/OSF.IO/74PAD, got: ',
@@ -379,7 +381,7 @@ class TestClient(TestCase):
                     ('Margarine', True, 'https://test.osf.io/userid/')
                 ],
                 'files': [
-                    ('file1.txt', None, None),
+                    ('file1.txt', None, 'https://test.osf.io/userid/'),
                     ('file2.txt', None, None),
                 ],
                 'funders': [],
@@ -398,7 +400,8 @@ class TestClient(TestCase):
                 },
                 'contributors': [
                     (
-                        'Long Double-Barrelled Name and Surname', False, 'https://test.osf.io/userid/'
+                        'Long Double-Barrelled Name and Surname',
+                        False, 'https://test.osf.io/userid/'
                     ),
                     (
                         'name2', True, 'https://test.osf.io/userid/'
@@ -424,7 +427,8 @@ class TestClient(TestCase):
                 },
                 'contributors': [
                     (
-                        'Long Double-Barrelled Name and Surname', False, 'https://test.osf.io/userid/'
+                        'Long Double-Barrelled Name and Surname',
+                        False, 'https://test.osf.io/userid/'
                     ),
                     (
                         'name2', True, 'https://test.osf.io/userid/'
@@ -449,7 +453,8 @@ class TestClient(TestCase):
                 },
                 'contributors': [
                     (
-                        'Long Double-Barrelled Name and Surname', False, 'https://test.osf.io/userid/'
+                        'Long Double-Barrelled Name and Surname',
+                        False, 'https://test.osf.io/userid/'
                     ),
                     (
                         'name2', True, 'https://test.osf.io/userid/'
@@ -547,16 +552,16 @@ class TestClient(TestCase):
             'Subjects: sub1, sub2, sub3\n\n'
             '2. Contributors\n\n'
             'Name                                               '
-            'Bibliographic?           '
+            'Bibliographic?            '
             'Profile Link\n\n'
             'Pineapple Pizza                                    '
-            'No                       '
+            'No                        '
             'https://test.osf.io/userid/\n\n'
             'Margarita                                          '
-            'Yes                      '
+            'Yes                       '
             'https://test.osf.io/userid/\n\n'
             'Margarine                                          '
-            'Yes                      '
+            'Yes                       '
             'https://test.osf.io/userid/\n\n'
             '3. Files in Main Project'
         )
@@ -568,13 +573,13 @@ class TestClient(TestCase):
             '3. Files in Main Project\n\n'
             'OSF Storage\n\n'
             'File Name                                          '
-            'Size (MB)                '
+            'Size (MB)                 '
             'Download Link\n\n'
             'file1.txt                                          '
-            'N/A                      '
-            'N/A\n\n'
+            'N/A                       '
+            'https://test.osf.io/userid/\n\n'
             'file2.txt                                          '
-            'N/A                      '
+            'N/A                       '
             'N/A\n\n'
             '4. Wiki'
         )
