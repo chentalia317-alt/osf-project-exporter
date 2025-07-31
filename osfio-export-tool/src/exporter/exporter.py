@@ -718,14 +718,14 @@ def write_pdf(projects, root_idx, folder=''):
             row = table.row()
             row.cell('Name')
             row.cell('Bibliographic?')
-            row.cell('Email (if available)')
+            row.cell('Profile Link')
             for data_row in project['contributors']:
                 row = table.row()
                 for datum in data_row:
                     if datum is True:
                         datum = 'Yes'
                     if datum is False:
-                        datum = 'N/A'
+                        datum = 'No'
                     row.cell(datum)
         pdf.write(0, '\n')
         pdf.write(0, '\n')
