@@ -429,8 +429,8 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
                 'url': project['links']['html'],
                 'description': project['attributes']['description'],
                 'category': CATEGORY_STRS[project['attributes']['category']]
-                if project['attributes']['category'] in CATEGORY_STRS
-                else project['attributes']['category'].title(),
+                    if project['attributes']['category'] in CATEGORY_STRS
+                    else project['attributes']['category'].title(),
                 'date_created': datetime.datetime.fromisoformat(
                     project['attributes']['date_created']
                 ).astimezone().strftime('%Y-%m-%d'),
@@ -438,7 +438,7 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
                     project['attributes']['date_modified']
                 ).astimezone().strftime('%Y-%m-%d'),
                 'tags': ', '.join(project['attributes']['tags'])
-                if project['attributes']['tags'] else 'NA',
+                    if project['attributes']['tags'] else 'NA',
                 'public': project['attributes']['public'],
                 'resource_type': 'NA',
                 'resource_lang': 'NA',
