@@ -321,6 +321,68 @@ class TestClient(TestCase):
         assert projects[0]['metadata']['id'] == 'x'
         assert projects[0]['children'] == ['a', 'b']
 
+    def test_write_pdf_without_giving_a_folder(self):
+        projects = [
+            {
+                'metadata': {
+                    'title': 'My Project Title',
+                    'id': 'id',
+                    'url': 'https://test.osf.io/',
+                    'description': 'This is a description of the project',
+                    'date_created': datetime.datetime.fromisoformat(
+                        '2025-06-12T15:54:42.105112Z'
+                    ),
+                    'date_modified': datetime.datetime.fromisoformat(
+                        '2001-01-01T01:01:01.105112Z'
+                    ),
+                    'tags': 'tag1, tag2, tag3',
+                    'resource_type': 'na',
+                    'resource_lang': 'english',
+                    'affiliated_institutions': 'University of Manchester',
+                    'identifiers': 'N/A',
+                    'license': 'Apache 2.0',
+                    'subjects': 'sub1, sub2, sub3',
+                },
+                'contributors': [
+                    ('Pineapple Pizza', True, 'email'),
+                    ('Margarita', True, 'email'),
+                    ('Margarine', True, 'email')
+                ],
+                'files': [
+                    ('file1.txt', None, None),
+                    ('file2.txt', None, None),
+                ],
+                'funders': [],
+                'wikis': {
+                    'Home': 'hello world',
+                    'Page2': 'another page'
+                },
+                "parent": None,
+                'children': ['a']
+            }
+        ]
+        root_nodes = [0]
+        is_filename_match = False  # Flag for if exported PDF has expected name
+        try:
+            pdf_one, path_one = write_pdf(projects, root_nodes[0], '')
+            
+            title_one = projects[0]['metadata']['title'].replace(' ', '-')
+            date_one = pdf_one.date_printed.strftime(
+                '%Y-%m-%d %H:%M:%S %Z'
+            ).replace(' ', '-')
+            expected_filename = f'{title_one}-{date_one}.pdf'
+            
+            is_filename_match = expected_filename in os.listdir(os.getcwd())
+        except Exception as e:
+            print(e)
+        finally:
+            if os.exists(path_one):
+                os.remove(path_one)
+        
+        assert is_filename_match, (
+            'Unable to create file in current directory.'
+        )
+
     def test_write_pdfs_from_mock_projects(self):
         # Put PDFs in a folder to keep things tidy
         if os.path.exists(FOLDER_OUT):
@@ -471,28 +533,43 @@ class TestClient(TestCase):
         # Get URL now as it will be removed later
         url = projects[0]['metadata']['url']
 
-        # Do we write only one PDF per project?
         # pdb.set_trace()
+        # Can we specify where to write PDFs?
         pdf_one, path_one = write_pdf(projects, root_nodes[0], FOLDER_OUT)
         pdf_two, path_two = write_pdf(projects, root_nodes[1], FOLDER_OUT)
-        assert path_one == os.path.join(
-            FOLDER_OUT, f'{projects[0]['metadata']['title']}_export.pdf'
-        )
-        pdfs = [
-            pdf_one,
-            pdf_two
-        ]
-        assert len(pdfs) == 2
-
-        # Can we specify where to write PDFs?
         files = os.listdir(FOLDER_OUT)
         assert len(files) == 2
 
+        title_one = projects[0]['metadata']['title'].replace(' ', '-')
+        title_two = projects[2]['metadata']['title'].replace(' ', '-')
+        date_one = pdf_one.date_printed.strftime(
+            '%Y-%m-%d %H:%M:%S %Z'
+        ).replace(' ', '-')
+        date_two = pdf_two.date_printed.strftime(
+            '%Y-%m-%d %H:%M:%S %Z'
+        ).replace(' ', '-')
+        path_one_real = os.path.join(
+            os.getcwd(), FOLDER_OUT,
+            f'{title_one}-{date_one}.pdf'
+        )
+        path_two_real = os.path.join(
+            os.getcwd(), FOLDER_OUT,
+            f'{title_two}-{date_two}.pdf'
+        )
+        assert path_one == path_one_real, (
+            path_one,
+            path_one_real
+        )
+        assert path_two == path_two_real, (
+            path_two,
+            path_two_real
+        )
+
         pdf_first = PdfReader(os.path.join(
-            FOLDER_OUT, "My Project Title_export.pdf"
+            FOLDER_OUT, f'{title_one}-{date_one}.pdf'
         ))
         pdf_second = PdfReader(os.path.join(
-            FOLDER_OUT, "Second Project in new PDF_export.pdf"
+            FOLDER_OUT, f'{title_two}-{date_two}.pdf'
         ))
         assert len(pdf_first.pages) == 4, (
             'Expected 4 pages in the first PDF, got: ',
@@ -563,6 +640,10 @@ class TestClient(TestCase):
             content_first_page
         )
 
+        # Remove files only if all good - keep for debugging otherwise
+        os.remove(path_one)
+        os.remove(path_two)
+
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
         This assumes the JSON parsing works correctly."""
@@ -597,7 +678,7 @@ class TestClient(TestCase):
         project_id = extract_project_id(url)
         assert project_id == 'x', f'Expected "x", got {project_id}'
 
-        # TODO: add test for passing a URL for test site when 
+        # TODO: add test for passing a URL for test site when
         # we are using production site, and vice versa
 
         url = 'x'

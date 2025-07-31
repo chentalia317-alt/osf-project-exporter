@@ -792,12 +792,19 @@ def write_pdf(projects, root_idx, folder=''):
     title = curr_project['metadata']['title']
     pdf = explore_project_tree(curr_project, projects)
 
-    # Be flexible for users by allowing saving in new folders
-    # and displaying the path the PDF is located at
-    filename = f'{title}_export.pdf'
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-    path = os.path.join(folder, filename)
+    # Remove spaces in file name for better behaviour on Linux
+    # Add timestamp to allow distinguishing between PDFs at a glance
+    timestamp = pdf.date_printed.strftime(
+        '%Y-%m-%d %H:%M:%S %Z'
+    ).replace(' ', '-')
+    filename = f'{title.replace(' ', '-')}-{timestamp}.pdf'
+
+    if folder:
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        path = os.path.join(os.getcwd(), folder, filename)
+    else:
+        path = os.path.join(os.getcwd(), filename)
     pdf.output(path)
 
     return pdf, path
