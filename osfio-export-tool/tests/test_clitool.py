@@ -16,7 +16,8 @@ from exporter import (
     get_project_data,
     explore_file_tree,
     explore_wikis,
-    write_pdf
+    write_pdf,
+    is_public
 )
 from client import (
     cli, extract_project_id
@@ -139,6 +140,10 @@ class TestAPI(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
+    
+    def test_get_public_status_on_code(self):
+        assert not is_public(f'{TestAPI.API_HOST}/users/me')
+        assert is_public(f'{TestAPI.API_HOST}')
 
 
 class TestClient(TestCase):
