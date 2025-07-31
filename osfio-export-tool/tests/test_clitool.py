@@ -374,9 +374,9 @@ class TestClient(TestCase):
                     'subjects': 'sub1, sub2, sub3',
                 },
                 'contributors': [
-                    ('Pineapple Pizza', True, 'email'),
-                    ('Margarita', True, 'email'),
-                    ('Margarine', True, 'email')
+                    ('Pineapple Pizza', False, 'https://test.osf.io/userid/'),
+                    ('Margarita', True, 'https://test.osf.io/userid/'),
+                    ('Margarine', True, 'https://test.osf.io/userid/')
                 ],
                 'files': [
                     ('file1.txt', None, None),
@@ -397,23 +397,14 @@ class TestClient(TestCase):
                     'url': 'https://test.osf.io/a',
                 },
                 'contributors': [
-                    ('Short Name', True, 'email'),
                     (
-                        'Long Double-Barrelled Name and Surname', True,
-                        (
-                            'Long Double-Barrelled Name and Surname@'
-                            'Long Double-Barrelled Name and Surname.com'
-                        )
+                        'Long Double-Barrelled Name and Surname', False, 'https://test.osf.io/userid/'
                     ),
                     (
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            'Long Double-Barrelled Name and Surname'
-                        ), True,
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            '@Long Double-Barrelled Name and Surname.com'
-                        )
+                        'name2', True, 'https://test.osf.io/userid/'
+                    ),
+                    (
+                        'name3', True, 'https://test.osf.io/userid/'
                     )
                 ],
                 'files': [
@@ -432,23 +423,14 @@ class TestClient(TestCase):
                     'category': 'Methods and Measures'
                 },
                 'contributors': [
-                    ('Short Name', True, 'email'),
                     (
-                        'Long Double-Barrelled Name and Surname', True,
-                        (
-                            'Long Double-Barrelled Name and Surname@'
-                            'Long Double-Barrelled Name and Surname.com'
-                        )
+                        'Long Double-Barrelled Name and Surname', False, 'https://test.osf.io/userid/'
                     ),
                     (
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            'Long Double-Barrelled Name and Surname'
-                        ), True,
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            '@Long Double-Barrelled Name and Surname.com'
-                        )
+                        'name2', True, 'https://test.osf.io/userid/'
+                    ),
+                    (
+                        'name3', True, 'https://test.osf.io/userid/'
                     )
                 ],
                 'files': [
@@ -466,23 +448,14 @@ class TestClient(TestCase):
                     'url': 'dan'
                 },
                 'contributors': [
-                    ('Short Name', True, 'email'),
                     (
-                        'Long Double-Barrelled Name and Surname', True,
-                        (
-                            'Long Double-Barrelled Name and Surname@'
-                            'Long Double-Barrelled Name and Surname.com'
-                        )
+                        'Long Double-Barrelled Name and Surname', False, 'https://test.osf.io/userid/'
                     ),
                     (
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            'Long Double-Barrelled Name and Surname'
-                        ), True,
-                        (
-                            'Long Double-Barrelled Name and Surname'
-                            '@Long Double-Barrelled Name and Surname.com'
-                        )
+                        'name2', True, 'https://test.osf.io/userid/'
+                    ),
+                    (
+                        'name3', True, 'https://test.osf.io/userid/'
                     )
                 ],
                 'files': [
@@ -573,44 +546,39 @@ class TestClient(TestCase):
         contributors_table = (
             'Subjects: sub1, sub2, sub3\n\n'
             '2. Contributors\n\n'
-            'Name                                              '
+            'Name                                               '
             'Bibliographic?           '
-            'Email (if available)\n\n'
-            'Pineapple Pizza                                   '
+            'Profile Link\n\n'
+            'Pineapple Pizza                                    '
+            'No                       '
+            'https://test.osf.io/userid/\n\n'
+            'Margarita                                          '
             'Yes                      '
-            'email\n\n'
-            'Margarine                                         '
+            'https://test.osf.io/userid/\n\n'
+            'Margarine                                          '
             'Yes                      '
-            'email\n\n'
+            'https://test.osf.io/userid/\n\n'
             '3. Files in Main Project'
-        ).join('')
-
-        assert contributors_table in content_first_page, (
-            contributors_table,
-            content_first_page
         )
+        assert contributors_table in content_first_page
 
         # This way of string formatting compresses line lengths used
         # End of headers and table rows marked by \n\n
         files_table = (
             '3. Files in Main Project\n\n'
             'OSF Storage\n\n'
-            'File Name                                         '
+            'File Name                                          '
             'Size (MB)                '
             'Download Link\n\n'
-            'file1.txt                                         '
+            'file1.txt                                          '
             'N/A                      '
             'N/A\n\n'
-            'file2.txt                                         '
+            'file2.txt                                          '
             'N/A                      '
             'N/A\n\n'
             '4. Wiki'
-        ).join('')
-
-        assert files_table in content_first_page, (
-            files_table,
-            content_first_page
         )
+        assert files_table in content_first_page
 
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
