@@ -669,10 +669,13 @@ def write_pdf(projects, root_idx, folder=''):
             pdf.multi_cell(0, h=0, text=f'{pdf.parent_title}\n', align='L')
         if pdf.parent_url:
             pdf.set_font('Times', size=12)
-            pdf.multi_cell(
-                0, h=0, text=f'Main Project URL: {pdf.parent_url}\n', align='L'
+            pdf.cell(
+                text=f'Main Project URL: ', align='L'
             )
-            pdf.write(0, '\n')
+            pdf.cell(
+                text=f'{pdf.parent_url}\n', align='L', link=pdf.parent_url
+            )
+            pdf.write(0, '\n\n')
 
         # Check if title, url is of parent's to avoid duplication
         title = project['metadata']['title']
@@ -689,11 +692,16 @@ def write_pdf(projects, root_idx, folder=''):
 
         pdf.set_font('Times', size=12)
         if url and pdf.parent_url != url:
-            pdf.multi_cell(
-                0, h=0,
-                text=f'Component URL: {url}\n',
+            pdf.cell(
+                text=f'Component URL: ',
                 align='L'
             )
+            pdf.cell(
+                text=f'{url}',
+                align='L',
+                link=url
+            )
+            pdf.write(0, '\n\n')
 
         pdf.ln()
         pdf.ln()
@@ -721,12 +729,16 @@ def write_pdf(projects, root_idx, folder=''):
             row.cell('Profile Link')
             for data_row in project['contributors']:
                 row = table.row()
-                for datum in data_row:
+                for idx, datum in enumerate(data_row):
                     if datum is True:
                         datum = 'Yes'
                     if datum is False:
                         datum = 'No'
-                    row.cell(datum)
+                    
+                    if idx == 2:
+                        row.cell(text=datum, link=datum)
+                    else:
+                        row.cell(datum)
         pdf.write(0, '\n')
         pdf.write(0, '\n')
 
@@ -749,12 +761,16 @@ def write_pdf(projects, root_idx, folder=''):
                 row.cell('Download Link')
                 for data_row in project['files']:
                     row = table.row()
-                    for datum in data_row:
+                    for idx, datum in enumerate(data_row):
                         if datum is True:
                             datum = 'Yes'
                         if datum is False or datum is None:
                             datum = 'N/A'
-                        row.cell(datum)
+                        
+                        if idx == 2:
+                            row.cell(text=datum, link=datum)
+                        else:
+                            row.cell(datum)
         else:
             pdf.write(0, '\n')
             pdf.multi_cell(
