@@ -37,6 +37,15 @@ def get_host(is_test):
 
     return API_HOST_TEST if is_test else API_HOST_PROD
 
+def is_public(url):
+    request = webhelper.Request(url, method='GET')
+    try:
+        result = webhelper.urlopen(request).status
+    except webhelper.HTTPError as e:
+        result = e
+    
+    return result == 200
+
 
 class MockAPIResponse:
     """Simulate OSF API response for testing purposes."""
