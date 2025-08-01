@@ -54,6 +54,19 @@ class TestAPI(TestCase):
             'Expected API version 2.20, actual version: ',
             data['meta']['version']
         )
+    
+    def test_call_api_no_pat(self):
+        public_node_id = json.loads(
+            call_api(
+                f'{TestAPI.API_HOST}/nodes', pat='',
+                per_page=1
+            ).read()
+        )['data'][0]['id']
+
+        result = call_api(
+            f'{TestAPI.API_HOST}/nodes/{public_node_id}/', pat='',
+        )
+        assert result.status == 200
 
     def test_parse_single_project_json_as_expected(self):
         # Use first public project available for this test
