@@ -1,6 +1,6 @@
 [project]
 name = "osfio-export-tool"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="Benito Matischen", email="benito.matischen@manchester.ac.uk" },
 ]
