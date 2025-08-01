@@ -5,8 +5,7 @@ import shutil
 import json
 import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
-import random
-import string
+from unittest.mock import patch
 
 from click.testing import CliRunner
 from pypdf import PdfReader
@@ -16,10 +15,11 @@ from exporter import (
     get_project_data,
     explore_file_tree,
     explore_wikis,
-    write_pdf
+    write_pdf,
+    is_public
 )
 from client import (
-    cli, extract_project_id
+    cli, extract_project_id, prompt_pat
 )
 
 TEST_PDF_FOLDER = 'good-pdfs'
@@ -52,12 +52,30 @@ class TestAPI(TestCase):
             data['meta']['version']
         )
 
+    def test_call_api_no_pat(self):
+        public_node_id = json.loads(
+            call_api(
+                f'{TestAPI.API_HOST}/nodes', pat='',
+                per_page=1
+            ).read()
+        )['data'][0]['id']
+
+        result = call_api(
+            f'{TestAPI.API_HOST}/nodes/{public_node_id}/', pat='',
+        )
+        assert result.status == 200
+
     def test_parse_single_project_json_as_expected(self):
         # Use first public project available for this test
+        # TODO: allow choosing individual components to start export from
+        # Currently a component will break this test
         data = call_api(
             f'{TestAPI.API_HOST}/nodes/',
             os.getenv('TEST_PAT', ''),
-            per_page=1
+            per_page=1,
+            filters={
+                'parent': ''
+            }
         )
         node = json.loads(data.read())['data'][0]
         id = extract_project_id(node['links']['html'])
@@ -74,8 +92,8 @@ class TestAPI(TestCase):
                 ).read()
             )['data']
         )
-        assert len(root_projects) == 1
         assert len(projects) == expected_child_count + 1
+        assert len(root_projects) == 1, (root_projects)
         assert projects[0]['metadata']['title'] == node['attributes']['title']
 
     def test_filter_by_api(self):
@@ -140,9 +158,13 @@ class TestAPI(TestCase):
             traceback.format_tb(result.exc_info[2])
         )
 
+    def test_get_public_status_on_code(self):
+        assert not is_public(f'{TestAPI.API_HOST}/users/me')
+        assert is_public(f'{TestAPI.API_HOST}')
 
-class TestClient(TestCase):
-    """Tests for the internal CLI parts without real API usage."""
+
+class TestExporter(TestCase):
+    """Tests for the exporter without real API usage."""
 
     def test_explore_mock_file_tree(self):
         """Test exploration of mock file tree."""
@@ -392,20 +414,20 @@ class TestClient(TestCase):
         is_filename_match = False  # Flag for if exported PDF has expected name
         try:
             pdf_one, path_one = write_pdf(projects, root_nodes[0], '')
-            
+
             title_one = projects[0]['metadata']['title'].replace(' ', '-')
             date_one = pdf_one.date_printed.strftime(
                 '%Y-%m-%d %H:%M:%S %Z'
             ).replace(' ', '-')
             expected_filename = f'{title_one}-{date_one}.pdf'
-            
+
             is_filename_match = expected_filename in os.listdir(os.getcwd())
         except Exception as e:
             print(e)
         finally:
             if os.path.exists(path_one):
                 os.remove(path_one)
-        
+
         assert is_filename_match, (
             'Unable to create file in current directory.'
         )
@@ -664,28 +686,32 @@ class TestClient(TestCase):
         os.remove(path_one)
         os.remove(path_two)
 
-    def test_pull_projects_command_on_mocks(self):
-        """Test generating a PDF from parsed project data.
-        This assumes the JSON parsing works correctly."""
+    def test_use_dryrun_in_user_default_dir(self):
+        """Regression test for using --dryrun in user's default directory."""
 
-        if os.path.exists(FOLDER_OUT):
-            shutil.rmtree(FOLDER_OUT)
-        os.mkdir(FOLDER_OUT)
+        cwd = os.getcwd()
+        try:
+            # Go to user's home directory in cross-platform way
+            os.chdir(os.path.expanduser("~"))
+            projects, roots = get_project_data('', dryrun=True, usetest=True)
+        except Exception as e:
+            raise e
+        finally:
+            # Reverse state changes for reproducibility
+            os.chdir(cwd)
+            assert os.getcwd() == cwd
 
-        runner = CliRunner()
-        result = runner.invoke(
-            cli, [
-                'export-projects', '--dryrun',
-                '--folder', FOLDER_OUT,
-                '--url', ''
-            ],
-            input=os.getenv('TEST_PAT', ''),
-            terminal_width=60
-        )
-        assert not result.exception, (
-            result.exc_info,
-            traceback.format_tb(result.exc_info[2])
-        )
+
+class TestCLI(TestCase):
+    @patch('exporter.is_public', lambda x: False)
+    def test_prompt_pat_if_private(self):
+        pat = prompt_pat('x')
+        assert pat != ''
+
+    @patch('exporter.is_public', lambda x: True)
+    def test_prompt_pat_if_public(self):
+        pat = prompt_pat('x')
+        assert pat == ''
 
     def test_extract_project_id(self):
         """Test extracting project ID from various URL formats."""
@@ -709,46 +735,25 @@ class TestClient(TestCase):
         url = ''
         project_id = extract_project_id(url)
 
-    def test_use_dryrun_in_user_default_dir(self):
-        """Regression test for using --dryrun in user's default directory."""
+    def test_pull_projects_command_on_mocks(self):
+        """Test generating a PDF from parsed project data.
+        This assumes the JSON parsing works correctly."""
 
-        cwd = os.getcwd()
-        try:
-            # Go to user's home directory in cross-platform way
-            os.chdir(os.path.expanduser("~"))
-            projects, roots = get_project_data('', dryrun=True, usetest=True)
-        except Exception as e:
-            raise e
-        finally:
-            # Reverse state changes for reproducibility
-            os.chdir(cwd)
-            assert os.getcwd() == cwd
+        if os.path.exists(FOLDER_OUT):
+            shutil.rmtree(FOLDER_OUT)
+        os.mkdir(FOLDER_OUT)
 
-    def test_write_pdf_in_new_folder(self):
-        folder = ''.join(
-            random.choice(string.ascii_letters + string.digits)
-            for _ in range(10)
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, [
+                'export-projects', '--dryrun',
+                '--folder', FOLDER_OUT,
+                '--url', ''
+            ],
+            input=os.getenv('TEST_PAT', ''),
+            terminal_width=60
         )
-        if os.path.exists(folder):
-            shutil.rmtree(folder)
-
-        try:
-            runner = CliRunner()
-            result = runner.invoke(
-                cli, [
-                    'export-projects', '--dryrun',
-                    '--folder', folder,
-                    '--url', ''
-                ],
-                input=os.getenv('TEST_PAT', ''),
-                terminal_width=60
-            )
-            assert not result.exception, (
-                result.exc_info,
-                traceback.format_tb(result.exc_info[2])
-            )
-        except Exception as e:
-            raise e
-        finally:
-            if os.path.exists(folder):
-                shutil.rmtree(folder)
+        assert not result.exception, (
+            result.exc_info,
+            traceback.format_tb(result.exc_info[2])
+        )

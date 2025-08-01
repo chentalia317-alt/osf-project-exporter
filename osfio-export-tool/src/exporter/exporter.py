@@ -38,6 +38,23 @@ def get_host(is_test):
     return API_HOST_TEST if is_test else API_HOST_PROD
 
 
+def is_public(url):
+    """Return boolean to indicate if a URL is public (True) or not (False).
+
+    Parameters
+    ------------
+    url: str
+        The URL to test.
+    """
+
+    request = webhelper.Request(url, method='GET')
+    try:
+        result = webhelper.urlopen(request).status
+    except webhelper.HTTPError as e:
+        result = e
+    return result == 200
+
+
 class MockAPIResponse:
     """Simulate OSF API response for testing purposes."""
 
@@ -670,7 +687,7 @@ def write_pdf(projects, root_idx, folder=''):
         if pdf.parent_url:
             pdf.set_font('Times', size=12)
             pdf.cell(
-                text=f'Main Project URL:', align='L'
+                text='Main Project URL:', align='L'
             )
             pdf.cell(
                 text=f'{pdf.parent_url}\n', align='L', link=pdf.parent_url
@@ -693,7 +710,7 @@ def write_pdf(projects, root_idx, folder=''):
         pdf.set_font('Times', size=12)
         if url and pdf.parent_url != url:
             pdf.cell(
-                text=f'Component URL:',
+                text='Component URL:',
                 align='L'
             )
             pdf.cell(
@@ -734,7 +751,6 @@ def write_pdf(projects, root_idx, folder=''):
                         datum = 'Yes'
                     if datum is False:
                         datum = 'No'
-                    
                     if idx == 2:
                         row.cell(text=datum, link=datum)
                     else:
@@ -766,7 +782,6 @@ def write_pdf(projects, root_idx, folder=''):
                             datum = 'Yes'
                         if datum is False or datum is None:
                             datum = 'N/A'
-                        
                         if idx == 2:
                             row.cell(text=datum, link=datum)
                         else:
