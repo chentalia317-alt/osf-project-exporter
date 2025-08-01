@@ -1,5 +1,6 @@
 import datetime
 from unittest import TestCase
+from urllib.request import HTTPError
 import os
 import shutil
 import json
@@ -7,6 +8,7 @@ import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
 import random
 import string
+from unittest.mock import patch
 
 from click.testing import CliRunner
 from pypdf import PdfReader
@@ -20,7 +22,7 @@ from exporter import (
     is_public
 )
 from client import (
-    cli, extract_project_id
+    cli, extract_project_id, prompt_pat
 )
 
 TEST_PDF_FOLDER = 'good-pdfs'
@@ -144,6 +146,7 @@ class TestAPI(TestCase):
     def test_get_public_status_on_code(self):
         assert not is_public(f'{TestAPI.API_HOST}/users/me')
         assert is_public(f'{TestAPI.API_HOST}')
+        
 
 
 class TestClient(TestCase):
@@ -757,3 +760,13 @@ class TestClient(TestCase):
         finally:
             if os.path.exists(folder):
                 shutil.rmtree(folder)
+    
+    @patch('exporter.is_public', lambda x: False)
+    def test_prompt_pat_if_private(self):
+        pat = prompt_pat('x')
+        assert pat != ''
+    
+    @patch('exporter.is_public', lambda x: True)
+    def test_prompt_pat_if_public(self):
+        pat = prompt_pat('x')
+        assert pat == ''
