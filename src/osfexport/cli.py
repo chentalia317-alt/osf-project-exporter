@@ -3,28 +3,10 @@ import urllib.request as webhelper
 
 import click
 
-import exporter as exporter
+import osfexport.exporter as exporter
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
-
-
-def extract_project_id(url):
-    """Extract project ID from a given OSF project URL.
-
-    Parameters
-    ----------
-    url: str
-        URL of the OSF project.
-
-    Returns
-    -------
-    str
-        Project ID extracted from the URL.
-    """
-
-    project_id = url.strip("/").split("/")[-1]
-    return project_id
 
 
 def prompt_pat(project_id='', usetest=False):
@@ -93,7 +75,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
 
     project_id = ''
     if url:
-        project_id = extract_project_id(url)
+        project_id = exporter.extract_project_id(url)
         click.echo(f'Extracting project with ID: {project_id}')
     else:
         click.echo('No project ID provided, extracting all projects.')

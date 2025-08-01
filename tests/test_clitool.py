@@ -10,16 +10,17 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from exporter import (
+from osfexport.exporter import (
     call_api,
     get_project_data,
     explore_file_tree,
     explore_wikis,
     write_pdf,
-    is_public
+    is_public,
+    extract_project_id
 )
-from client import (
-    cli, extract_project_id, prompt_pat
+from osfexport.cli import (
+    cli, prompt_pat
 )
 
 TEST_PDF_FOLDER = 'good-pdfs'
@@ -700,19 +701,7 @@ class TestExporter(TestCase):
             # Reverse state changes for reproducibility
             os.chdir(cwd)
             assert os.getcwd() == cwd
-
-
-class TestCLI(TestCase):
-    @patch('exporter.is_public', lambda x: False)
-    def test_prompt_pat_if_private(self):
-        pat = prompt_pat('x')
-        assert pat != ''
-
-    @patch('exporter.is_public', lambda x: True)
-    def test_prompt_pat_if_public(self):
-        pat = prompt_pat('x')
-        assert pat == ''
-
+    
     def test_extract_project_id(self):
         """Test extracting project ID from various URL formats."""
 
@@ -734,6 +723,18 @@ class TestCLI(TestCase):
         # Should just run normally
         url = ''
         project_id = extract_project_id(url)
+
+
+class TestCLI(TestCase):
+    @patch('osfexport.exporter.is_public', lambda x: False)
+    def test_prompt_pat_if_private(self):
+        pat = prompt_pat('x')
+        assert pat != ''
+
+    @patch('osfexport.exporter.is_public', lambda x: True)
+    def test_prompt_pat_if_public(self):
+        pat = prompt_pat('x')
+        assert pat == ''
 
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.

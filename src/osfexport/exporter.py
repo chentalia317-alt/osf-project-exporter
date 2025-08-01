@@ -20,6 +20,23 @@ STUBS_DIR = os.path.join(
 BLUE = (173, 216, 230)
 HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
 
+def extract_project_id(url):
+    """Extract project ID from a given OSF project URL.
+
+    Parameters
+    ----------
+    url: str
+        URL of the OSF project.
+
+    Returns
+    -------
+    str
+        Project ID extracted from the URL.
+    """
+
+    project_id = url.strip("/").split("/")[-1]
+    return project_id
+
 
 def get_host(is_test):
     """Get API host based on flag.
