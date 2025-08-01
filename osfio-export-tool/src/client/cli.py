@@ -26,6 +26,23 @@ def extract_project_id(url):
     project_id = url.strip("/").split("/")[-1]
     return project_id
 
+def prompt_pat(project_id, usetest=False):
+    pat = ''
+
+    if usetest:
+        api_host = API_HOST_TEST
+    else:
+        api_host = API_HOST_PROD
+    
+    if not exporter.is_public(f'{api_host}/nodes/{project_id}/'):
+        pat = click.prompt(
+            'Please enter your PAT to access this private project: ',
+            type=str,
+            hide_input=True
+        )
+    
+    return pat
+
 
 @click.command()
 @click.option('--pat', type=str, default='',
