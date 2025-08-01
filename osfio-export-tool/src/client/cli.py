@@ -26,12 +26,30 @@ def extract_project_id(url):
     project_id = url.strip("/").split("/")[-1]
     return project_id
 
+
 def prompt_pat(project_id='', usetest=False):
+    """
+    Ask for a PAT if exporting a single project or all projects a user has.
+
+    Parameters
+    -------------
+        project_id: str
+            ID of a single project to export.
+            If one provided then ask for a PAT.
+        usetest: bool
+            Flag to indicate whether to use the test/production API server.
+
+    Returns
+    -----------------
+        pat: str
+            Personal Access Token to use to authorise a user.
+    """
+
     if usetest:
         api_host = API_HOST_TEST
     else:
         api_host = API_HOST_PROD
-    
+
     if not project_id:
         pat = click.prompt(
             'Please enter your PAT to export all your projects',
@@ -46,7 +64,7 @@ def prompt_pat(project_id='', usetest=False):
         )
     else:
         pat = ''
-    
+
     return pat
 
 
@@ -79,7 +97,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
         click.echo(f'Extracting project with ID: {project_id}')
     else:
         click.echo('No project ID provided, extracting all projects.')
-    
+
     if not pat:
         pat = prompt_pat(project_id=project_id, usetest=usetest)
 
