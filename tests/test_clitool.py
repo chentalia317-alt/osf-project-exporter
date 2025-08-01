@@ -10,7 +10,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from osfexport import (
+from osfexport.exporter import (
     call_api,
     get_project_data,
     explore_file_tree,
@@ -19,7 +19,7 @@ from osfexport import (
     is_public,
     extract_project_id
 )
-from client import (
+from osfexport.cli import (
     cli, prompt_pat
 )
 
@@ -726,12 +726,12 @@ class TestExporter(TestCase):
 
 
 class TestCLI(TestCase):
-    @patch('exporter.is_public', lambda x: False)
+    @patch('osfexport.exporter.is_public', lambda x: False)
     def test_prompt_pat_if_private(self):
         pat = prompt_pat('x')
         assert pat != ''
 
-    @patch('exporter.is_public', lambda x: True)
+    @patch('osfexport.exporter.is_public', lambda x: True)
     def test_prompt_pat_if_public(self):
         pat = prompt_pat('x')
         assert pat == ''

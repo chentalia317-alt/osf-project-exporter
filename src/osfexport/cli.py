@@ -3,7 +3,7 @@ import urllib.request as webhelper
 
 import click
 
-import osfexport as osfexport
+import osfexport.exporter as exporter
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
@@ -38,7 +38,7 @@ def prompt_pat(project_id='', usetest=False):
             type=str,
             hide_input=True
         )
-    elif not osfexport.is_public(f'{api_host}/nodes/{project_id}/'):
+    elif not exporter.is_public(f'{api_host}/nodes/{project_id}/'):
         pat = click.prompt(
             'Please enter your PAT to export this private project',
             type=str,
@@ -75,7 +75,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
 
     project_id = ''
     if url:
-        project_id = osfexport.extract_project_id(url)
+        project_id = exporter.extract_project_id(url)
         click.echo(f'Extracting project with ID: {project_id}')
     else:
         click.echo('No project ID provided, extracting all projects.')
@@ -84,7 +84,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
         pat = prompt_pat(project_id=project_id, usetest=usetest)
 
     click.echo('Downloading project data...')
-    projects, root_nodes = osfexport.get_project_data(
+    projects, root_nodes = exporter.get_project_data(
         pat, dryrun=dryrun, project_id=project_id, usetest=usetest
     )
     click.echo(f'Found {len(root_nodes)} projects.')
@@ -92,7 +92,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
     for idx in root_nodes:
         title = projects[idx]['metadata']['title']
         click.echo(f'Exporting project {title}...')
-        pdf, path = osfexport.write_pdf(projects, idx, folder)
+        pdf, path = exporter.write_pdf(projects, idx, folder)
         click.echo(f'Project exported to {path}')
 
 
