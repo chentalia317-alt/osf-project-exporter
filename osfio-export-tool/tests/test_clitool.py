@@ -5,8 +5,6 @@ import shutil
 import json
 import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
-import random
-import string
 from unittest.mock import patch
 
 from click.testing import CliRunner
@@ -69,10 +67,15 @@ class TestAPI(TestCase):
 
     def test_parse_single_project_json_as_expected(self):
         # Use first public project available for this test
+        # TODO: allow choosing individual components to start export from
+        # Currently a component will break this test
         data = call_api(
             f'{TestAPI.API_HOST}/nodes/',
             os.getenv('TEST_PAT', ''),
-            per_page=1
+            per_page=1,
+            filters={
+                'parent': ''
+            }
         )
         node = json.loads(data.read())['data'][0]
         id = extract_project_id(node['links']['html'])
