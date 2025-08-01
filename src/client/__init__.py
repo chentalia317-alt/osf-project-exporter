@@ -5,5 +5,5 @@ from .cli import (
 __all__ = [
     'cli',
     'extract_project_id',
-    prompt_pat
+    'prompt_pat'
 ]
