@@ -10,7 +10,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from exporter import (
+from osfexport import (
     call_api,
     get_project_data,
     explore_file_tree,
