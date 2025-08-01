@@ -1,6 +1,6 @@
 [project]
 name = "osfio-export-tool"
-version = "0.0.7"
+version = "0.0.8"
 authors = [
   { name="Benito Matischen", email="benito.matischen@manchester.ac.uk" },
 ]
@@ -27,7 +27,7 @@ Issues = "https://github.com/CenterForOpenScience/osf-project-exporter/issues"
 
 [project.scripts]
 # Executable scripts, names are commands
-clirun = "osfexport.client.cli:cli"
+clirun = "osfexport.cli:cli"
 
 [build-system]
 requires = ["flit_core<4"]
