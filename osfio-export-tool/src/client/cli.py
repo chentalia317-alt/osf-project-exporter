@@ -26,27 +26,33 @@ def extract_project_id(url):
     project_id = url.strip("/").split("/")[-1]
     return project_id
 
-def prompt_pat(project_id, usetest=False):
-    pat = ''
-
+def prompt_pat(project_id='', usetest=False):
     if usetest:
         api_host = API_HOST_TEST
     else:
         api_host = API_HOST_PROD
     
-    if not exporter.is_public(f'{api_host}/nodes/{project_id}/'):
+    if not project_id:
         pat = click.prompt(
-            'Please enter your PAT to access this private project: ',
+            'Please enter your PAT to export all your projects',
             type=str,
             hide_input=True
         )
+    elif not exporter.is_public(f'{api_host}/nodes/{project_id}/'):
+        pat = click.prompt(
+            'Please enter your PAT to export this private project',
+            type=str,
+            hide_input=True
+        )
+    else:
+        pat = ''
     
     return pat
 
 
 @click.command()
 @click.option('--pat', type=str, default='',
-              prompt=True, hide_input=True,
+              prompt='Enter your PAT', prompt_required=False, hide_input=True,
               help='Personal Access Token to authorise OSF account access.')
 @click.option('--dryrun', is_flag=True, default=False,
               help='If enabled, use mock responses in place of the API.')
@@ -62,7 +68,7 @@ def prompt_pat(project_id, usetest=False):
               For example: https://osf.io/dry9j/
 
               Leave blank to export all projects you have access to.""")
-def export_projects(pat, folder, dryrun=False, url='', usetest=False):
+def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
     """Pull and export OSF projects to a PDF file.
     You can export all projects you have access to, or one specific one
     with the --url option."""
@@ -73,6 +79,9 @@ def export_projects(pat, folder, dryrun=False, url='', usetest=False):
         click.echo(f'Extracting project with ID: {project_id}')
     else:
         click.echo('No project ID provided, extracting all projects.')
+    
+    if not pat:
+        pat = prompt_pat(project_id=project_id, usetest=usetest)
 
     click.echo('Downloading project data...')
     projects, root_nodes = exporter.get_project_data(
