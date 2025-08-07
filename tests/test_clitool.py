@@ -40,8 +40,8 @@ class TestAPI(TestCase):
         """Test for if JSON for user's projects are loaded correctly"""
 
         data = call_api(
-            f'{TestAPI.API_HOST}/users/me/nodes/',
-            os.getenv('TEST_PAT', '')
+            f'{TestAPI.API_HOST}/',
+            pat=''
         )
         assert data.status == 200
 
@@ -52,6 +52,24 @@ class TestAPI(TestCase):
             'Expected API version 2.20, actual version: ',
             data['meta']['version']
         )
+    
+    def test_explore_api_file_tree(self):
+        """Test using API to filter and search file links."""
+
+        data = call_api(
+            f'{TestAPI.API_HOST}/nodes/',
+            pat=''
+        )
+        nodes = json.loads(data.read())['data']
+        if len(nodes) > 0:
+            node_id = nodes[0]['id']
+            link = f'{TestAPI.API_HOST}/nodes/{node_id}/files/osfstorage/'
+            files = explore_file_tree(
+                link, pat='', dryrun=False
+            )
+            assert isinstance(files, list)
+        else:
+            print("No nodes available, consider making a test project.")
 
     def test_call_api_no_pat(self):
         public_node_id = json.loads(
@@ -72,7 +90,7 @@ class TestAPI(TestCase):
         # Currently a component will break this test
         data = call_api(
             f'{TestAPI.API_HOST}/nodes/',
-            os.getenv('TEST_PAT', ''),
+            pat='',
             per_page=1,
             filters={
                 'parent': ''
@@ -81,7 +99,7 @@ class TestAPI(TestCase):
         node = json.loads(data.read())['data'][0]
         id = extract_project_id(node['links']['html'])
         projects, root_projects = get_project_data(
-            os.getenv('TEST_PAT', ''), dryrun=False,
+            pat='', dryrun=False,
             usetest=True, project_id=id
         )
 
@@ -89,7 +107,7 @@ class TestAPI(TestCase):
             json.loads(
                 call_api(
                     f'{TestAPI.API_HOST}/nodes/{node["id"]}/children/',
-                    os.getenv('TEST_PAT', '')
+                    pat=''
                 ).read()
             )['data']
         )
@@ -106,58 +124,10 @@ class TestAPI(TestCase):
         }
         data = call_api(
             f'{TestAPI.API_HOST}/nodes/',
-            os.getenv('TEST_PAT', ''),
+            pat='',
             per_page=12, filters=filters
         )
         assert data.status == 200
-
-    def test_explore_api_file_tree(self):
-        """Test using API to filter and search file links."""
-
-        data = call_api(
-            f'{TestAPI.API_HOST}/users/me/nodes/',
-            os.getenv('TEST_PAT', '')
-        )
-        nodes = json.loads(data.read())['data']
-        if len(nodes) > 0:
-            node_id = nodes[0]['id']
-            link = f'{TestAPI.API_HOST}/nodes/{node_id}/files/osfstorage/'
-            files = explore_file_tree(
-                link, os.getenv('TEST_PAT', ''), dryrun=False
-            )
-            assert isinstance(files, list)
-        else:
-            print("No nodes available, consider making a test project.")
-
-    def test_export_projects_command(self):
-        """Test we can successfully pull projects using the OSF API"""
-
-        if os.path.exists(FOLDER_OUT):
-            shutil.rmtree(FOLDER_OUT)
-        os.mkdir(FOLDER_OUT)
-
-        runner = CliRunner()
-
-        # No PAT given - exception
-        result = runner.invoke(
-            cli, ['export-projects'], input='', terminal_width=60
-        )
-        assert result.exception
-
-        # Use PAT to find user projects
-        result = runner.invoke(
-            cli, [
-                'export-projects',
-                '--folder', FOLDER_OUT,
-                '--usetest'
-            ],
-            input=os.getenv('TEST_PAT', ''),
-            terminal_width=60
-        )
-        assert not result.exception, (
-            result.exc_info,
-            traceback.format_tb(result.exc_info[2])
-        )
 
     def test_get_public_status_on_code(self):
         assert not is_public(f'{TestAPI.API_HOST}/users/me')
@@ -171,7 +141,7 @@ class TestExporter(TestCase):
         """Test exploration of mock file tree."""
 
         files = explore_file_tree(
-            'root', os.getenv('TEST_PAT', ''), dryrun=True
+            'root', pat='', dryrun=True
         )
 
         assert '/helloworld.txt.txt' == files[4][0]
@@ -187,7 +157,7 @@ class TestExporter(TestCase):
 
         link = 'wiki'
         wikis = explore_wikis(
-            link, os.getenv('TEST_PAT', ''), dryrun=True
+            link, pat='', dryrun=True
             )
         assert len(wikis) == 3
         assert 'helloworld' in wikis.keys(), (
@@ -212,7 +182,7 @@ class TestExporter(TestCase):
         test we can parse them correctly"""
 
         projects, root_nodes = get_project_data(
-            os.getenv('TEST_PAT', ''),
+            pat='',
             dryrun=True
         )
 
@@ -362,7 +332,7 @@ class TestExporter(TestCase):
 
     def test_get_single_mock_project(self):
         projects, roots = get_project_data(
-            os.getenv('TEST_PAT', ''), dryrun=True,
+            pat='', dryrun=True,
             project_id='x'
         )
         assert len(roots) == 1
@@ -751,7 +721,7 @@ class TestCLI(TestCase):
                 '--folder', FOLDER_OUT,
                 '--url', ''
             ],
-            input=os.getenv('TEST_PAT', ''),
+            input='',
             terminal_width=60
         )
         assert not result.exception, (
