@@ -80,7 +80,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
     else:
         click.echo('No project ID provided, extracting all projects.')
 
-    if not pat:
+    if not pat and not dryrun:
         pat = prompt_pat(project_id=project_id, usetest=usetest)
 
     click.echo('Downloading project data...')
