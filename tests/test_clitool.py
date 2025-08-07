@@ -719,9 +719,9 @@ class TestCLI(TestCase):
             cli, [
                 'export-projects', '--dryrun',
                 '--folder', FOLDER_OUT,
-                '--url', ''
+                '--url', '',
+                '--pat', ''
             ],
-            input='',
             terminal_width=60
         )
         assert not result.exception, (
