@@ -7,6 +7,7 @@ import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
 from unittest.mock import patch
 
+import click
 from click.testing import CliRunner
 from pypdf import PdfReader
 
@@ -696,15 +697,21 @@ class TestExporter(TestCase):
 
 
 class TestCLI(TestCase):
-    @patch('src.osfexport.exporter.is_public', lambda x: False)
-    def test_prompt_pat_if_private(self):
-        pat = prompt_pat('x')
-        assert pat != ''
-
     @patch('src.osfexport.exporter.is_public', lambda x: True)
-    def test_prompt_pat_if_public(self):
+    def test_prompt_pat_if_public_project_id_given(self):
         pat = prompt_pat('x')
         assert pat == ''
+    
+    @patch('src.osfexport.exporter.is_public', lambda x: False)
+    @patch('click.prompt', return_value='strinput')
+    def test_prompt_pat_if_private_project_id_given(self, mock_obj):
+        pat = prompt_pat('x')
+        assert pat == 'strinput'
+    
+    @patch('click.prompt', return_value='strinput')
+    def test_prompt_pat_if_exporting_all_projects(self, mock_obj):
+        pat = prompt_pat()
+        assert pat == 'strinput'
 
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
