@@ -42,4 +42,4 @@ jobs:
           python -m unittest tests.test_clitool.TestCLI
     - name: Run API tests
       run: |
-          python -m unittest tests.test_clitool.TestAPI
+          python -m unittest -f tests.test_clitool.TestAPI
