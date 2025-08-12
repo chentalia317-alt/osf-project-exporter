@@ -3,10 +3,11 @@ from unittest import TestCase
 import os
 import shutil
 import json
-# import pdb  # Use pdb.set_trace() to help with debugging
+import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
 from unittest.mock import patch
 
+import click
 from click.testing import CliRunner
 from pypdf import PdfReader
 
@@ -52,7 +53,7 @@ class TestAPI(TestCase):
             'Expected API version 2.20, actual version: ',
             data['meta']['version']
         )
-
+    
     def test_explore_api_file_tree(self):
         """Test using API to filter and search file links."""
 
@@ -671,7 +672,7 @@ class TestExporter(TestCase):
             # Reverse state changes for reproducibility
             os.chdir(cwd)
             assert os.getcwd() == cwd
-
+    
     def test_extract_project_id(self):
         """Test extracting project ID from various URL formats."""
 
@@ -700,13 +701,13 @@ class TestCLI(TestCase):
     def test_prompt_pat_if_public_project_id_given(self):
         pat = prompt_pat('x')
         assert pat == ''
-
+    
     @patch('src.osfexport.exporter.is_public', lambda x: False)
     @patch('click.prompt', return_value='strinput')
     def test_prompt_pat_if_private_project_id_given(self, mock_obj):
         pat = prompt_pat('x')
         assert pat == 'strinput'
-
+    
     @patch('click.prompt', return_value='strinput')
     def test_prompt_pat_if_exporting_all_projects(self, mock_obj):
         pat = prompt_pat()
