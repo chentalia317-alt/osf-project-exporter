@@ -53,12 +53,15 @@ class TestAPI(TestCase):
             data['meta']['version']
         )
 
-    def test_explore_api_file_tree(self):
+    def test_explore_file_tree_real_structure(self):
         """Test using API to filter and search file links."""
 
         data = call_api(
             f'{TestAPI.API_HOST}/nodes/',
-            pat=''
+            pat='',
+            filters={
+                'parent': ''
+            }
         )
         nodes = json.loads(data.read())['data']
         if len(nodes) > 0:
@@ -71,11 +74,14 @@ class TestAPI(TestCase):
         else:
             print("No nodes available, consider making a test project.")
 
-    def test_call_api_no_pat(self):
+    def test_get_public_projects_if_no_pat(self):
         public_node_id = json.loads(
             call_api(
                 f'{TestAPI.API_HOST}/nodes', pat='',
-                per_page=1
+                per_page=1,
+                filters={
+                    'parent': ''
+                }
             ).read()
         )['data'][0]['id']
 
@@ -114,20 +120,6 @@ class TestAPI(TestCase):
         assert len(projects) == expected_child_count + 1
         assert len(root_projects) == 1, (root_projects)
         assert projects[0]['metadata']['title'] == node['attributes']['title']
-
-    def test_filter_by_api(self):
-        """Test if we use query params in API calls."""
-
-        filters = {
-            'category': '',
-            'title': 'ttt',
-        }
-        data = call_api(
-            f'{TestAPI.API_HOST}/nodes/',
-            pat='',
-            per_page=12, filters=filters
-        )
-        assert data.status == 200
 
     def test_get_public_status_on_code(self):
         assert not is_public(f'{TestAPI.API_HOST}/users/me')
