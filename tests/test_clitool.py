@@ -53,6 +53,26 @@ class TestAPI(TestCase):
             data['meta']['version']
         )
 
+    def test_get_public_status_on_code(self):
+        assert not is_public(f'{TestAPI.API_HOST}/users/me')
+        assert is_public(f'{TestAPI.API_HOST}')
+
+    def test_get_public_projects_if_no_pat(self):
+        public_node_id = json.loads(
+            call_api(
+                f'{TestAPI.API_HOST}/nodes', pat='',
+                per_page=1,
+                filters={
+                    'parent': ''
+                }
+            ).read()
+        )['data'][0]['id']
+
+        result = call_api(
+            f'{TestAPI.API_HOST}/nodes/{public_node_id}/', pat='',
+        )
+        assert result.status == 200
+
     def test_explore_file_tree_real_structure(self):
         """Test using API to filter and search file links."""
 
@@ -74,26 +94,10 @@ class TestAPI(TestCase):
         else:
             print("No nodes available, consider making a test project.")
 
-    def test_get_public_projects_if_no_pat(self):
-        public_node_id = json.loads(
-            call_api(
-                f'{TestAPI.API_HOST}/nodes', pat='',
-                per_page=1,
-                filters={
-                    'parent': ''
-                }
-            ).read()
-        )['data'][0]['id']
-
-        result = call_api(
-            f'{TestAPI.API_HOST}/nodes/{public_node_id}/', pat='',
-        )
-        assert result.status == 200
-
     def test_parse_single_project_json_as_expected(self):
         # Use first public project available for this test
         # TODO: allow choosing individual components to start export from
-        # Currently a component will break this test
+        # Currently using a component will cause a fail
         data = call_api(
             f'{TestAPI.API_HOST}/nodes/',
             pat='',
@@ -120,10 +124,6 @@ class TestAPI(TestCase):
         assert len(projects) == expected_child_count + 1
         assert len(root_projects) == 1, (root_projects)
         assert projects[0]['metadata']['title'] == node['attributes']['title']
-
-    def test_get_public_status_on_code(self):
-        assert not is_public(f'{TestAPI.API_HOST}/users/me')
-        assert is_public(f'{TestAPI.API_HOST}')
 
 
 class TestExporter(TestCase):
