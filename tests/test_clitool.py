@@ -73,27 +73,6 @@ class TestAPI(TestCase):
         )
         assert result.status == 200
 
-    def test_explore_file_tree_real_structure(self):
-        """Test using API to filter and search file links."""
-
-        data = call_api(
-            f'{TestAPI.API_HOST}/nodes/',
-            pat='',
-            filters={
-                'parent': ''
-            }
-        )
-        nodes = json.loads(data.read())['data']
-        if len(nodes) > 0:
-            node_id = nodes[0]['id']
-            link = f'{TestAPI.API_HOST}/nodes/{node_id}/files/osfstorage/'
-            files = explore_file_tree(
-                link, pat='', dryrun=False
-            )
-            assert isinstance(files, list)
-        else:
-            print("No nodes available, consider making a test project.")
-
     def test_parse_single_project_json_as_expected(self):
         # Use first public project available for this test
         # TODO: allow choosing individual components to start export from
@@ -124,6 +103,7 @@ class TestAPI(TestCase):
         assert len(projects) == expected_child_count + 1
         assert len(root_projects) == 1, (root_projects)
         assert projects[0]['metadata']['title'] == node['attributes']['title']
+        assert isinstance(projects[0]['files'], list)
 
 
 class TestExporter(TestCase):
