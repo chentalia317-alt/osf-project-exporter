@@ -17,6 +17,7 @@ STUBS_DIR = os.path.join(
 )
 
 # Global styles for PDF
+FONT = 'Times'
 BLUE = (173, 216, 230)
 HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
 
@@ -188,7 +189,7 @@ class PDF(FPDF):
     def footer(self):
         self.set_y(-15)
         self.set_x(-30)
-        self.set_font('Times', size=10)
+        self.set_font(FONT, size=10)
         self.cell(0, 10, f"Page: {self.page_no()}", align="C")
         self.set_x(10)
         timestamp = self.date_printed.strftime(
@@ -646,13 +647,13 @@ def write_pdf(projects, root_idx, folder=''):
             field_name = key.replace('_', ' ').title()
         if isinstance(fielddict[key], list):
             pdf.write(0, '\n')
-            pdf.set_font('Times', size=14)
+            pdf.set_font(FONT, size=14)
             pdf.multi_cell(
                 0, h=0,
                 text=f'**{field_name}**\n\n',
                 align='L', markdown=True
             )
-            pdf.set_font('Times', size=12)
+            pdf.set_font(FONT, size=12)
             for item in fielddict[key]:
                 for subkey in item.keys():
                     if subkey in pdf_display_names:
@@ -693,16 +694,16 @@ def write_pdf(projects, root_idx, folder=''):
         pdf.set_line_width(0.05)
         pdf.set_left_margin(10)
         pdf.set_right_margin(10)
-        pdf.set_font('Times', size=12)
+        pdf.set_font(FONT, size=12)
         wikis = project['wikis']
 
         # Write header section
-        pdf.set_font('Times', size=18, style='B')
+        pdf.set_font(FONT, size=18, style='B')
         # Write parent header and title first
         if pdf.parent_title:
             pdf.multi_cell(0, h=0, text=f'{pdf.parent_title}\n', align='L')
         if pdf.parent_url:
-            pdf.set_font('Times', size=12)
+            pdf.set_font(FONT, size=12)
             pdf.cell(
                 text='Main Project URL:', align='L'
             )
@@ -714,7 +715,7 @@ def write_pdf(projects, root_idx, folder=''):
         # Check if title, url is of parent's to avoid duplication
         title = project['metadata']['title']
         if pdf.parent_title != title:
-            pdf.set_font('Times', size=18, style='B')
+            pdf.set_font(FONT, size=18, style='B')
             pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
 
         # Pop URL field to avoid printing it out in Metadata section
@@ -724,7 +725,7 @@ def write_pdf(projects, root_idx, folder=''):
         qr_img = pdf.generate_qr_code()
         pdf.image(qr_img, w=30, x=Align.R, y=5)
 
-        pdf.set_font('Times', size=12)
+        pdf.set_font(FONT, size=12)
         if url and pdf.parent_url != url:
             pdf.cell(
                 text='Component URL:',
@@ -741,18 +742,18 @@ def write_pdf(projects, root_idx, folder=''):
         pdf.ln()
 
         # Write title for metadata section, then actual fields
-        pdf.set_font('Times', size=16, style='B')
+        pdf.set_font(FONT, size=16, style='B')
         pdf.multi_cell(0, h=0, text='1. Project Metadata\n', align='L')
-        pdf.set_font('Times', size=12)
+        pdf.set_font(FONT, size=12)
         for key in project['metadata']:
             write_list_section(key, project['metadata'], pdf)
         pdf.write(0, '\n')
         pdf.write(0, '\n')
 
         # Write Contributors in table
-        pdf.set_font('Times', size=16, style='B')
+        pdf.set_font(FONT, size=16, style='B')
         pdf.multi_cell(0, h=0, text='2. Contributors\n', align='L')
-        pdf.set_font('Times', size=12)
+        pdf.set_font(FONT, size=12)
         with pdf.table(
             headings_style=HEADINGS_STYLE,
             col_widths=(1, 0.5, 1)
@@ -777,12 +778,12 @@ def write_pdf(projects, root_idx, folder=''):
 
         # List files stored in storage providers
         # For now only OSF Storage is involved
-        pdf.set_font('Times', size=16, style='B')
+        pdf.set_font(FONT, size=16, style='B')
         pdf.multi_cell(0, h=0, text='3. Files in Main Project\n', align='L')
         pdf.write(0, '\n')
-        pdf.set_font('Times', size=14, style='B')
+        pdf.set_font(FONT, size=14, style='B')
         pdf.multi_cell(0, h=0, text='OSF Storage\n', align='L')
-        pdf.set_font('Times', size=12)
+        pdf.set_font(FONT, size=12)
         if len(project['files']) > 0:
             with pdf.table(
                 headings_style=HEADINGS_STYLE,
@@ -812,13 +813,13 @@ def write_pdf(projects, root_idx, folder=''):
 
         # Write wikis separately to more easily handle Markdown parsing
         pdf.ln()
-        pdf.set_font('Times', size=18, style='B')
+        pdf.set_font(FONT, size=18, style='B')
         pdf.multi_cell(0, h=0, text='4. Wiki\n', align='L')
         pdf.ln()
         for i, wiki in enumerate(wikis.keys()):
-            pdf.set_font('Times', size=16, style='B')
+            pdf.set_font(FONT, size=16, style='B')
             pdf.multi_cell(0, h=0, text=f'{wiki}\n')
-            pdf.set_font('Times', size=12)
+            pdf.set_font(FONT, size=12)
             html = markdown(wikis[wiki])
             pdf.write_html(html)
             if i < len(wikis.keys())-1:
