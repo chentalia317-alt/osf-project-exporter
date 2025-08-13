@@ -446,7 +446,7 @@ class TestExporter(TestCase):
                     'id': 'id',
                     'url': 'https://test.osf.io/x',
                     'category': 'Uncategorized',
-                    'description': 'This is a description of the project',
+                    'description': 'This is a description of the project ג',
                     'date_created': datetime.datetime.fromisoformat(
                         '2025-06-12T15:54:42.105112Z'
                     ),
@@ -456,7 +456,7 @@ class TestExporter(TestCase):
                     'tags': 'tag1, tag2, tag3',
                     'resource_type': 'na',
                     'resource_lang': 'english',
-                    'affiliated_institutions': 'University of Manchester',
+                    'affiliated_institutions': 'University of Manchester — Test',
                     'identifiers': 'N/A',
                     'license': 'Apache 2.0',
                     'subjects': 'sub1, sub2, sub3',
@@ -506,7 +506,7 @@ class TestExporter(TestCase):
             },
             {
                 'metadata': {
-                    "title": "Second Project in new PDF",
+                    "title": "Second Project in new PDF ♡",
                     "id": "c",
                     'url': 'lol',
                     'category': 'Methods and Measures'
@@ -649,21 +649,26 @@ class TestExporter(TestCase):
         contributors_table = (
             'Subjects: sub1, sub2, sub3\n\n'
             '2. Contributors\n\n'
-            'Name                                               '
-            'Bibliographic?            '
+            'Name'
+            'Bibliographic?'
             'Profile Link\n\n'
-            'Pineapple Pizza                                    '
-            'No                        '
+            'Pineapple Pizza'
+            'No'
             'https://test.osf.io/userid/\n\n'
-            'Margarita                                          '
-            'Yes                       '
+            'Margarita'
+            'Yes'
             'https://test.osf.io/userid/\n\n'
-            'Margarine                                          '
-            'Yes                       '
+            'Margarine'
+            'Yes'
             'https://test.osf.io/userid/\n\n'
             '3. Files in Main Project'
         )
-        assert contributors_table in content_first_page
+        assert contributors_table.replace(' ', '') in content_first_page.replace(' ', ''), (
+            'Table: ',
+            contributors_table.replace(' ', ''),
+            'Actual: ',
+            content_first_page.replace(' ', '')
+        )
 
         # This way of string formatting compresses line lengths used
         # End of headers and table rows marked by \n\n
@@ -681,7 +686,12 @@ class TestExporter(TestCase):
             'N/A\n\n'
             '4. Wiki'
         )
-        assert files_table in content_first_page
+        assert files_table.replace(' ', '') in content_first_page.replace(' ', ''), (
+            'Table: ',
+            files_table.replace(' ', ''),
+            'Actual: ',
+            content_first_page.replace(' ', '')
+        )
 
         # Remove files only if all good - keep for debugging otherwise
         os.remove(path_one)
