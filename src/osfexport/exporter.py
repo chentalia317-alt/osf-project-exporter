@@ -663,7 +663,7 @@ def write_pdf(projects, root_idx, folder=''):
             field_name = pdf_display_names[key]
         else:
             field_name = key.replace('_', ' ').title()
-        
+
         if isinstance(fielddict[key], list):
             # Create separate paragraphs for more complex attributes
             pdf.write(0, '\n')
@@ -738,7 +738,10 @@ def write_pdf(projects, root_idx, folder=''):
         title = project['metadata']['title']
         if pdf.parent_title != title:
             pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
-            pdf.multi_cell(0, h=0, text=f'{title}\n', align='L', padding=LINE_PADDING)
+            pdf.multi_cell(
+                0, h=0, text=f'{title}\n',
+                align='L', padding=LINE_PADDING
+            )
 
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')

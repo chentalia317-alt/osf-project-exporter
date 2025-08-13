@@ -656,10 +656,10 @@ class TestExporter(TestCase):
             'Yes'
             'https://test.osf.io/userid/\n\n'
             '3. Files in Main Project'
-        )
-        assert contributors_table.replace(' ', '') in content_first_page.replace(' ', ''), (
+        ).replace(' ', '')
+        assert contributors_table in content_first_page.replace(' ', ''), (
             'Table: ',
-            contributors_table.replace(' ', ''),
+            contributors_table,
             'Actual: ',
             content_first_page.replace(' ', '')
         )
@@ -669,20 +669,20 @@ class TestExporter(TestCase):
         files_table = (
             '3. Files in Main Project\n\n'
             'OSF Storage\n\n'
-            'File Name                                          '
-            'Size (MB)                 '
+            'File Name'
+            'Size (MB)'
             'Download Link\n\n'
-            'file1.txt                                          '
-            'N/A                       '
+            'file1.txt'
+            'N/A'
             'https://test.osf.io/userid/\n\n'
-            'file2.txt                                          '
-            'N/A                       '
+            'file2.txt'
+            'N/A'
             'N/A\n\n'
             '4. Wiki'
-        )
-        assert files_table.replace(' ', '') in content_first_page.replace(' ', ''), (
+        ).replace(' ', '')
+        assert files_table in content_first_page.replace(' ', ''), (
             'Table: ',
-            files_table.replace(' ', ''),
+            files_table,
             'Actual: ',
             content_first_page.replace(' ', '')
         )
