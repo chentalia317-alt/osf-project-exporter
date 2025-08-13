@@ -168,8 +168,6 @@ class TestExporter(TestCase):
     """Tests for the exporter without real API usage."""
 
     def test_explore_mock_file_tree(self):
-        """Test exploration of mock file tree."""
-
         files = explore_file_tree(
             'root', os.getenv('TEST_PAT', ''), dryrun=True
         )
@@ -183,8 +181,6 @@ class TestExporter(TestCase):
         assert isinstance(files[0][2], str)
 
     def test_get_latest_mock_wiki_version(self):
-        """Test getting the latest version of a mock wiki"""
-
         link = 'wiki'
         wikis = explore_wikis(
             link, os.getenv('TEST_PAT', ''), dryrun=True
@@ -208,9 +204,6 @@ class TestExporter(TestCase):
         )
 
     def test_parse_mock_api_responses(self):
-        """Using JSON stubs to simulate API responses,
-        test we can parse them correctly"""
-
         projects, root_nodes = get_project_data(
             os.getenv('TEST_PAT', ''),
             dryrun=True
@@ -370,7 +363,7 @@ class TestExporter(TestCase):
         assert projects[0]['metadata']['id'] == 'x'
         assert projects[0]['children'] == ['a', 'b']
 
-    def test_write_pdf_without_giving_a_folder(self):
+    def test_write_pdf_no_folder_given(self):
         projects = [
             {
                 'metadata': {
@@ -433,7 +426,7 @@ class TestExporter(TestCase):
             'Unable to create file in current directory.'
         )
 
-    def test_write_pdfs_from_mock_projects(self):
+    def test_write_unicode_pdfs_from_mock_projects(self):
         # Put PDFs in a folder to keep things tidy
         if os.path.exists(FOLDER_OUT):
             shutil.rmtree(FOLDER_OUT)
@@ -456,6 +449,7 @@ class TestExporter(TestCase):
                     'tags': 'tag1, tag2, tag3',
                     'resource_type': 'na',
                     'resource_lang': 'english',
+                    # Below uses em-dash at end
                     'affiliated_institutions': 'University of Manchester — Test',
                     'identifiers': 'N/A',
                     'license': 'Apache 2.0',
@@ -698,8 +692,6 @@ class TestExporter(TestCase):
         os.remove(path_two)
 
     def test_use_dryrun_in_user_default_dir(self):
-        """Regression test for using --dryrun in user's default directory."""
-
         cwd = os.getcwd()
         try:
             # Go to user's home directory in cross-platform way
@@ -712,9 +704,7 @@ class TestExporter(TestCase):
             os.chdir(cwd)
             assert os.getcwd() == cwd
 
-    def test_extract_project_id(self):
-        """Test extracting project ID from various URL formats."""
-
+    def test_extract_project_id_from_strings(self):
         url = 'https://osf.io/x/'
         project_id = extract_project_id(url)
         assert project_id == 'x', f'Expected "x", got {project_id}'
@@ -746,10 +736,7 @@ class TestCLI(TestCase):
         pat = prompt_pat('x')
         assert pat == ''
 
-    def test_pull_projects_command_on_mocks(self):
-        """Test generating a PDF from parsed project data.
-        This assumes the JSON parsing works correctly."""
-
+    def test_pull_projects_command_with_mocks(self):
         if os.path.exists(FOLDER_OUT):
             shutil.rmtree(FOLDER_OUT)
         os.mkdir(FOLDER_OUT)
