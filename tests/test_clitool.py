@@ -3,7 +3,7 @@ from unittest import TestCase
 import os
 import shutil
 import json
-import pdb  # Use pdb.set_trace() to help with debugging
+# import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
 from unittest.mock import patch
 
@@ -711,7 +711,7 @@ class TestExporter(TestCase):
             # Reverse state changes for reproducibility
             os.chdir(cwd)
             assert os.getcwd() == cwd
-    
+
     def test_extract_project_id(self):
         """Test extracting project ID from various URL formats."""
 

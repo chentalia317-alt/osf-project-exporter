@@ -660,7 +660,7 @@ def write_pdf(projects, root_idx, folder=''):
             pdf.multi_cell(
                 0, h=0,
                 text=f'**{field_name}**\n\n',
-                align='L', markdown=True
+                align='L', markdown=True, padding=0.5
             )
             pdf.set_font(FONT, size=12)
             for item in fielddict[key]:
@@ -673,7 +673,7 @@ def write_pdf(projects, root_idx, folder=''):
                     pdf.multi_cell(
                         0, h=0,
                         text=f'**{field_name}:** {item[subkey]}\n\n',
-                        align='L', markdown=True
+                        align='L', markdown=True, padding=0.5
                     )
                 pdf.write(0, '\n')
         else:
@@ -682,7 +682,8 @@ def write_pdf(projects, root_idx, folder=''):
                 h=0,
                 text=f'**{field_name}:** {fielddict[key]}\n\n',
                 align='L',
-                markdown=True
+                markdown=True,
+                padding=0.5
             )
 
     def write_project_body(pdf, project):
@@ -725,7 +726,7 @@ def write_pdf(projects, root_idx, folder=''):
         title = project['metadata']['title']
         if pdf.parent_title != title:
             pdf.set_font(FONT, size=18, style='B')
-            pdf.multi_cell(0, h=0, text=f'{title}\n', align='L')
+            pdf.multi_cell(0, h=0, text=f'{title}\n', align='L', padding=0.5)
 
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')
@@ -752,7 +753,9 @@ def write_pdf(projects, root_idx, folder=''):
 
         # Write title for metadata section, then actual fields
         pdf.set_font(FONT, size=16, style='B')
-        pdf.multi_cell(0, h=0, text='1. Project Metadata\n', align='L')
+        pdf.multi_cell(
+            0, h=0, text='1. Project Metadata\n',
+            align='L', padding=0.5)
         pdf.set_font(FONT, size=12)
         for key in project['metadata']:
             write_list_section(key, project['metadata'], pdf)
