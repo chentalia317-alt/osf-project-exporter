@@ -21,6 +21,7 @@ FONT = 'dejavu-sans'
 BLUE = (173, 216, 230)
 HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
 
+
 def extract_project_id(url):
     """Extract project ID from a given OSF project URL.
 
@@ -178,11 +179,15 @@ class PDF(FPDF):
         self.parent_url = parent_url
         self.parent_title = parent_title
         self.url = url
-        self.add_font("dejavu-sans", style="", fname=os.path.join(os.path.dirname(__file__), 'DejaVuSans.ttf'))
-        self.add_font("dejavu-sans", style="b",fname=os.path.join(os.path.dirname(__file__), 'DejaVuSans-Bold.ttf'))
-        self.add_font("dejavu-sans", style="i", fname=os.path.join(os.path.dirname(__file__), 'DejaVuSans-Oblique.ttf'))
-        self.add_font("dejavu-sans", style="bi", fname=os.path.join(os.path.dirname(__file__), 'DejaVuSans-BoldOblique.ttf'))
-    
+        self.add_font("dejavu-sans", style="", fname=os.path.join(
+            os.path.dirname(__file__), 'font', 'DejaVuSans.ttf'))
+        self.add_font("dejavu-sans", style="b", fname=os.path.join(
+            os.path.dirname(__file__), 'font', 'DejaVuSans-Bold.ttf'))
+        self.add_font("dejavu-sans", style="i", fname=os.path.join(
+            os.path.dirname(__file__), 'font', 'DejaVuSans-Oblique.ttf'))
+        self.add_font("dejavu-sans", style="bi", fname=os.path.join(
+            os.path.dirname(__file__), 'font', 'DejaVuSans-BoldOblique.ttf'))
+
     def generate_qr_code(self):
         qr = qrcode.make(self.url)
         img_byte_arr = io.BytesIO()
