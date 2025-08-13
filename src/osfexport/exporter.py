@@ -17,7 +17,7 @@ STUBS_DIR = os.path.join(
 )
 
 # Global styles for PDF
-FONT = 'Times'
+FONT = 'dejavu-sans'
 BLUE = (173, 216, 230)
 HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
 
@@ -178,7 +178,11 @@ class PDF(FPDF):
         self.parent_url = parent_url
         self.parent_title = parent_title
         self.url = url
-
+        self.add_font("dejavu-sans", style="", fname=os.path.join(os.path.dirname(__file__), 'DejaVuSans.ttf'))
+        self.add_font("dejavu-sans", style="b",fname=os.path.join(os.path.dirname(__file__), 'DejaVuSans-Bold.ttf'))
+        self.add_font("dejavu-sans", style="i", fname=os.path.join(os.path.dirname(__file__), 'DejaVuSans-Oblique.ttf'))
+        self.add_font("dejavu-sans", style="bi", fname=os.path.join(os.path.dirname(__file__), 'DejaVuSans-BoldOblique.ttf'))
+    
     def generate_qr_code(self):
         qr = qrcode.make(self.url)
         img_byte_arr = io.BytesIO()
