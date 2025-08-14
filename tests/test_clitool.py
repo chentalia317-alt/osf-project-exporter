@@ -740,14 +740,15 @@ class TestExporter(TestCase):
             page3
         ]
         
-        def get_data(json):
-            return json['data']
+        def add_x(json, **kwargs):
+            x = kwargs.get('x', 0)
+            return json['data'] + x
         
-        results = paginate_json_result(start='http://api.example.com/page1', action=get_data)
+        results = paginate_json_result(start='http://api.example.com/page1', action=add_x, x=5)
         assert isinstance(results, deque)
-        self.assertEqual(results.popleft(), 1)
-        self.assertEqual(results.popleft(), 3)
-        self.assertEqual(results.popleft(), 5)
+        self.assertEqual(results.popleft(), 1+5)
+        self.assertEqual(results.popleft(), 3+5)
+        self.assertEqual(results.popleft(), 5+5)
 
 
 
