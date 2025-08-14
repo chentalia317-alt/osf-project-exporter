@@ -84,7 +84,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
         pat = prompt_pat(project_id=project_id, usetest=usetest)
 
     click.echo('Downloading project data...')
-    projects, root_nodes = exporter.get_project_data(
+    projects, root_nodes = exporter.get_nodes(
         pat, dryrun=dryrun, project_id=project_id, usetest=usetest
     )
     click.echo(f'Found {len(root_nodes)} projects.')

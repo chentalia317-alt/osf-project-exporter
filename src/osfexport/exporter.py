@@ -445,29 +445,10 @@ def explore_wikis(link, pat, dryrun=True):
     return wiki_content
 
 
-def get_project_data(pat, dryrun=False, project_id='', usetest=False):
-    """Pull and list projects for a user from the OSF.
-
-    Parameters
-    ----------
-    pat: str
-        Personal Access Token to authorise a user with.
-    dryrun: bool
-        If True, use test data from JSON stubs to mock API calls.
-    project_id: str
-        Optional ID for a specific OSF project to export.
-    usetest: bool
-        If True, use test API host, otherwise use production host.
-
-    Returns
-    ----------
-        projects: list[dict]
-            List of dictionaries representing projects.
-    """
-
+def get_nodes(pat, dryrun=False, project_id='', usetest=False):
     api_host = get_host(usetest)
 
-    # TODO: SPlit into sep function
+    # TODO: Split into sep function
     # Reduce query size by getting root nodes only
     node_filter = {
         'parent': '',
@@ -492,7 +473,31 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
             nodes = {'data': [MockAPIResponse.read(project_id)['data']]}
         else:
             nodes = MockAPIResponse.read('nodes')
-    #========
+    
+    return get_project_data(nodes, pat, dryrun=dryrun, usetest=usetest)
+
+
+def get_project_data(nodes, pat, dryrun=False, usetest=False):
+    """Pull and list projects for a user from the OSF.
+
+    Parameters
+    ----------
+    pat: str
+        Personal Access Token to authorise a user with.
+    dryrun: bool
+        If True, use test data from JSON stubs to mock API calls.
+    project_id: str
+        Optional ID for a specific OSF project to export.
+    usetest: bool
+        If True, use test API host, otherwise use production host.
+
+    Returns
+    ----------
+        projects: list[dict]
+            List of dictionaries representing projects.
+    """
+
+    api_host = get_host(usetest)
 
     projects = []
     root_nodes = []  # Track indexes of root nodes for quick access

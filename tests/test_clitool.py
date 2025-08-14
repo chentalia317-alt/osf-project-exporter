@@ -14,6 +14,7 @@ from pypdf import PdfReader
 from src.osfexport.exporter import (
     call_api,
     get_project_data,
+    get_nodes,
     explore_file_tree,
     explore_wikis,
     write_pdf,
@@ -89,7 +90,7 @@ class TestAPI(TestCase):
         )
         node = json.loads(data.read())['data'][0]
         id = extract_project_id(node['links']['html'])
-        projects, root_projects = get_project_data(
+        projects, root_projects = get_nodes(
             pat='', dryrun=False,
             usetest=True, project_id=id
         )
@@ -148,7 +149,7 @@ class TestExporter(TestCase):
         )
 
     def test_parse_mock_api_responses(self):
-        projects, root_nodes = get_project_data(
+        projects, root_nodes = get_nodes(
             pat='',
             dryrun=True
         )
@@ -298,7 +299,7 @@ class TestExporter(TestCase):
         )
 
     def test_get_single_mock_project(self):
-        projects, roots = get_project_data(
+        projects, roots = get_nodes(
             pat='', dryrun=True,
             project_id='x'
         )
@@ -640,7 +641,7 @@ class TestExporter(TestCase):
         try:
             # Go to user's home directory in cross-platform way
             os.chdir(os.path.expanduser("~"))
-            projects, roots = get_project_data('', dryrun=True, usetest=True)
+            projects, roots = get_nodes('', dryrun=True, usetest=True)
         except Exception as e:
             raise e
         finally:
@@ -669,7 +670,7 @@ class TestExporter(TestCase):
         project_id = extract_project_id(url)
     
     
-    @patch('osfexport.exporter.call_api')
+    @patch('src.osfexport.exporter.call_api')
     def test_add_on_paginated_results(self, mock_get):
         # Mock JSON responses
         page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
