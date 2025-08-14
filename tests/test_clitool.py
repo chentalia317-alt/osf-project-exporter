@@ -110,8 +110,6 @@ class TestExporter(TestCase):
     """Tests for the exporter without real API usage."""
 
     def test_explore_mock_file_tree(self):
-        """Test exploration of mock file tree."""
-
         files = explore_file_tree(
             'root', pat='', dryrun=True
         )
@@ -125,8 +123,6 @@ class TestExporter(TestCase):
         assert isinstance(files[0][2], str)
 
     def test_get_latest_mock_wiki_version(self):
-        """Test getting the latest version of a mock wiki"""
-
         link = 'wiki'
         wikis = explore_wikis(
             link, pat='', dryrun=True
@@ -150,9 +146,6 @@ class TestExporter(TestCase):
         )
 
     def test_parse_mock_api_responses(self):
-        """Using JSON stubs to simulate API responses,
-        test we can parse them correctly"""
-
         projects, root_nodes = get_project_data(
             pat='',
             dryrun=True
@@ -312,7 +305,7 @@ class TestExporter(TestCase):
         assert projects[0]['metadata']['id'] == 'x'
         assert projects[0]['children'] == ['a', 'b']
 
-    def test_write_pdf_without_giving_a_folder(self):
+    def test_write_pdf_no_folder_given(self):
         projects = [
             {
                 'metadata': {
@@ -375,7 +368,7 @@ class TestExporter(TestCase):
             'Unable to create file in current directory.'
         )
 
-    def test_write_pdfs_from_mock_projects(self):
+    def test_write_unicode_pdfs_from_mock_projects(self):
         # Put PDFs in a folder to keep things tidy
         if os.path.exists(FOLDER_OUT):
             shutil.rmtree(FOLDER_OUT)
@@ -388,7 +381,7 @@ class TestExporter(TestCase):
                     'id': 'id',
                     'url': 'https://test.osf.io/x',
                     'category': 'Uncategorized',
-                    'description': 'This is a description of the project',
+                    'description': 'This is a description of the project ג',
                     'date_created': datetime.datetime.fromisoformat(
                         '2025-06-12T15:54:42.105112Z'
                     ),
@@ -398,7 +391,8 @@ class TestExporter(TestCase):
                     'tags': 'tag1, tag2, tag3',
                     'resource_type': 'na',
                     'resource_lang': 'english',
-                    'affiliated_institutions': 'University of Manchester',
+                    # Below uses em-dash at end
+                    'affiliated_institutions': 'University of Manchester — Test',
                     'identifiers': 'N/A',
                     'license': 'Apache 2.0',
                     'subjects': 'sub1, sub2, sub3',
@@ -448,7 +442,7 @@ class TestExporter(TestCase):
             },
             {
                 'metadata': {
-                    "title": "Second Project in new PDF",
+                    "title": "Second Project in new PDF ♡",
                     "id": "c",
                     'url': 'lol',
                     'category': 'Methods and Measures'
@@ -591,47 +585,55 @@ class TestExporter(TestCase):
         contributors_table = (
             'Subjects: sub1, sub2, sub3\n\n'
             '2. Contributors\n\n'
-            'Name                                               '
-            'Bibliographic?            '
+            'Name'
+            'Bibliographic?'
             'Profile Link\n\n'
-            'Pineapple Pizza                                    '
-            'No                        '
+            'Pineapple Pizza'
+            'No'
             'https://test.osf.io/userid/\n\n'
-            'Margarita                                          '
-            'Yes                       '
+            'Margarita'
+            'Yes'
             'https://test.osf.io/userid/\n\n'
-            'Margarine                                          '
-            'Yes                       '
+            'Margarine'
+            'Yes'
             'https://test.osf.io/userid/\n\n'
             '3. Files in Main Project'
+        ).replace(' ', '')
+        assert contributors_table in content_first_page.replace(' ', ''), (
+            'Table: ',
+            contributors_table,
+            'Actual: ',
+            content_first_page.replace(' ', '')
         )
-        assert contributors_table in content_first_page
 
         # This way of string formatting compresses line lengths used
         # End of headers and table rows marked by \n\n
         files_table = (
             '3. Files in Main Project\n\n'
             'OSF Storage\n\n'
-            'File Name                                          '
-            'Size (MB)                 '
+            'File Name'
+            'Size (MB)'
             'Download Link\n\n'
-            'file1.txt                                          '
-            'N/A                       '
+            'file1.txt'
+            'N/A'
             'https://test.osf.io/userid/\n\n'
-            'file2.txt                                          '
-            'N/A                       '
+            'file2.txt'
+            'N/A'
             'N/A\n\n'
             '4. Wiki'
+        ).replace(' ', '')
+        assert files_table in content_first_page.replace(' ', ''), (
+            'Table: ',
+            files_table,
+            'Actual: ',
+            content_first_page.replace(' ', '')
         )
-        assert files_table in content_first_page
 
         # Remove files only if all good - keep for debugging otherwise
         os.remove(path_one)
         os.remove(path_two)
 
     def test_use_dryrun_in_user_default_dir(self):
-        """Regression test for using --dryrun in user's default directory."""
-
         cwd = os.getcwd()
         try:
             # Go to user's home directory in cross-platform way
@@ -644,9 +646,7 @@ class TestExporter(TestCase):
             os.chdir(cwd)
             assert os.getcwd() == cwd
 
-    def test_extract_project_id(self):
-        """Test extracting project ID from various URL formats."""
-
+    def test_extract_project_id_from_strings(self):
         url = 'https://osf.io/x/'
         project_id = extract_project_id(url)
         assert project_id == 'x', f'Expected "x", got {project_id}'
