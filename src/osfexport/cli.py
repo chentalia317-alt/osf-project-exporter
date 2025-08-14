@@ -3,7 +3,7 @@ import urllib.request as webhelper
 
 import click
 
-import osfexport.exporter as exporter
+import src.osfexport.exporter as exporter
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
@@ -80,7 +80,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
     else:
         click.echo('No project ID provided, extracting all projects.')
 
-    if not pat:
+    if not pat and not dryrun:
         pat = prompt_pat(project_id=project_id, usetest=usetest)
 
     click.echo('Downloading project data...')

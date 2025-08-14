@@ -20,6 +20,7 @@ STUBS_DIR = os.path.join(
 BLUE = (173, 216, 230)
 HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
 
+
 def extract_project_id(url):
     """Extract project ID from a given OSF project URL.
 
@@ -462,17 +463,12 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
                 'id': project['id'],
                 'url': project['links']['html'],
                 'description': project['attributes']['description'],
-                'category': CATEGORY_STRS[project['attributes']['category']]
-                    if project['attributes']['category'] in CATEGORY_STRS
-                    else project['attributes']['category'].title(),
                 'date_created': datetime.datetime.fromisoformat(
                     project['attributes']['date_created']
                 ).astimezone().strftime('%Y-%m-%d'),
                 'date_modified': datetime.datetime.fromisoformat(
                     project['attributes']['date_modified']
                 ).astimezone().strftime('%Y-%m-%d'),
-                'tags': ', '.join(project['attributes']['tags'])
-                    if project['attributes']['tags'] else 'NA',
                 'public': project['attributes']['public'],
                 'resource_type': 'NA',
                 'resource_lang': 'NA',
@@ -481,6 +477,14 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
             'files': [],
             'wikis': {}
         }
+        if project['attributes']['category'] in CATEGORY_STRS:
+            project_data['metadata']['category'] = CATEGORY_STRS[project['attributes']['category']]
+        else:
+            project_data['metadata']['category'] = project['attributes']['category'].title()
+        if project['attributes']['tags']:
+            project_data['metadata']['tags'] = ', '.join(project['attributes']['tags'])
+        else:
+            project_data['metadata']['tags'] = 'NA'
 
         # Resource type/lang/funding info share specific endpoint
         # that isn't linked to in user nodes' responses
