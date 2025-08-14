@@ -259,16 +259,33 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     return result
 
 
-def paginate_json_result(start, action, pat='', **kwargs):
+def paginate_json_result(start, action, **kwargs):
+    """Loop through paginated JSON responses and perform action on each.
+    
+    Parameters
+    -------------
+    start: str
+        Link to start looping from
+    action: func
+        Takes in found JSON page and returns a result
+    **kwargs
+        For call_api and action.
+    
+    Returns
+    ------------------
+    results: deque
+        Queue of results per page
+    """
     next_link = start
     is_last_page = False
     results = deque()
+    pat = kwargs.pop('pat', '')
     per_page = kwargs.pop('per_page', 100)
     filters = kwargs.pop('filters', {})
     is_json = kwargs.pop('is_json', True)
     while not is_last_page:
         curr_page = call_api(next_link, pat, per_page=per_page, filters=filters, is_json=is_json)
-        results.append(action(curr_page))
+        results.append(action(curr_page, **kwargs))
         next_link = curr_page['links']['next']
         is_last_page = not next_link
     return results
@@ -431,6 +448,7 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
 
     api_host = get_host(usetest)
 
+    # TODO: SPlit into sep function
     # Reduce query size by getting root nodes only
     node_filter = {
         'parent': '',
@@ -455,6 +473,7 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
             nodes = {'data': [MockAPIResponse.read(project_id)['data']]}
         else:
             nodes = MockAPIResponse.read('nodes')
+    #========
 
     projects = []
     root_nodes = []  # Track indexes of root nodes for quick access
@@ -498,6 +517,7 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
             'wikis': {}
         }
 
+        # TODO: split into function
         # Resource type/lang/funding info share specific endpoint
         # that isn't linked to in user nodes' responses
         if dryrun:
@@ -514,6 +534,7 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
         project_data['metadata']['resource_lang'] = resource_lang
         for funder in metadata['funders']:
             project_data['metadata']['funders'].append(funder)
+        #=========
 
         relations = project['relationships']
 
