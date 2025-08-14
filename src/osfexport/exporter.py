@@ -29,7 +29,6 @@ FONT_SIZES = {
 LINE_PADDING = 0.5  # Gaps between lines
 
 
-
 def extract_project_id(url):
     """Extract project ID from a given OSF project URL.
 
