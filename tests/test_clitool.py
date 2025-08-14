@@ -1,3 +1,4 @@
+from collections import deque
 import datetime
 from unittest import TestCase
 import os
@@ -17,7 +18,8 @@ from osfexport.exporter import (
     explore_wikis,
     write_pdf,
     is_public,
-    extract_project_id
+    extract_project_id,
+    paginate_json_result
 )
 from osfexport.cli import (
     cli, prompt_pat
@@ -723,6 +725,31 @@ class TestExporter(TestCase):
         # Should just run normally
         url = ''
         project_id = extract_project_id(url)
+    
+    
+    @patch('osfexport.exporter.call_api')
+    def test_add_on_paginated_results(self, mock_get):
+        # Mock JSON responses
+        page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
+        page2 = {'data': 3, 'links': {'next': 'http://api.example.com/page3'}}
+        page3 = {'data': 5, 'links': {'next': None}}
+        # Configure mock to return these responses in sequence
+        mock_get.side_effect = [
+            page1,
+            page2,
+            page3
+        ]
+        
+        def get_data(json):
+            return json['data']
+        
+        results = paginate_json_result(start='http://api.example.com/page1', action=get_data)
+        assert isinstance(results, deque)
+        self.assertEqual(results.popleft(), 1)
+        self.assertEqual(results.popleft(), 3)
+        self.assertEqual(results.popleft(), 5)
+
+
 
 
 class TestCLI(TestCase):
