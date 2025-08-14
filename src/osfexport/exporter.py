@@ -1,3 +1,4 @@
+from collections import deque
 import json
 import os
 import datetime
@@ -256,6 +257,21 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
         )
     result = webhelper.urlopen(request)
     return result
+
+
+def paginate_json_result(start, action, pat='', **kwargs):
+    next_link = start
+    is_last_page = False
+    results = deque()
+    per_page = kwargs.pop('per_page', 100)
+    filters = kwargs.pop('filters', {})
+    is_json = kwargs.pop('is_json', True)
+    while not is_last_page:
+        curr_page = call_api(next_link, pat, per_page=per_page, filters=filters, is_json=is_json)
+        results.append(action(curr_page))
+        next_link = curr_page['links']['next']
+        is_last_page = not next_link
+    return results
 
 
 def explore_file_tree(curr_link, pat, dryrun=True):
