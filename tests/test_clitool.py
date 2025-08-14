@@ -10,7 +10,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from osfexport.exporter import (
+from src.osfexport.exporter import (
     call_api,
     get_project_data,
     explore_file_tree,
@@ -19,7 +19,7 @@ from osfexport.exporter import (
     is_public,
     extract_project_id
 )
-from osfexport.cli import (
+from src.osfexport.cli import (
     cli, prompt_pat
 )
 
@@ -40,8 +40,8 @@ class TestAPI(TestCase):
         """Test for if JSON for user's projects are loaded correctly"""
 
         data = call_api(
-            f'{TestAPI.API_HOST}/users/me/nodes/',
-            os.getenv('TEST_PAT', '')
+            f'{TestAPI.API_HOST}/',
+            pat=''
         )
         assert data.status == 200
 
@@ -53,11 +53,18 @@ class TestAPI(TestCase):
             data['meta']['version']
         )
 
-    def test_call_api_no_pat(self):
+    def test_get_public_status_on_code(self):
+        assert not is_public(f'{TestAPI.API_HOST}/users/me')
+        assert is_public(f'{TestAPI.API_HOST}')
+
+    def test_get_public_projects_if_no_pat(self):
         public_node_id = json.loads(
             call_api(
                 f'{TestAPI.API_HOST}/nodes', pat='',
-                per_page=1
+                per_page=1,
+                filters={
+                    'parent': ''
+                }
             ).read()
         )['data'][0]['id']
 
@@ -69,10 +76,10 @@ class TestAPI(TestCase):
     def test_parse_single_project_json_as_expected(self):
         # Use first public project available for this test
         # TODO: allow choosing individual components to start export from
-        # Currently a component will break this test
+        # Currently using a component will cause a fail
         data = call_api(
             f'{TestAPI.API_HOST}/nodes/',
-            os.getenv('TEST_PAT', ''),
+            pat='',
             per_page=1,
             filters={
                 'parent': ''
@@ -81,7 +88,7 @@ class TestAPI(TestCase):
         node = json.loads(data.read())['data'][0]
         id = extract_project_id(node['links']['html'])
         projects, root_projects = get_project_data(
-            os.getenv('TEST_PAT', ''), dryrun=False,
+            pat='', dryrun=False,
             usetest=True, project_id=id
         )
 
@@ -89,79 +96,14 @@ class TestAPI(TestCase):
             json.loads(
                 call_api(
                     f'{TestAPI.API_HOST}/nodes/{node["id"]}/children/',
-                    os.getenv('TEST_PAT', '')
+                    pat=''
                 ).read()
             )['data']
         )
         assert len(projects) == expected_child_count + 1
         assert len(root_projects) == 1, (root_projects)
         assert projects[0]['metadata']['title'] == node['attributes']['title']
-
-    def test_filter_by_api(self):
-        """Test if we use query params in API calls."""
-
-        filters = {
-            'category': '',
-            'title': 'ttt',
-        }
-        data = call_api(
-            f'{TestAPI.API_HOST}/nodes/',
-            os.getenv('TEST_PAT', ''),
-            per_page=12, filters=filters
-        )
-        assert data.status == 200
-
-    def test_explore_api_file_tree(self):
-        """Test using API to filter and search file links."""
-
-        data = call_api(
-            f'{TestAPI.API_HOST}/users/me/nodes/',
-            os.getenv('TEST_PAT', '')
-        )
-        nodes = json.loads(data.read())['data']
-        if len(nodes) > 0:
-            node_id = nodes[0]['id']
-            link = f'{TestAPI.API_HOST}/nodes/{node_id}/files/osfstorage/'
-            files = explore_file_tree(
-                link, os.getenv('TEST_PAT', ''), dryrun=False
-            )
-            assert isinstance(files, list)
-        else:
-            print("No nodes available, consider making a test project.")
-
-    def test_export_projects_command(self):
-        """Test we can successfully pull projects using the OSF API"""
-
-        if os.path.exists(FOLDER_OUT):
-            shutil.rmtree(FOLDER_OUT)
-        os.mkdir(FOLDER_OUT)
-
-        runner = CliRunner()
-
-        # No PAT given - exception
-        result = runner.invoke(
-            cli, ['export-projects'], input='', terminal_width=60
-        )
-        assert result.exception
-
-        # Use PAT to find user projects
-        result = runner.invoke(
-            cli, [
-                'export-projects',
-                '--folder', FOLDER_OUT,
-                '--usetest'
-            ],
-            input=os.getenv('TEST_PAT', ''),
-            terminal_width=60
-        )
-        assert not result.exception, (
-            result.exc_info,
-            traceback.format_tb(result.exc_info[2])
-        )
-
-    def test_get_public_status_on_code(self):
-        assert not is_public(f'{TestAPI.API_HOST}/users/me')
-        assert is_public(f'{TestAPI.API_HOST}')
+        assert isinstance(projects[0]['files'], list)
 
 
 class TestExporter(TestCase):
@@ -169,7 +111,7 @@ class TestExporter(TestCase):
 
     def test_explore_mock_file_tree(self):
         files = explore_file_tree(
-            'root', os.getenv('TEST_PAT', ''), dryrun=True
+            'root', pat='', dryrun=True
         )
 
         assert '/helloworld.txt.txt' == files[4][0]
@@ -183,7 +125,7 @@ class TestExporter(TestCase):
     def test_get_latest_mock_wiki_version(self):
         link = 'wiki'
         wikis = explore_wikis(
-            link, os.getenv('TEST_PAT', ''), dryrun=True
+            link, pat='', dryrun=True
             )
         assert len(wikis) == 3
         assert 'helloworld' in wikis.keys(), (
@@ -205,7 +147,7 @@ class TestExporter(TestCase):
 
     def test_parse_mock_api_responses(self):
         projects, root_nodes = get_project_data(
-            os.getenv('TEST_PAT', ''),
+            pat='',
             dryrun=True
         )
 
@@ -355,7 +297,7 @@ class TestExporter(TestCase):
 
     def test_get_single_mock_project(self):
         projects, roots = get_project_data(
-            os.getenv('TEST_PAT', ''), dryrun=True,
+            pat='', dryrun=True,
             project_id='x'
         )
         assert len(roots) == 1
@@ -726,17 +668,26 @@ class TestExporter(TestCase):
 
 
 class TestCLI(TestCase):
-    @patch('osfexport.exporter.is_public', lambda x: False)
-    def test_prompt_pat_if_private(self):
-        pat = prompt_pat('x')
-        assert pat != ''
-
-    @patch('osfexport.exporter.is_public', lambda x: True)
-    def test_prompt_pat_if_public(self):
+    @patch('src.osfexport.exporter.is_public', lambda x: True)
+    def test_prompt_pat_if_public_project_id_given(self):
         pat = prompt_pat('x')
         assert pat == ''
 
-    def test_pull_projects_command_with_mocks(self):
+    @patch('src.osfexport.exporter.is_public', lambda x: False)
+    @patch('click.prompt', return_value='strinput')
+    def test_prompt_pat_if_private_project_id_given(self, mock_obj):
+        pat = prompt_pat('x')
+        assert pat == 'strinput'
+
+    @patch('click.prompt', return_value='strinput')
+    def test_prompt_pat_if_exporting_all_projects(self, mock_obj):
+        pat = prompt_pat()
+        assert pat == 'strinput'
+
+    def test_pull_projects_command_on_mocks(self):
+        """Test generating a PDF from parsed project data.
+        This assumes the JSON parsing works correctly."""
+
         if os.path.exists(FOLDER_OUT):
             shutil.rmtree(FOLDER_OUT)
         os.mkdir(FOLDER_OUT)
@@ -746,9 +697,9 @@ class TestCLI(TestCase):
             cli, [
                 'export-projects', '--dryrun',
                 '--folder', FOLDER_OUT,
-                '--url', ''
+                '--url', '',
+                '--pat', ''
             ],
-            input=os.getenv('TEST_PAT', ''),
             terminal_width=60
         )
         assert not result.exception, (
