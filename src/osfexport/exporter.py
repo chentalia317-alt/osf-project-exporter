@@ -503,46 +503,192 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
     root_nodes = []  # Track indexes of root nodes for quick access
     added_node_ids = set()  # Track added node IDs to avoid duplicates
 
-    for idx, project in enumerate(nodes['data']):
-        if project['id'] in added_node_ids:
-            continue
-        else:
-            added_node_ids.add(project['id'])
-
+    def get_category(project, **kwargs):
         # Define nice representations of categories if needed
         CATEGORY_STRS = {
             '': 'Uncategorized',
             'methods and measures': 'Methods and Measures'
         }
+        if project['attributes']['category'] in CATEGORY_STRS:
+            return CATEGORY_STRS[project['attributes']['category']]
+        else:
+            return project['attributes']['category'].title()
+    
+    def get_tags(project, **kwargs):
+        if project['attributes']['tags']:
+            return ', '.join(project['attributes']['tags'])
+        else:
+            return 'NA'
+    
+    def get_contributors(project, **kwargs):
+        dryrun = kwargs.pop('dryrun', True)
+        key = kwargs.pop('key', 'contributors')
+        if not dryrun:
+            # Check relationship exists and can get link to linked data
+            # Otherwise just pass a placeholder dict
+            try:
+                link = relations[key]['links']['related']['href']
+                json_data = json.loads(
+                    call_api(
+                        link, pat,
+                        filters=URL_FILTERS.get(key, {})
+                    ).read()
+                )
+            except KeyError:
+                if key == 'subjects':
+                    raise KeyError()  # Subjects should have a href link
+                json_data = {'data': None}
+        else:
+            json_data = MockAPIResponse.read(key)
+        values = []
+        for item in json_data['data']:
+            values.append((
+                item['embeds']['users']['data']
+                ['attributes']['full_name'],
+                item['attributes']['bibliographic'],
+                item['embeds']['users']['data']['links']['html']
+            ))
+        return values
+    
+    def get_affiliated_institutions(project, **kwargs):
+        dryrun = kwargs.pop('dryrun', True)
+        key = kwargs.pop('key', 'affiliated_institutions')
+        if not dryrun:
+            # Check relationship exists and can get link to linked data
+            # Otherwise just pass a placeholder dict
+            try:
+                link = relations[key]['links']['related']['href']
+                json_data = json.loads(
+                    call_api(
+                        link, pat,
+                        filters=URL_FILTERS.get(key, {})
+                    ).read()
+                )
+            except KeyError:
+                if key == 'subjects':
+                    raise KeyError()  # Subjects should have a href link
+                json_data = {'data': None}
+        else:
+            json_data = MockAPIResponse.read(key)
+        values = []
+        for item in json_data['data']:
+            values.append(item['attributes']['name'])
+        values = ', '.join(values)
+        return values
+    
+    def get_identifiers(project, **kwargs):
+        dryrun = kwargs.pop('dryrun', True)
+        key = kwargs.pop('key', 'identifiers')
+        if not dryrun:
+            # Check relationship exists and can get link to linked data
+            # Otherwise just pass a placeholder dict
+            try:
+                link = relations[key]['links']['related']['href']
+                json_data = json.loads(
+                    call_api(
+                        link, pat,
+                        filters=URL_FILTERS.get(key, {})
+                    ).read()
+                )
+            except KeyError:
+                if key == 'subjects':
+                    raise KeyError()  # Subjects should have a href link
+                json_data = {'data': None}
+        else:
+            json_data = MockAPIResponse.read(key)
+        values = []
+        for item in json_data['data']:
+            values.append(item['attributes']['value'])
+        values = ', '.join(values)
+        return values
+    
+    def get_license(project, **kwargs):
+        dryrun = kwargs.pop('dryrun', True)
+        key = kwargs.pop('key', 'license')
+        if not dryrun:
+        # Check relationship exists and can get link to linked data
+        # Otherwise just pass a placeholder dict
+            try:
+                link = relations[key]['links']['related']['href']
+                json_data = json.loads(
+                    call_api(
+                        link, pat,
+                        filters=URL_FILTERS.get(key, {})
+                    ).read()
+                )
+            except KeyError:
+                if key == 'subjects':
+                    raise KeyError()  # Subjects should have a href link
+                json_data = {'data': None}
+        else:
+            json_data = MockAPIResponse.read(key)
+        return json_data['data']['attributes']['name']
+    
+    def get_subjects(project, **kwargs):
+        dryrun = kwargs.pop('dryrun', True)
+        key = kwargs.pop('key', 'subjects')
+        if not dryrun:
+        # Check relationship exists and can get link to linked data
+        # Otherwise just pass a placeholder dict
+            try:
+                link = relations[key]['links']['related']['href']
+                json_data = json.loads(
+                    call_api(
+                        link, pat,
+                        filters=URL_FILTERS.get(key, {})
+                    ).read()
+                )
+            except KeyError:
+                if key == 'subjects':
+                    raise KeyError()  # Subjects should have a href link
+                json_data = {'data': None}
+        else:
+            json_data = MockAPIResponse.read(key)
+        values = []
+        for item in json_data['data']:
+            values.append(item['attributes']['text'])
+        values = ', '.join(values)
+        return values
 
-        project_data = {
-            'metadata': {
-                'title': project['attributes']['title'],
-                'id': project['id'],
-                'url': project['links']['html'],
-                'description': project['attributes']['description'],
-                'date_created': datetime.datetime.fromisoformat(
+    # Dispatch table defines how to process fields from JSON once
+    fields = {
+        'metadata': {
+            'title': lambda project, **kwargs: project['attributes']['title'],
+            'id': lambda project, **kwargs: project['id'],
+            'url': lambda project, **kwargs: project['links']['html'],
+            'description': lambda project, **kwargs: project['attributes']['description'],
+            'date_created': lambda project, **kwargs: datetime.datetime.fromisoformat(
                     project['attributes']['date_created']
                 ).astimezone().strftime('%Y-%m-%d'),
-                'date_modified': datetime.datetime.fromisoformat(
+            'date_modified': lambda project, **kwargs: datetime.datetime.fromisoformat(
                     project['attributes']['date_modified']
                 ).astimezone().strftime('%Y-%m-%d'),
-                'public': project['attributes']['public'],
-                'resource_type': 'NA',
-                'resource_lang': 'NA',
-                'funders': []
-            },
-            'files': [],
-            'wikis': {}
+            'public': lambda project, **kwargs: project['attributes']['public'],
+            'category': get_category,
+            'tags': get_tags,
+            'resource_type': lambda project, **kwargs: 'NA',
+            'funders': lambda project, **kwargs: [],
+            'affiliated_institutions': get_affiliated_institutions,
+            'identifiers': get_identifiers,
+            'license': get_license,
+            'subjects': get_subjects,
+        },
+        'contributors': get_contributors
+    }
+
+
+    for idx, project in enumerate(nodes['data']):
+        if project['id'] in added_node_ids:
+            continue
+        else:
+            added_node_ids.add(project['id'])
+        
+        project_data = {
+            'metadata': {}
         }
-        if project['attributes']['category'] in CATEGORY_STRS:
-            project_data['metadata']['category'] = CATEGORY_STRS[project['attributes']['category']]
-        else:
-            project_data['metadata']['category'] = project['attributes']['category'].title()
-        if project['attributes']['tags']:
-            project_data['metadata']['tags'] = ', '.join(project['attributes']['tags'])
-        else:
-            project_data['metadata']['tags'] = 'NA'
+        for field in fields['metadata']:
+            project_data['metadata'][field] = fields['metadata'][field](project, dryrun=dryrun, key=field)
+        project_data['contributors'] = fields['contributors'](project, dryrun=dryrun, key='contributors')
 
         # TODO: split into function
         # Resource type/lang/funding info share specific endpoint
@@ -575,69 +721,6 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
             use_mocks = False
         project_data['files'] = explore_file_tree(link, pat, dryrun=use_mocks)
 
-        # These attributes need link traversal to get their data
-        # Most should be part of the project metadata
-        METADATA_RELATIONS = [
-            'affiliated_institutions',
-            'identifiers',
-            'license',
-            'subjects',
-        ]
-        RELATION_KEYS = METADATA_RELATIONS + ['contributors']
-        for key in RELATION_KEYS:
-            if not dryrun:
-                # Check relationship exists and can get link to linked data
-                # Otherwise just pass a placeholder dict
-                try:
-                    link = relations[key]['links']['related']['href']
-                    json_data = json.loads(
-                        call_api(
-                            link, pat,
-                            filters=URL_FILTERS.get(key, {})
-                        ).read()
-                    )
-                except KeyError:
-                    if key == 'subjects':
-                        raise KeyError()  # Subjects should have a href link
-                    json_data = {'data': None}
-            else:
-                json_data = MockAPIResponse.read(key)
-
-            values = []
-            if isinstance(json_data['data'], list):
-                for item in json_data['data']:
-                    # Required data can either be embedded or in attributes
-                    if 'embeds' in item and key != "subjects":
-                        if 'users' in item['embeds']:
-                            values.append((
-                                item['embeds']['users']['data']
-                                ['attributes']['full_name'],
-                                item['attributes']['bibliographic'],
-                                item['embeds']['users']['data']
-                                ['links']['html']
-                            ))
-                        else:
-                            values.append(item['embeds']['attributes']['name'])
-                    else:
-                        if key == 'identifiers':
-                            values.append(item['attributes']['value'])
-                        elif key == 'subjects':
-                            values.append(item['attributes']['text'])
-                        else:
-                            values.append(item['attributes']['name'])
-
-            if isinstance(json_data['data'], dict):  # e.g. license field
-                values.append(json_data['data']['attributes']['name'])
-
-            if isinstance(values, list):
-                if key != 'contributors':
-                    values = ', '.join(values)
-
-            if key in METADATA_RELATIONS:
-                project_data['metadata'][key] = values
-            else:
-                project_data[key] = values
-
         project_data['wikis'] = explore_wikis(
             f'{api_host}/nodes/{project['id']}/wikis/',
             pat=pat, dryrun=dryrun
@@ -649,6 +732,8 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
         else:
             project_data['parent'] = None
             root_nodes.append(idx)
+        
+        # TODO Needs looping
         children_link = relations['children']['links']['related']['href']
         if dryrun:
             children = MockAPIResponse.read(children_link)
