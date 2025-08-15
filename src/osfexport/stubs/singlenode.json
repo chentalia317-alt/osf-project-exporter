@@ -322,5 +322,8 @@
     },
     "meta": {
         "version": "2.20"
+    },
+    "links": {
+        "next": null
     }
 }

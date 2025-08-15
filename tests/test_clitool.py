@@ -154,7 +154,8 @@ class TestExporter(TestCase):
         projects, root_nodes = get_project_data(
             nodes,
             pat='',
-            dryrun=True
+            dryrun=True,
+            usetest=True
         )
 
         assert len(projects) == 4, (
@@ -301,13 +302,32 @@ class TestExporter(TestCase):
             projects[1]['metadata']['category']
         )
 
+    def test_get_paginated_projects(self):
+        projects, root_nodes = get_nodes(
+            pat='',
+            dryrun=True,
+            usetest=True
+        )
+        assert len(projects) == 5, (
+            f'Expected 5 projects in the stub data, got {len(projects)}',
+            projects
+        )
+        assert len(root_nodes) == 3, (
+            f'Expected 3 root nodes in the stub data, got {len(root_nodes)}'
+        )
+
+
     def test_get_single_mock_project(self):
+        # import pdb
+        # pdb.set_trace()
         projects, roots = get_nodes(
-            pat='', dryrun=True,
+            pat='', dryrun=True, usetest=True,
             project_id='x'
         )
         assert len(roots) == 1
-        assert len(projects) == 3
+        assert len(projects) == 3, (
+            print(projects)
+        )
         assert projects[0]['metadata']['id'] == 'x'
         assert projects[0]['children'] == ['a', 'b'], (
             projects[0]['children']

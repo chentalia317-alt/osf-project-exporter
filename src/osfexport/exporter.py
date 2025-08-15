@@ -88,6 +88,8 @@ class MockAPIResponse:
     JSON_FILES = {
         'nodes': os.path.join(
             STUBS_DIR, 'nodestubs.json'),
+        'nodes2': os.path.join(
+            STUBS_DIR, 'nodestubs2.json'),
         'x': os.path.join(
             STUBS_DIR, 'singlenode.json'),
         'affiliated_institutions': os.path.join(
