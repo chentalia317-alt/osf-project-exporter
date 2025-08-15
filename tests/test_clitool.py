@@ -12,6 +12,7 @@ from click.testing import CliRunner
 from pypdf import PdfReader
 
 from src.osfexport.exporter import (
+    MockAPIResponse,
     call_api,
     get_project_data,
     get_nodes,
@@ -148,17 +149,19 @@ class TestExporter(TestCase):
             wikis['home']
         )
 
-    def test_parse_mock_api_responses(self):
-        projects, root_nodes = get_nodes(
+    def test_get_project_data_for_json_mocks(self):
+        nodes = MockAPIResponse.read('nodes')
+        projects, root_nodes = get_project_data(
+            nodes,
             pat='',
             dryrun=True
         )
 
         assert len(projects) == 4, (
-            'Expected 4 projects in the stub data'
+            f'Expected 4 projects in the stub data, got {len(projects)}'
         )
         assert len(root_nodes) == 2, (
-            'Expected 2 root nodes in the stub data'
+            f'Expected 2 root nodes in the stub data, got {len(root_nodes)}'
         )
         assert root_nodes[0] == 0
         assert root_nodes[1] == 1
@@ -306,7 +309,9 @@ class TestExporter(TestCase):
         assert len(roots) == 1
         assert len(projects) == 3
         assert projects[0]['metadata']['id'] == 'x'
-        assert projects[0]['children'] == ['a', 'b']
+        assert projects[0]['children'] == ['a', 'b'], (
+            projects[0]['children']
+        )
 
     def test_write_pdf_no_folder_given(self):
         projects = [

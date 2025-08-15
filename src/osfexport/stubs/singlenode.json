@@ -47,7 +47,7 @@
             "children": {
                 "links": {
                     "related": {
-                        "href": "x-children",
+                        "href": "x-child-1",
                         "meta": {}
                     }
                 }
