@@ -315,6 +315,9 @@ class TestExporter(TestCase):
         assert len(root_nodes) == 3, (
             f'Expected 3 root nodes in the stub data, got {len(root_nodes)}'
         )
+        assert root_nodes[0] == 0
+        assert root_nodes[1] == 1
+        assert root_nodes[2] == 4
 
 
     def test_get_single_mock_project(self):
