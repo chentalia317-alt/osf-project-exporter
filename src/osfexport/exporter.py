@@ -282,7 +282,7 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     return result
 
 
-def paginate_json_result(start, action, dryrun=False, **kwargs):
+def paginate_json_result(start, action, **kwargs):
     """Loop through paginated JSON responses and perform action on each.
     
     Parameters
@@ -302,15 +302,20 @@ def paginate_json_result(start, action, dryrun=False, **kwargs):
     next_link = start
     is_last_page = False
     results = deque()
-    pat = kwargs.pop('pat', '')
     per_page = kwargs.pop('per_page', 100)
     filters = kwargs.pop('filters', {})
     is_json = kwargs.pop('is_json', True)
+    pat = kwargs.get('pat', '')
+    dryrun = kwargs.get('dryrun', False)
+    usetest = kwargs.get('usetest', False)
     while not is_last_page:
         if not dryrun:
-            curr_page = call_api(next_link, pat, per_page=per_page, filters=filters, is_json=is_json)
+            curr_page = call_api(
+                next_link, pat, per_page=per_page, filters=filters,
+                is_json=is_json, usetest=usetest)
         else:
             curr_page = MockAPIResponse.read(next_link)
+            print(curr_page)
         results.append(action(curr_page, **kwargs))
         next_link = curr_page['links']['next']
         is_last_page = not next_link
@@ -453,38 +458,37 @@ def explore_wikis(link, pat, dryrun=True):
 
 
 def get_nodes(pat, dryrun=False, project_id='', usetest=False):
+    # Set start link and page size filter based on flags
     api_host = get_host(usetest)
-
-    # TODO: Split into sep function
-    # Reduce query size by getting root nodes only
-    node_filter = {
-        'parent': '',
-    }
-
+    node_filter = {}
     if not dryrun:
         if project_id:
-            result = call_api(
-                f'{api_host}/nodes/{project_id}/', pat
-            )
-            # Put data into same format as if multiple nodes found
-            nodes = {'data': [json.loads(result.read())['data']]}
+            start = f'{api_host}/nodes/{project_id}/'
         else:
-            result = call_api(
-                f'{api_host}/users/me/nodes/', pat,
-                filters=node_filter
-            )
-            nodes = json.loads(result.read())
+            start = f'{api_host}/users/me/nodes/'
+            node_filter = {
+                'parent': ''
+            }
     else:
+        # import pdb
+        # pdb.set_trace()
         if project_id:
-            # Put data into same format as if multiple nodes found
-            nodes = {'data': [MockAPIResponse.read(project_id)['data']]}
+            start = project_id
         else:
-            nodes = MockAPIResponse.read('nodes')
+            start = 'nodes'
     
-    return get_project_data(nodes, pat, dryrun=dryrun, usetest=usetest)
+    results = paginate_json_result(
+        start, get_project_data, dryrun=dryrun, usetest=usetest,
+        pat=pat, filters=node_filter, project_id=project_id
+    )
+    l1, l2 = zip(*list(results))
+    projects = [item for sublist in l1 for item in sublist]
+    root_nodes = [item for sublist in l2 for item in sublist]
+
+    return projects, root_nodes
 
 
-def get_project_data(nodes, pat, dryrun=False, usetest=False):
+def get_project_data(nodes, **kwargs):
     """Pull and list projects for a user from the OSF.
 
     Parameters
@@ -504,7 +508,18 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
             List of dictionaries representing projects.
     """
 
+    pat = kwargs.pop('pat', '')
+    dryrun = kwargs.pop('dryrun', False)
+    usetest = kwargs.pop('usetest', False)
+    project_id = kwargs.pop('project_id', '')
+
     api_host = get_host(usetest)
+
+    if not dryrun and project_id:
+        nodes = {'data': [nodes['data']]}
+    elif project_id:
+        # Put data into same format as if multiple nodes found
+        nodes = {'data': [MockAPIResponse.read(project_id)['data']]}
 
     projects = []
     root_nodes = []  # Track indexes of root nodes for quick access
@@ -534,7 +549,7 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
             # Check relationship exists and can get link to linked data
             # Otherwise just pass a placeholder dict
             try:
-                link = relations[key]['links']['related']['href']
+                link = project['relationships'][key]['links']['related']['href']
                 json_data = json.loads(
                     call_api(
                         link, pat,
@@ -564,7 +579,7 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
             # Check relationship exists and can get link to linked data
             # Otherwise just pass a placeholder dict
             try:
-                link = relations[key]['links']['related']['href']
+                link = project['relationships'][key]['links']['related']['href']
                 json_data = json.loads(
                     call_api(
                         link, pat,
@@ -590,7 +605,7 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
             # Check relationship exists and can get link to linked data
             # Otherwise just pass a placeholder dict
             try:
-                link = relations[key]['links']['related']['href']
+                link = project['relationships'][key]['links']['related']['href']
                 json_data = json.loads(
                     call_api(
                         link, pat,
@@ -616,7 +631,7 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
         # Check relationship exists and can get link to linked data
         # Otherwise just pass a placeholder dict
             try:
-                link = relations[key]['links']['related']['href']
+                link = project['relationships'][key]['links']['related']['href']
                 json_data = json.loads(
                     call_api(
                         link, pat,
@@ -638,7 +653,7 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
         # Check relationship exists and can get link to linked data
         # Otherwise just pass a placeholder dict
             try:
-                link = relations[key]['links']['related']['href']
+                link = project['relationships'][key]['links']['related']['href']
                 json_data = json.loads(
                     call_api(
                         link, pat,
@@ -683,7 +698,7 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
         'contributors': get_contributors
     }
 
-
+    print(nodes)
     for idx, project in enumerate(nodes['data']):
         if project['id'] in added_node_ids:
             continue
@@ -741,13 +756,15 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
             root_nodes.append(idx)
         
         # TODO Needs looping
-        def get_children(json):
+        def get_children(json, **kwargs):
             children = []
             for child in json['data']:
                 children.append(child['id'])
                 nodes['data'].append(child)
             return children
         children_link = relations['children']['links']['related']['href']
+        # import pdb
+        # pdb.set_trace()
         children = list(paginate_json_result(children_link, dryrun=dryrun, pat=pat,action=get_children))
         newlist = [item for sublist in children for item in sublist]
         project_data['children'] = newlist
