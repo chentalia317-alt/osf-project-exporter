@@ -128,8 +128,10 @@ class MockAPIResponse:
             STUBS_DIR, 'wikis', 'wikistubs.json'),
         'wikis2': os.path.join(
             STUBS_DIR, 'wikis', 'wikis2stubs.json'),
-        'x-children': os.path.join(
-            STUBS_DIR, 'components', 'x-children.json'),
+        'x-child-1': os.path.join(
+            STUBS_DIR, 'components', 'x-child-1.json'),
+        'x-child-2': os.path.join(
+            STUBS_DIR, 'components', 'x-child-2.json'),
         'empty-children': os.path.join(
             STUBS_DIR, 'components', 'empty-children.json'),
     }
@@ -278,7 +280,7 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     return result
 
 
-def paginate_json_result(start, action, **kwargs):
+def paginate_json_result(start, action, dryrun=False, **kwargs):
     """Loop through paginated JSON responses and perform action on each.
     
     Parameters
@@ -303,7 +305,10 @@ def paginate_json_result(start, action, **kwargs):
     filters = kwargs.pop('filters', {})
     is_json = kwargs.pop('is_json', True)
     while not is_last_page:
-        curr_page = call_api(next_link, pat, per_page=per_page, filters=filters, is_json=is_json)
+        if not dryrun:
+            curr_page = call_api(next_link, pat, per_page=per_page, filters=filters, is_json=is_json)
+        else:
+            curr_page = MockAPIResponse.read(next_link)
         results.append(action(curr_page, **kwargs))
         next_link = curr_page['links']['next']
         is_last_page = not next_link
@@ -734,17 +739,17 @@ def get_project_data(nodes, pat, dryrun=False, usetest=False):
             root_nodes.append(idx)
         
         # TODO Needs looping
+        def get_children(json):
+            children = []
+            for child in json['data']:
+                children.append(child['id'])
+                nodes['data'].append(child)
+            return children
         children_link = relations['children']['links']['related']['href']
-        if dryrun:
-            children = MockAPIResponse.read(children_link)
-        else:
-            children = json.loads(
-                call_api(children_link, pat).read()
-            )
-        project_data['children'] = []
-        for child in children['data']:
-            project_data['children'].append(child['id'])
-            nodes['data'].append(child)
+        children = list(paginate_json_result(children_link, dryrun=dryrun, pat=pat,action=get_children))
+        newlist = [item for sublist in children for item in sublist]
+        project_data['children'] = newlist
+
 
         projects.append(project_data)
 
