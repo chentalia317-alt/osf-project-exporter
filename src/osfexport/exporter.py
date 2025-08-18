@@ -268,7 +268,7 @@ def paginate_json_result(start, action, **kwargs):
             next_link = curr_page['links']['next']
             is_last_page = not next_link
         except KeyError as e:
-            is_last_page = None
+            is_last_page = True
     return results
 
 
@@ -645,7 +645,6 @@ def get_project_data(nodes, **kwargs):
             except KeyError:
                 if key == 'subjects':
                     raise KeyError()  # Subjects should have a href link
-                json_data = {'data': None}
         else:
             json_data = MockAPIResponse.read(key)
         values = []
