@@ -307,15 +307,15 @@ def paginate_json_result(start, action, **kwargs):
     is_json = kwargs.pop('is_json', True)
     pat = kwargs.get('pat', '')
     dryrun = kwargs.get('dryrun', False)
-    usetest = kwargs.get('usetest', False)
     while not is_last_page:
         if not dryrun:
             curr_page = call_api(
                 next_link, pat, per_page=per_page, filters=filters,
-                is_json=is_json, usetest=usetest)
+                is_json=is_json).read()
+            if is_json:
+                curr_page = json.loads(curr_page)
         else:
             curr_page = MockAPIResponse.read(next_link)
-            print(curr_page)
         results.append(action(curr_page, **kwargs))
         next_link = curr_page['links']['next']
         is_last_page = not next_link
@@ -457,7 +457,7 @@ def explore_wikis(link, pat, dryrun=True):
     return wiki_content
 
 
-def get_nodes(pat, dryrun=False, project_id='', usetest=False):
+def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
     # Set start link and page size filter based on flags
     api_host = get_host(usetest)
     node_filter = {}
@@ -472,6 +472,7 @@ def get_nodes(pat, dryrun=False, project_id='', usetest=False):
     else:
         # import pdb
         # pdb.set_trace()
+        page_size = 4
         if project_id:
             start = project_id
         else:
@@ -479,10 +480,17 @@ def get_nodes(pat, dryrun=False, project_id='', usetest=False):
     
     results = paginate_json_result(
         start, get_project_data, dryrun=dryrun, usetest=usetest,
-        pat=pat, filters=node_filter, project_id=project_id
+        pat=pat, filters=node_filter, project_id=project_id, per_page=page_size
     )
     l1, l2 = zip(*list(results))
     projects = [item for sublist in l1 for item in sublist]
+    # Convert local indexes into global ones for order of projects
+    page_idx = -1
+    for page in l2:
+        page_idx += 1
+        for idx, n in enumerate(page):
+            global_node_idx = page_size*page_idx + n
+            page[idx] = global_node_idx
     root_nodes = [item for sublist in l2 for item in sublist]
 
     return projects, root_nodes

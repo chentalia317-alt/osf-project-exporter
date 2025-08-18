@@ -306,7 +306,8 @@ class TestExporter(TestCase):
         projects, root_nodes = get_nodes(
             pat='',
             dryrun=True,
-            usetest=True
+            usetest=True,
+            page_size=4
         )
         assert len(projects) == 5, (
             f'Expected 5 projects in the stub data, got {len(projects)}',
