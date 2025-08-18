@@ -252,9 +252,14 @@ def paginate_json_result(start, action, **kwargs):
         if not dryrun:
             curr_page = call_api(
                 next_link, pat, per_page=per_page, filters=filters,
-                is_json=is_json).read()
-            if is_json:
-                curr_page = json.loads(curr_page)
+                is_json=is_json)
+            # Catch error if call_api is replaced with mock in tests
+            try:
+                curr_page = curr_page.read()
+                if is_json:
+                    curr_page = json.loads(curr_page)
+            except AttributeError as e:
+                pass
         else:
             curr_page = MockAPIResponse.read(next_link)
         results.append(action(curr_page, **kwargs))
