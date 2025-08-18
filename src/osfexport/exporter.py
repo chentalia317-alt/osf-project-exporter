@@ -29,6 +29,13 @@ FONT_SIZES = {
 }
 LINE_PADDING = 0.5  # Gaps between lines
 
+# Reduce response size by applying filters on fields
+URL_FILTERS = {
+    'identifiers': {
+        'category': 'doi'
+    }
+}
+
 
 def extract_project_id(url):
     """Extract project ID from a given OSF project URL.
@@ -191,7 +198,7 @@ class PDF(FPDF):
         self.parent_url = parent_url
         self.parent_title = parent_title
         self.url = url
-        # Add unicode font as available font. 4 styles available
+        # Setup unicode font for use. Can have 4 styles
         self.font = 'dejavu-sans'
         self.add_font(self.font, style="", fname=os.path.join(
             os.path.dirname(__file__), 'font', 'DejaVuSans.ttf'))
@@ -223,14 +230,6 @@ class PDF(FPDF):
         self.set_y(-25)
         qr_img = self.generate_qr_code()
         self.image(qr_img, w=15, h=15, x=Align.C)
-
-
-# Reduce response size by applying filters on fields
-URL_FILTERS = {
-    'identifiers': {
-        'category': 'doi'
-    }
-}
 
 
 def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
@@ -291,14 +290,26 @@ def paginate_json_result(start, action, **kwargs):
         Link to start looping from
     action: func
         Takes in found JSON page and returns a result
+    per_page: int
+        How many items to include on one page. Default is 100.
+        Valid range is from 1-1000.
+    filters: dict
+        Optional key-value dict to filter queries by.
+    is_json:
+        If JSON response expected, add header to specify JSON format.
+    pat: str
+        Personal Access Token to authorise a user.
+    dryrun: bool
+        Flag for whether mock JSON or real API will be used.
     **kwargs
-        For call_api and action.
+        Keyword args to pass down to action and call_api.
     
     Returns
     ------------------
     results: deque
         Queue of results per page
     """
+
     next_link = start
     is_last_page = False
     results = deque()
@@ -317,11 +328,12 @@ def paginate_json_result(start, action, **kwargs):
         else:
             curr_page = MockAPIResponse.read(next_link)
         results.append(action(curr_page, **kwargs))
+        # Stop if no next link found
         try:
             next_link = curr_page['links']['next']
             is_last_page = not next_link
         except KeyError as e:
-            pass
+            is_last_page = None
     return results
 
 
@@ -461,6 +473,31 @@ def explore_wikis(link, pat, dryrun=True):
 
 
 def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
+    """Pull and list projects for a user from the OSF.
+
+    Parameters
+    ----------
+    pat: str
+        Personal Access Token to authorise a user with.
+    page_size: int
+        How many nodes to put onto a page. Default is 100.
+        Possible range is 1-1000
+    dryrun: bool
+        If True, use test data from JSON stubs to mock API calls.
+    project_id: str
+        Optional ID for a specific OSF project to export.
+    usetest: bool
+        If True, use test API host, otherwise use production host.
+
+    Returns
+    ----------
+        projects: list[dict]
+            List of all project objects found
+        root_nodes: list[int]
+            List of indexes for root nodes in projects list.
+            Make PDFs for these.
+    """
+
     # Set start link and page size filter based on flags
     api_host = get_host(usetest)
     node_filter = {}
@@ -473,9 +510,7 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
                 'parent': ''
             }
     else:
-        # import pdb
-        # pdb.set_trace()
-        page_size = 4
+        page_size = 4  # Nodes found are hardcoded for --dryrun
         if project_id:
             start = project_id
         else:
@@ -684,7 +719,8 @@ def get_project_data(nodes, **kwargs):
         values = ', '.join(values)
         return values
 
-    # Dispatch table defines how to process fields from JSON once
+    # Dispatch table used to define how to process JSON
+    # Add new field by giving name and function
     fields = {
         'metadata': {
             'title': lambda project, **kwargs: project['attributes']['title'],
@@ -766,7 +802,6 @@ def get_project_data(nodes, **kwargs):
             project_data['parent'] = None
             root_nodes.append(idx)
         
-        # TODO Needs looping
         def get_children(json, **kwargs):
             children = []
             for child in json['data']:
@@ -774,8 +809,6 @@ def get_project_data(nodes, **kwargs):
                 nodes['data'].append(child)
             return children
         children_link = relations['children']['links']['related']['href']
-        # import pdb
-        # pdb.set_trace()
         children = list(paginate_json_result(children_link, dryrun=dryrun, pat=pat,action=get_children))
         newlist = [item for sublist in children for item in sublist]
         project_data['children'] = newlist
