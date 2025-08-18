@@ -726,14 +726,14 @@ class TestExporter(TestCase):
 
 
 class TestCLI(TestCase):
-    @patch('osfexport.exporter.is_public', lambda x: True)
+    @patch('src.osfexport.exporter.is_public', lambda x: True)
     def test_prompt_pat_if_public_project_id_given(self):
         pat = prompt_pat('x')
         assert pat == '', (
             pat
         )
 
-    @patch('osfexport.exporter.is_public', lambda x: False)
+    @patch('src.osfexport.exporter.is_public', lambda x: False)
     @patch('click.prompt', return_value='strinput')
     def test_prompt_pat_if_private_project_id_given(self, mock_obj):
         pat = prompt_pat('x')
