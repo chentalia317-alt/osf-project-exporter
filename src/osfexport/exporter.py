@@ -317,8 +317,11 @@ def paginate_json_result(start, action, **kwargs):
         else:
             curr_page = MockAPIResponse.read(next_link)
         results.append(action(curr_page, **kwargs))
-        next_link = curr_page['links']['next']
-        is_last_page = not next_link
+        try:
+            next_link = curr_page['links']['next']
+            is_last_page = not next_link
+        except KeyError as e:
+            pass
     return results
 
 
@@ -647,12 +650,13 @@ def get_project_data(nodes, **kwargs):
                     ).read()
                 )
             except KeyError:
-                if key == 'subjects':
-                    raise KeyError()  # Subjects should have a href link
                 json_data = {'data': None}
         else:
             json_data = MockAPIResponse.read(key)
-        return json_data['data']['attributes']['name']
+        if json_data['data'] is not None:
+            return json_data['data']['attributes']['name']
+        else:
+            return None
     
     def get_subjects(project, **kwargs):
         dryrun = kwargs.pop('dryrun', True)
@@ -706,7 +710,6 @@ def get_project_data(nodes, **kwargs):
         'contributors': get_contributors
     }
 
-    print(nodes)
     for idx, project in enumerate(nodes['data']):
         if project['id'] in added_node_ids:
             continue
