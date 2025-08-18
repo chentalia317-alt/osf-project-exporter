@@ -18,13 +18,15 @@ from src.osfexport.exporter import (
     get_nodes,
     explore_file_tree,
     explore_wikis,
-    write_pdf,
     is_public,
     extract_project_id,
     paginate_json_result
 )
 from src.osfexport.cli import (
     cli, prompt_pat
+)
+from src.osfexport.formatter import (
+    write_pdf
 )
 
 TEST_PDF_FOLDER = 'good-pdfs'
