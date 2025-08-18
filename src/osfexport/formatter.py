@@ -19,6 +19,7 @@ FONT_SIZES = {
 }
 LINE_PADDING = 0.5  # Gaps between liness
 
+
 class PDF(FPDF):
     """Custom PDF class to implement extra customisation.
     Attributes:

@@ -161,7 +161,6 @@ class MockAPIResponse:
             return {}
 
 
-
 def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     """Call OSF v2 API methods.
 
@@ -213,7 +212,7 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
 
 def paginate_json_result(start, action, **kwargs):
     """Loop through paginated JSON responses and perform action on each.
-    
+
     Parameters
     -------------
     start: str
@@ -233,7 +232,7 @@ def paginate_json_result(start, action, **kwargs):
         Flag for whether mock JSON or real API will be used.
     **kwargs
         Extra keyword args to pass down to action and call_api.
-    
+
     Returns
     ------------------
     results: deque
@@ -258,7 +257,7 @@ def paginate_json_result(start, action, **kwargs):
                 curr_page = curr_page.read()
                 if is_json:
                     curr_page = json.loads(curr_page)
-            except AttributeError as e:
+            except AttributeError:
                 pass
         else:
             curr_page = MockAPIResponse.read(next_link)
@@ -267,7 +266,7 @@ def paginate_json_result(start, action, **kwargs):
         try:
             next_link = curr_page['links']['next']
             is_last_page = not next_link
-        except KeyError as e:
+        except KeyError:
             is_last_page = True
     return results
 
@@ -450,7 +449,7 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
             start = project_id
         else:
             start = 'nodes'
-    
+
     results = paginate_json_result(
         start, get_project_data, dryrun=dryrun, usetest=usetest,
         pat=pat, filters=node_filter, project_id=project_id, per_page=page_size
@@ -516,13 +515,13 @@ def get_project_data(nodes, **kwargs):
             return CATEGORY_STRS[project['attributes']['category']]
         else:
             return project['attributes']['category'].title()
-    
+
     def get_tags(project, **kwargs):
         if project['attributes']['tags']:
             return ', '.join(project['attributes']['tags'])
         else:
             return 'NA'
-    
+
     def get_contributors(project, **kwargs):
         dryrun = kwargs.pop('dryrun', True)
         key = kwargs.pop('key', 'contributors')
@@ -552,7 +551,7 @@ def get_project_data(nodes, **kwargs):
                 item['embeds']['users']['data']['links']['html']
             ))
         return values
-    
+
     def get_affiliated_institutions(project, **kwargs):
         dryrun = kwargs.pop('dryrun', True)
         key = kwargs.pop('key', 'affiliated_institutions')
@@ -578,7 +577,7 @@ def get_project_data(nodes, **kwargs):
             values.append(item['attributes']['name'])
         values = ', '.join(values)
         return values
-    
+
     def get_identifiers(project, **kwargs):
         dryrun = kwargs.pop('dryrun', True)
         key = kwargs.pop('key', 'identifiers')
@@ -604,13 +603,13 @@ def get_project_data(nodes, **kwargs):
             values.append(item['attributes']['value'])
         values = ', '.join(values)
         return values
-    
+
     def get_license(project, **kwargs):
         dryrun = kwargs.pop('dryrun', True)
         key = kwargs.pop('key', 'license')
         if not dryrun:
-        # Check relationship exists and can get link to linked data
-        # Otherwise just pass a placeholder dict
+            # Check relationship exists and can get link to linked data
+            # Otherwise just pass a placeholder dict
             try:
                 link = project['relationships'][key]['links']['related']['href']
                 json_data = json.loads(
@@ -627,13 +626,13 @@ def get_project_data(nodes, **kwargs):
             return json_data['data']['attributes']['name']
         else:
             return None
-    
+
     def get_subjects(project, **kwargs):
         dryrun = kwargs.pop('dryrun', True)
         key = kwargs.pop('key', 'subjects')
         if not dryrun:
-        # Check relationship exists and can get link to linked data
-        # Otherwise just pass a placeholder dict
+            # Check relationship exists and can get link to linked data
+            # Otherwise just pass a placeholder dict
             try:
                 link = project['relationships'][key]['links']['related']['href']
                 json_data = json.loads(
@@ -685,13 +684,17 @@ def get_project_data(nodes, **kwargs):
             continue
         else:
             added_node_ids.add(project['id'])
-        
+
         project_data = {
             'metadata': {}
         }
         for field in fields['metadata']:
-            project_data['metadata'][field] = fields['metadata'][field](project, dryrun=dryrun, key=field)
-        project_data['contributors'] = fields['contributors'](project, dryrun=dryrun, key='contributors')
+            project_data['metadata'][field] = fields['metadata'][field](
+                project, dryrun=dryrun, key=field
+            )
+        project_data['contributors'] = fields['contributors'](
+            project, dryrun=dryrun, key='contributors'
+        )
 
         # TODO: split into function
         # Resource type/lang/funding info share specific endpoint
@@ -710,7 +713,7 @@ def get_project_data(nodes, **kwargs):
         project_data['metadata']['resource_lang'] = resource_lang
         for funder in metadata['funders']:
             project_data['metadata']['funders'].append(funder)
-        #=========
+        # =========
 
         relations = project['relationships']
 
@@ -735,18 +738,19 @@ def get_project_data(nodes, **kwargs):
         else:
             project_data['parent'] = None
             root_nodes.append(idx)
-        
-        def get_children(json, **kwargs):
+
+        def get_children(json_page, **kwargs):
             children = []
-            for child in json['data']:
+            for child in json_page['data']:
                 children.append(child['id'])
                 nodes['data'].append(child)
             return children
         children_link = relations['children']['links']['related']['href']
-        children = list(paginate_json_result(children_link, dryrun=dryrun, pat=pat,action=get_children))
+        children = list(paginate_json_result(
+            children_link, dryrun=dryrun, pat=pat, action=get_children
+        ))
         newlist = [item for sublist in children for item in sublist]
         project_data['children'] = newlist
-
 
         projects.append(project_data)
 

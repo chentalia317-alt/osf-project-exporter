@@ -322,7 +322,6 @@ class TestExporter(TestCase):
         assert root_nodes[1] == 1
         assert root_nodes[2] == 4
 
-
     def test_get_single_mock_project(self):
         # import pdb
         # pdb.set_trace()
@@ -699,8 +698,7 @@ class TestExporter(TestCase):
         # Should just run normally
         url = ''
         project_id = extract_project_id(url)
-    
-    
+
     @patch('src.osfexport.exporter.call_api')
     def test_add_on_paginated_results(self, mock_get):
         # Mock JSON responses
@@ -713,18 +711,18 @@ class TestExporter(TestCase):
             page2,
             page3
         ]
-        
+
         def add_x(json, **kwargs):
             x = kwargs.get('x', 0)
             return json['data'] + x
-        
-        results = paginate_json_result(start='http://api.example.com/page1', action=add_x, x=5)
+
+        results = paginate_json_result(
+            start='http://api.example.com/page1', action=add_x, x=5
+        )
         assert isinstance(results, deque)
         self.assertEqual(results.popleft(), 1+5)
         self.assertEqual(results.popleft(), 3+5)
         self.assertEqual(results.popleft(), 5+5)
-
-
 
 
 class TestCLI(TestCase):
