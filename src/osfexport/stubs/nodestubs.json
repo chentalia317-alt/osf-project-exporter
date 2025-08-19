@@ -48,7 +48,7 @@
                 "children": {
                     "links": {
                         "related": {
-                            "href": "x-children",
+                            "href": "x-child-1",
                             "meta": {}
                         }
                     }
@@ -1311,7 +1311,7 @@
                 "children": {
                     "links": {
                         "related": {
-                            "href": "x-children",
+                            "href": "x-child-1",
                             "meta": {}
                         }
                     }
@@ -1584,5 +1584,8 @@
                 "iri": "https://test.osf.io/x"
             }
         }
-    ]
+    ],
+    "links": {
+        "next": "nodes2"
+    }
 }

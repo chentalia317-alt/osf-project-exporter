@@ -1,3 +1,4 @@
+from collections import deque
 import datetime
 from unittest import TestCase
 import os
@@ -11,16 +12,21 @@ from click.testing import CliRunner
 from pypdf import PdfReader
 
 from src.osfexport.exporter import (
+    MockAPIResponse,
     call_api,
     get_project_data,
+    get_nodes,
     explore_file_tree,
     explore_wikis,
-    write_pdf,
     is_public,
-    extract_project_id
+    extract_project_id,
+    paginate_json_result
 )
 from src.osfexport.cli import (
     cli, prompt_pat
+)
+from src.osfexport.formatter import (
+    write_pdf
 )
 
 TEST_PDF_FOLDER = 'good-pdfs'
@@ -87,7 +93,7 @@ class TestAPI(TestCase):
         )
         node = json.loads(data.read())['data'][0]
         id = extract_project_id(node['links']['html'])
-        projects, root_projects = get_project_data(
+        projects, root_projects = get_nodes(
             pat='', dryrun=False,
             usetest=True, project_id=id
         )
@@ -145,17 +151,20 @@ class TestExporter(TestCase):
             wikis['home']
         )
 
-    def test_parse_mock_api_responses(self):
+    def test_get_project_data_for_json_mocks(self):
+        nodes = MockAPIResponse.read('nodes')
         projects, root_nodes = get_project_data(
+            nodes,
             pat='',
-            dryrun=True
+            dryrun=True,
+            usetest=True
         )
 
         assert len(projects) == 4, (
-            'Expected 4 projects in the stub data'
+            f'Expected 4 projects in the stub data, got {len(projects)}'
         )
         assert len(root_nodes) == 2, (
-            'Expected 2 root nodes in the stub data'
+            f'Expected 2 root nodes in the stub data, got {len(root_nodes)}'
         )
         assert root_nodes[0] == 0
         assert root_nodes[1] == 1
@@ -295,15 +304,37 @@ class TestExporter(TestCase):
             projects[1]['metadata']['category']
         )
 
+    def test_get_paginated_projects(self):
+        projects, root_nodes = get_nodes(
+            pat='',
+            dryrun=True,
+            usetest=True,
+            page_size=4
+        )
+        assert len(projects) == 5, (
+            f'Expected 5 projects in the stub data, got {len(projects)}',
+            projects
+        )
+        assert len(root_nodes) == 3, (
+            f'Expected 3 root nodes in the stub data, got {len(root_nodes)}'
+        )
+        assert root_nodes[0] == 0
+        assert root_nodes[1] == 1
+        assert root_nodes[2] == 4
+
     def test_get_single_mock_project(self):
-        projects, roots = get_project_data(
-            pat='', dryrun=True,
+        projects, roots = get_nodes(
+            pat='', dryrun=True, usetest=True,
             project_id='x'
         )
         assert len(roots) == 1
-        assert len(projects) == 3
+        assert len(projects) == 3, (
+            print(projects)
+        )
         assert projects[0]['metadata']['id'] == 'x'
-        assert projects[0]['children'] == ['a', 'b']
+        assert projects[0]['children'] == ['a', 'b'], (
+            projects[0]['children']
+        )
 
     def test_write_pdf_no_folder_given(self):
         projects = [
@@ -501,7 +532,6 @@ class TestExporter(TestCase):
         url = projects[0]['metadata']['url']
         url_comp = projects[1]['metadata']['url']
 
-        # pdb.set_trace()
         # Can we specify where to write PDFs?
         pdf_one, path_one = write_pdf(projects, root_nodes[0], FOLDER_OUT)
         pdf_two, path_two = write_pdf(projects, root_nodes[1], FOLDER_OUT)
@@ -638,7 +668,7 @@ class TestExporter(TestCase):
         try:
             # Go to user's home directory in cross-platform way
             os.chdir(os.path.expanduser("~"))
-            projects, roots = get_project_data('', dryrun=True, usetest=True)
+            projects, roots = get_nodes('', dryrun=True, usetest=True)
         except Exception as e:
             raise e
         finally:
@@ -666,12 +696,39 @@ class TestExporter(TestCase):
         url = ''
         project_id = extract_project_id(url)
 
+    @patch('src.osfexport.exporter.call_api')
+    def test_add_on_paginated_results(self, mock_get):
+        # Mock JSON responses
+        page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
+        page2 = {'data': 3, 'links': {'next': 'http://api.example.com/page3'}}
+        page3 = {'data': 5, 'links': {'next': None}}
+        # Configure mock to return these responses in sequence
+        mock_get.side_effect = [
+            page1,
+            page2,
+            page3
+        ]
+
+        def add_x(json, **kwargs):
+            x = kwargs.get('x', 0)
+            return json['data'] + x
+
+        results = paginate_json_result(
+            start='http://api.example.com/page1', action=add_x, x=5
+        )
+        assert isinstance(results, deque)
+        self.assertEqual(results.popleft(), 1+5)
+        self.assertEqual(results.popleft(), 3+5)
+        self.assertEqual(results.popleft(), 5+5)
+
 
 class TestCLI(TestCase):
     @patch('src.osfexport.exporter.is_public', lambda x: True)
     def test_prompt_pat_if_public_project_id_given(self):
         pat = prompt_pat('x')
-        assert pat == ''
+        assert pat == '', (
+            pat
+        )
 
     @patch('src.osfexport.exporter.is_public', lambda x: False)
     @patch('click.prompt', return_value='strinput')

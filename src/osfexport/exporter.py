@@ -1,13 +1,8 @@
+from collections import deque
 import json
 import os
 import datetime
 import urllib.request as webhelper
-import io
-
-from fpdf import FPDF, Align
-from fpdf.fonts import FontFace
-from mistletoe import markdown
-import qrcode
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
@@ -16,17 +11,102 @@ STUBS_DIR = os.path.join(
     os.path.dirname(__file__), 'stubs'
 )
 
-# Global styles for PDF
-BLUE = (173, 216, 230)
-HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
-FONT_SIZES = {
-    'h1': 18,  # Project titles
-    'h2': 16,  # Section titles
-    'h3': 14,  # Section sub-titles
-    'h4': 12,  # Body
-    'h5': 10  # Footer
+# Reduce response size by applying filters on fields
+URL_FILTERS = {
+    'identifiers': {
+        'category': 'doi'
+    }
 }
-LINE_PADDING = 0.5  # Gaps between lines
+
+
+class MockAPIResponse:
+    """Simulate OSF API response for testing purposes."""
+
+    JSON_FILES = {
+        'nodes': os.path.join(
+            STUBS_DIR, 'nodestubs.json'),
+        'nodes2': os.path.join(
+            STUBS_DIR, 'nodestubs2.json'),
+        'x': os.path.join(
+            STUBS_DIR, 'singlenode.json'),
+        'affiliated_institutions': os.path.join(
+            STUBS_DIR, 'institutionstubs.json'),
+        'contributors': os.path.join(
+            STUBS_DIR, 'contributorstubs.json'),
+        'identifiers': os.path.join(
+            STUBS_DIR, 'doistubs.json'),
+        'custom_metadata': os.path.join(
+            STUBS_DIR, 'custommetadatastub.json'),
+        'root_folder': os.path.join(
+            STUBS_DIR, 'files', 'rootfolders.json'),
+        'root_files': os.path.join(
+            STUBS_DIR, 'files', 'rootfiles.json'),
+        'tf1_folder': os.path.join(
+            STUBS_DIR, 'files', 'tf1folders.json'),
+        'tf1-2_folder': os.path.join(
+            STUBS_DIR, 'files', 'tf1folders-2.json'),
+        'tf1-2_files': os.path.join(
+            STUBS_DIR, 'files', 'tf2-second-folders.json'),
+        'tf1_files': os.path.join(
+            STUBS_DIR, 'files', 'tf1files.json'),
+        'tf2_folder': os.path.join(
+            STUBS_DIR, 'files', 'tf2folders.json'),
+        'tf2-second_folder': os.path.join(
+            STUBS_DIR, 'files', 'tf2-second-folders.json'),
+        'tf2_files': os.path.join(
+            STUBS_DIR, 'files', 'tf2files.json'),
+        'tf2-second_files': os.path.join(
+            STUBS_DIR, 'files', 'tf2-second-files.json'),
+        'tf2-second-2_files': os.path.join(
+            STUBS_DIR, 'files', 'tf2-second-files-2.json'),
+        'license': os.path.join(
+            STUBS_DIR, 'licensestub.json'),
+        'subjects': os.path.join(
+            STUBS_DIR, 'subjectsstub.json'),
+        'wikis': os.path.join(
+            STUBS_DIR, 'wikis', 'wikistubs.json'),
+        'wikis2': os.path.join(
+            STUBS_DIR, 'wikis', 'wikis2stubs.json'),
+        'x-child-1': os.path.join(
+            STUBS_DIR, 'components', 'x-child-1.json'),
+        'x-child-2': os.path.join(
+            STUBS_DIR, 'components', 'x-child-2.json'),
+        'empty-children': os.path.join(
+            STUBS_DIR, 'components', 'empty-children.json'),
+    }
+
+    MARKDOWN_FILES = {
+        'helloworld': os.path.join(
+            STUBS_DIR, 'wikis', 'helloworld.md'),
+        'home': os.path.join(
+            STUBS_DIR, 'wikis', 'home.md'),
+        'anotherone': os.path.join(
+            STUBS_DIR, 'wikis', 'anotherone.md'),
+    }
+
+    @staticmethod
+    def read(field):
+        """Get mock response for a field.
+
+        Parameters
+        -----------
+            field: str
+                ID associated to a JSON or Markdown mock file.
+                Available fields to mock are listed in class-level
+                JSON_FILES and MARKDOWN_FILES attributes.
+
+        Returns
+        ------------
+            Parsed JSON dictionary or Markdown."""
+
+        if field in MockAPIResponse.JSON_FILES.keys():
+            with open(MockAPIResponse.JSON_FILES[field], 'r') as file:
+                return json.load(file)
+        elif field in MockAPIResponse.MARKDOWN_FILES.keys():
+            with open(MockAPIResponse.MARKDOWN_FILES[field], 'r') as file:
+                return file.read()
+        else:
+            return {}
 
 
 def extract_project_id(url):
@@ -81,153 +161,6 @@ def is_public(url):
     return result == 200
 
 
-class MockAPIResponse:
-    """Simulate OSF API response for testing purposes."""
-
-    JSON_FILES = {
-        'nodes': os.path.join(
-            STUBS_DIR, 'nodestubs.json'),
-        'x': os.path.join(
-            STUBS_DIR, 'singlenode.json'),
-        'affiliated_institutions': os.path.join(
-            STUBS_DIR, 'institutionstubs.json'),
-        'contributors': os.path.join(
-            STUBS_DIR, 'contributorstubs.json'),
-        'identifiers': os.path.join(
-            STUBS_DIR, 'doistubs.json'),
-        'custom_metadata': os.path.join(
-            STUBS_DIR, 'custommetadatastub.json'),
-        'root_folder': os.path.join(
-            STUBS_DIR, 'files', 'rootfolders.json'),
-        'root_files': os.path.join(
-            STUBS_DIR, 'files', 'rootfiles.json'),
-        'tf1_folder': os.path.join(
-            STUBS_DIR, 'files', 'tf1folders.json'),
-        'tf1-2_folder': os.path.join(
-            STUBS_DIR, 'files', 'tf1folders-2.json'),
-        'tf1-2_files': os.path.join(
-            STUBS_DIR, 'files', 'tf2-second-folders.json'),
-        'tf1_files': os.path.join(
-            STUBS_DIR, 'files', 'tf1files.json'),
-        'tf2_folder': os.path.join(
-            STUBS_DIR, 'files', 'tf2folders.json'),
-        'tf2-second_folder': os.path.join(
-            STUBS_DIR, 'files', 'tf2-second-folders.json'),
-        'tf2_files': os.path.join(
-            STUBS_DIR, 'files', 'tf2files.json'),
-        'tf2-second_files': os.path.join(
-            STUBS_DIR, 'files', 'tf2-second-files.json'),
-        'tf2-second-2_files': os.path.join(
-            STUBS_DIR, 'files', 'tf2-second-files-2.json'),
-        'license': os.path.join(
-            STUBS_DIR, 'licensestub.json'),
-        'subjects': os.path.join(
-            STUBS_DIR, 'subjectsstub.json'),
-        'wikis': os.path.join(
-            STUBS_DIR, 'wikis', 'wikistubs.json'),
-        'wikis2': os.path.join(
-            STUBS_DIR, 'wikis', 'wikis2stubs.json'),
-        'x-children': os.path.join(
-            STUBS_DIR, 'components', 'x-children.json'),
-        'empty-children': os.path.join(
-            STUBS_DIR, 'components', 'empty-children.json'),
-    }
-
-    MARKDOWN_FILES = {
-        'helloworld': os.path.join(
-            STUBS_DIR, 'wikis', 'helloworld.md'),
-        'home': os.path.join(
-            STUBS_DIR, 'wikis', 'home.md'),
-        'anotherone': os.path.join(
-            STUBS_DIR, 'wikis', 'anotherone.md'),
-    }
-
-    @staticmethod
-    def read(field):
-        """Get mock response for a field.
-
-        Parameters
-        -----------
-            field: str
-                ID associated to a JSON or Markdown mock file.
-                Available fields to mock are listed in class-level
-                JSON_FILES and MARKDOWN_FILES attributes.
-
-        Returns
-        ------------
-            Parsed JSON dictionary or Markdown."""
-
-        if field in MockAPIResponse.JSON_FILES.keys():
-            with open(MockAPIResponse.JSON_FILES[field], 'r') as file:
-                return json.load(file)
-        elif field in MockAPIResponse.MARKDOWN_FILES.keys():
-            with open(MockAPIResponse.MARKDOWN_FILES[field], 'r') as file:
-                return file.read()
-        else:
-            return {}
-
-
-class PDF(FPDF):
-    """Custom PDF class to implement extra customisation.
-    Attributes:
-        date_printed: datetime
-            Date and time when the project was exported.
-        url: str
-            Current URL to include in QR codes.
-        parent_url: str
-            URL of root project to use in component sections.
-        parent_title: str
-            Title of root project to use in component sections.
-    """
-
-    def __init__(self, url='', parent_url='', parent_title=''):
-        super().__init__()
-        self.date_printed = datetime.datetime.now().astimezone()
-        self.parent_url = parent_url
-        self.parent_title = parent_title
-        self.url = url
-        # Add unicode font as available font. 4 styles available
-        self.font = 'dejavu-sans'
-        self.add_font(self.font, style="", fname=os.path.join(
-            os.path.dirname(__file__), 'font', 'DejaVuSans.ttf'))
-        self.add_font(self.font, style="b", fname=os.path.join(
-            os.path.dirname(__file__), 'font', 'DejaVuSans-Bold.ttf'))
-        self.add_font(self.font, style="i", fname=os.path.join(
-            os.path.dirname(__file__), 'font', 'DejaVuSans-Oblique.ttf'))
-        self.add_font(self.font, style="bi", fname=os.path.join(
-            os.path.dirname(__file__), 'font', 'DejaVuSans-BoldOblique.ttf'))
-
-    def generate_qr_code(self):
-        qr = qrcode.make(self.url)
-        img_byte_arr = io.BytesIO()
-        qr.save(img_byte_arr, format='PNG')
-        img_byte_arr.seek(0)
-        return img_byte_arr
-
-    def footer(self):
-        self.set_y(-15)
-        self.set_x(-30)
-        self.set_font(self.font, size=FONT_SIZES['h5'])
-        self.cell(0, 10, f"Page: {self.page_no()}", align="C")
-        self.set_x(10)
-        timestamp = self.date_printed.strftime(
-            '%Y-%m-%d %H:%M:%S %Z'
-        )
-        self.cell(0, 10, f"Exported: {timestamp}", align="L")
-        self.set_x(10)
-        self.set_y(-25)
-        qr_img = self.generate_qr_code()
-        self.image(qr_img, w=15, h=15, x=Align.C)
-
-
-# Reduce response size by applying filters on fields
-URL_FILTERS = {
-    'identifiers': {
-        'category': 'doi'
-    }
-}
-
-
 def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     """Call OSF v2 API methods.
 
@@ -275,6 +208,67 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
         )
     result = webhelper.urlopen(request)
     return result
+
+
+def paginate_json_result(start, action, **kwargs):
+    """Loop through paginated JSON responses and perform action on each.
+
+    Parameters
+    -------------
+    start: str
+        Link to start looping from
+    action: func
+        Takes in found JSON page and returns a result
+    per_page: int
+        How many items to include on one page. Default is 100.
+        Valid range is from 1-1000.
+    filters: dict
+        Optional key-value dict to filter queries by.
+    is_json:
+        If JSON response expected, add header to specify JSON format.
+    pat: str
+        Personal Access Token to authorise a user.
+    dryrun: bool
+        Flag for whether mock JSON or real API will be used.
+    **kwargs
+        Extra keyword args to pass down to action and call_api.
+
+    Returns
+    ------------------
+    results: deque
+        Queue of results per page
+    """
+
+    next_link = start
+    is_last_page = False
+    results = deque()
+    per_page = kwargs.pop('per_page', 100)
+    filters = kwargs.pop('filters', {})
+    is_json = kwargs.pop('is_json', True)
+    pat = kwargs.get('pat', '')
+    dryrun = kwargs.get('dryrun', False)
+    while not is_last_page:
+        if not dryrun:
+            curr_page = call_api(
+                next_link, pat, per_page=per_page, filters=filters,
+                is_json=is_json)
+            # Catch error if call_api is replaced with mock in tests
+            try:
+                curr_page = curr_page.read()
+                if is_json:
+                    curr_page = json.loads(curr_page)
+            except AttributeError:
+                pass
+        else:
+            curr_page = MockAPIResponse.read(next_link)
+        results.append(action(curr_page, **kwargs))
+        # Stop if no next link found
+        try:
+            next_link = curr_page['links']['next']
+            is_last_page = not next_link
+        except KeyError:
+            is_last_page = True
+    return results
 
 
 def explore_file_tree(curr_link, pat, dryrun=True):
@@ -412,7 +406,69 @@ def explore_wikis(link, pat, dryrun=True):
     return wiki_content
 
 
-def get_project_data(pat, dryrun=False, project_id='', usetest=False):
+def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
+    """Pull and list projects for a user from the OSF.
+
+    Parameters
+    ----------
+    pat: str
+        Personal Access Token to authorise a user with.
+    page_size: int
+        How many nodes to put onto a page. Default is 100.
+        Possible range is 1-1000
+    dryrun: bool
+        If True, use test data from JSON stubs to mock API calls.
+    project_id: str
+        Optional ID for a specific OSF project to export.
+    usetest: bool
+        If True, use test API host, otherwise use production host.
+
+    Returns
+    ----------
+        projects: list[dict]
+            List of all project objects found
+        root_nodes: list[int]
+            List of indexes for root nodes in projects list.
+            Make PDFs for these.
+    """
+
+    # Set start link and page size filter based on flags
+    api_host = get_host(usetest)
+    node_filter = {}
+    if not dryrun:
+        if project_id:
+            start = f'{api_host}/nodes/{project_id}/'
+        else:
+            start = f'{api_host}/users/me/nodes/'
+            node_filter = {
+                'parent': ''
+            }
+    else:
+        page_size = 4  # Nodes found are hardcoded for --dryrun
+        if project_id:
+            start = project_id
+        else:
+            start = 'nodes'
+
+    results = paginate_json_result(
+        start, get_project_data, dryrun=dryrun, usetest=usetest,
+        pat=pat, filters=node_filter, project_id=project_id, per_page=page_size
+    )
+    l1, l2 = zip(*list(results))
+    projects = [item for sublist in l1 for item in sublist]
+    # Convert local indexes into global ones for order of projects
+    page_idx = -1
+    for page in l2:
+        page_idx += 1
+        for idx, n in enumerate(page):
+            global_node_idx = page_size*page_idx + n
+            page[idx] = global_node_idx
+    root_nodes = [item for sublist in l2 for item in sublist]
+
+    return projects, root_nodes
+
+
+def get_project_data(nodes, **kwargs):
     """Pull and list projects for a user from the OSF.
 
     Parameters
@@ -432,36 +488,49 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
             List of dictionaries representing projects.
     """
 
+    pat = kwargs.pop('pat', '')
+    dryrun = kwargs.pop('dryrun', False)
+    usetest = kwargs.pop('usetest', False)
+    project_id = kwargs.pop('project_id', '')
+
     api_host = get_host(usetest)
 
-    # Reduce query size by getting root nodes only
-    node_filter = {
-        'parent': '',
-    }
-
-    if not dryrun:
-        if project_id:
-            result = call_api(
-                f'{api_host}/nodes/{project_id}/', pat
-            )
-            # Put data into same format as if multiple nodes found
-            nodes = {'data': [json.loads(result.read())['data']]}
-        else:
-            result = call_api(
-                f'{api_host}/users/me/nodes/', pat,
-                filters=node_filter
-            )
-            nodes = json.loads(result.read())
-    else:
-        if project_id:
-            # Put data into same format as if multiple nodes found
-            nodes = {'data': [MockAPIResponse.read(project_id)['data']]}
-        else:
-            nodes = MockAPIResponse.read('nodes')
+    if not dryrun and project_id:
+        nodes = {'data': [nodes['data']]}
+    elif project_id:
+        # Put data into same format as if multiple nodes found
+        nodes = {'data': [MockAPIResponse.read(project_id)['data']]}
 
     projects = []
     root_nodes = []  # Track indexes of root nodes for quick access
     added_node_ids = set()  # Track added node IDs to avoid duplicates
+
+    # Dispatch table used to define how to process JSON
+    # Add new field by giving name and function
+    fields = {
+        'metadata': {
+            'title': lambda project, **kwargs: project['attributes']['title'],
+            'id': lambda project, **kwargs: project['id'],
+            'url': lambda project, **kwargs: project['links']['html'],
+            'description': lambda project, **kwargs: project['attributes']['description'],
+            'date_created': lambda project, **kwargs: datetime.datetime.fromisoformat(
+                    project['attributes']['date_created']
+                ).astimezone().strftime('%Y-%m-%d'),
+            'date_modified': lambda project, **kwargs: datetime.datetime.fromisoformat(
+                    project['attributes']['date_modified']
+                ).astimezone().strftime('%Y-%m-%d'),
+            'public': lambda project, **kwargs: project['attributes']['public'],
+            'category': get_category,
+            'tags': get_tags,
+            'resource_type': lambda project, **kwargs: 'NA',
+            'funders': lambda project, **kwargs: [],
+            'affiliated_institutions': get_affiliated_institutions,
+            'identifiers': get_identifiers,
+            'license': get_license,
+            'subjects': get_subjects,
+        },
+        'contributors': get_contributors
+    }
 
     for idx, project in enumerate(nodes['data']):
         if project['id'] in added_node_ids:
@@ -469,41 +538,18 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
         else:
             added_node_ids.add(project['id'])
 
-        # Define nice representations of categories if needed
-        CATEGORY_STRS = {
-            '': 'Uncategorized',
-            'methods and measures': 'Methods and Measures'
-        }
-
         project_data = {
-            'metadata': {
-                'title': project['attributes']['title'],
-                'id': project['id'],
-                'url': project['links']['html'],
-                'description': project['attributes']['description'],
-                'date_created': datetime.datetime.fromisoformat(
-                    project['attributes']['date_created']
-                ).astimezone().strftime('%Y-%m-%d'),
-                'date_modified': datetime.datetime.fromisoformat(
-                    project['attributes']['date_modified']
-                ).astimezone().strftime('%Y-%m-%d'),
-                'public': project['attributes']['public'],
-                'resource_type': 'NA',
-                'resource_lang': 'NA',
-                'funders': []
-            },
-            'files': [],
-            'wikis': {}
+            'metadata': {}
         }
-        if project['attributes']['category'] in CATEGORY_STRS:
-            project_data['metadata']['category'] = CATEGORY_STRS[project['attributes']['category']]
-        else:
-            project_data['metadata']['category'] = project['attributes']['category'].title()
-        if project['attributes']['tags']:
-            project_data['metadata']['tags'] = ', '.join(project['attributes']['tags'])
-        else:
-            project_data['metadata']['tags'] = 'NA'
+        for field in fields['metadata']:
+            project_data['metadata'][field] = fields['metadata'][field](
+                project, dryrun=dryrun, key=field
+            )
+        project_data['contributors'] = fields['contributors'](
+            project, dryrun=dryrun, key='contributors'
+        )
 
+        # TODO: split into function
         # Resource type/lang/funding info share specific endpoint
         # that isn't linked to in user nodes' responses
         if dryrun:
@@ -520,6 +566,7 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
         project_data['metadata']['resource_lang'] = resource_lang
         for funder in metadata['funders']:
             project_data['metadata']['funders'].append(funder)
+        # =========
 
         relations = project['relationships']
 
@@ -533,69 +580,6 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
             use_mocks = False
         project_data['files'] = explore_file_tree(link, pat, dryrun=use_mocks)
 
-        # These attributes need link traversal to get their data
-        # Most should be part of the project metadata
-        METADATA_RELATIONS = [
-            'affiliated_institutions',
-            'identifiers',
-            'license',
-            'subjects',
-        ]
-        RELATION_KEYS = METADATA_RELATIONS + ['contributors']
-        for key in RELATION_KEYS:
-            if not dryrun:
-                # Check relationship exists and can get link to linked data
-                # Otherwise just pass a placeholder dict
-                try:
-                    link = relations[key]['links']['related']['href']
-                    json_data = json.loads(
-                        call_api(
-                            link, pat,
-                            filters=URL_FILTERS.get(key, {})
-                        ).read()
-                    )
-                except KeyError:
-                    if key == 'subjects':
-                        raise KeyError()  # Subjects should have a href link
-                    json_data = {'data': None}
-            else:
-                json_data = MockAPIResponse.read(key)
-
-            values = []
-            if isinstance(json_data['data'], list):
-                for item in json_data['data']:
-                    # Required data can either be embedded or in attributes
-                    if 'embeds' in item and key != "subjects":
-                        if 'users' in item['embeds']:
-                            values.append((
-                                item['embeds']['users']['data']
-                                ['attributes']['full_name'],
-                                item['attributes']['bibliographic'],
-                                item['embeds']['users']['data']
-                                ['links']['html']
-                            ))
-                        else:
-                            values.append(item['embeds']['attributes']['name'])
-                    else:
-                        if key == 'identifiers':
-                            values.append(item['attributes']['value'])
-                        elif key == 'subjects':
-                            values.append(item['attributes']['text'])
-                        else:
-                            values.append(item['attributes']['name'])
-
-            if isinstance(json_data['data'], dict):  # e.g. license field
-                values.append(json_data['data']['attributes']['name'])
-
-            if isinstance(values, list):
-                if key != 'contributors':
-                    values = ', '.join(values)
-
-            if key in METADATA_RELATIONS:
-                project_data['metadata'][key] = values
-            else:
-                project_data[key] = values
-
         project_data['wikis'] = explore_wikis(
             f'{api_host}/nodes/{project['id']}/wikis/',
             pat=pat, dryrun=dryrun
@@ -607,315 +591,172 @@ def get_project_data(pat, dryrun=False, project_id='', usetest=False):
         else:
             project_data['parent'] = None
             root_nodes.append(idx)
+
+        def get_children(json_page, **kwargs):
+            children = []
+            for child in json_page['data']:
+                children.append(child['id'])
+                nodes['data'].append(child)  # Add to list of nodes to search
+            return children
         children_link = relations['children']['links']['related']['href']
-        if dryrun:
-            children = MockAPIResponse.read(children_link)
-        else:
-            children = json.loads(
-                call_api(children_link, pat).read()
-            )
-        project_data['children'] = []
-        for child in children['data']:
-            project_data['children'].append(child['id'])
-            nodes['data'].append(child)
+        children = list(paginate_json_result(
+            children_link, dryrun=dryrun, pat=pat, action=get_children
+        ))
+        newlist = [item for sublist in children for item in sublist]
+        project_data['children'] = newlist
 
         projects.append(project_data)
 
     return projects, root_nodes
 
 
-def write_pdf(projects, root_idx, folder=''):
-    """Make PDF for each project.
-
-    Parameters
-    ------------
-        projects: dict[str, str|tuple]
-            Projects found to export into the PDF.
-        root_idx: int
-            Position of root node (no parent) in the projects list.
-            This is used for accessing root projects without sorting the list.
-        folder: str
-            The path to the folder to output the project PDFs in.
-            Default is the current working directory.
-
-    Returns
-    ------------
-        pdfs: list
-            List of created PDF files.
-    """
-
-    def write_list_section(key, fielddict, pdf):
-        """Handle writing fields based on their type to PDF.
-        Possible types are lists or strings.
-
-        Parameters
-        -----------
-            key: str
-                Name of the field to write.
-            fielddict: dict
-                Dictionary containing the field data.
-            pdf: PDF
-                PDF object to write to."""
-
-        # Set nicer display names for certain PDF fields
-        pdf_display_names = {
-            'identifiers': 'DOI',
-            'funders': 'Support/Funding Information'
-        }
-        if key in pdf_display_names:
-            field_name = pdf_display_names[key]
-        else:
-            field_name = key.replace('_', ' ').title()
-
-        if isinstance(fielddict[key], list):
-            # Create separate paragraphs for more complex attributes
-            pdf.write(0, '\n')
-            pdf.set_font(pdf.font, size=FONT_SIZES['h3'])
-            pdf.multi_cell(
-                0, h=0,
-                text=f'**{field_name}**\n\n',
-                align='L', markdown=True, padding=LINE_PADDING
-            )
-            pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-            for item in fielddict[key]:
-                for subkey in item.keys():
-                    if subkey in pdf_display_names:
-                        field_name = pdf_display_names[subkey]
-                    else:
-                        field_name = subkey.replace('_', ' ').title()
-
-                    pdf.multi_cell(
-                        0, h=0,
-                        text=f'**{field_name}:** {item[subkey]}\n\n',
-                        align='L', markdown=True, padding=LINE_PADDING
-                    )
-                pdf.write(0, '\n')
-        else:
-            # Simple key-value attributes can go on one-line
-            pdf.multi_cell(
-                0,
-                h=0,
-                text=f'**{field_name}:** {fielddict[key]}\n\n',
-                align='L',
-                markdown=True,
-                padding=LINE_PADDING
-            )
-
-    def write_project_body(pdf, project):
-        """Write the body of a project to the PDF.
-
-        Parameters
-        -----------
-            pdf: PDF
-                PDF object to write to.
-            project: dict
-                Dictionary containing project data to write.
-            parent_title: str
-                Title of the parent project.
-        Returns
-        -----------
-            pdf: PDF"""
-        pdf.add_page()
-        pdf.set_line_width(0.05)
-        pdf.set_left_margin(10)
-        pdf.set_right_margin(10)
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-        wikis = project['wikis']
-
-        # Write header section
-        # Write parent header and title first
-        if pdf.parent_title:
-            pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
-            pdf.multi_cell(0, h=0, text=f'{pdf.parent_title}\n', align='L')
-        if pdf.parent_url:
-            pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-            pdf.cell(
-                text='Main Project URL:', align='L'
-            )
-            pdf.cell(
-                text=f'{pdf.parent_url}\n', align='L', link=pdf.parent_url
-            )
-            pdf.write(0, '\n\n')
-
-        # Check if title, url is of parent's to avoid duplication
-        title = project['metadata']['title']
-        if pdf.parent_title != title:
-            pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
-            pdf.multi_cell(
-                0, h=0, text=f'{title}\n',
-                align='L', padding=LINE_PADDING
-            )
-
-        # Pop URL field to avoid printing it out in Metadata section
-        url = project['metadata'].pop('url', '')
-
-        pdf.url = url  # Set current URL to use in QR codes
-        qr_img = pdf.generate_qr_code()
-        pdf.image(qr_img, w=30, x=Align.R, y=5)
-
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-        if url and pdf.parent_url != url:
-            pdf.cell(
-                text='Component URL:',
-                align='L'
-            )
-            pdf.cell(
-                text=f'{url}',
-                align='L',
-                link=url
-            )
-            pdf.write(0, '\n\n')
-
-        pdf.ln()
-        pdf.ln()
-
-        # Write title for metadata section, then actual fields
-        pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-        pdf.multi_cell(
-            0, h=0, text='1. Project Metadata\n',
-            align='L', padding=LINE_PADDING)
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-        for key in project['metadata']:
-            write_list_section(key, project['metadata'], pdf)
-        pdf.write(0, '\n')
-        pdf.write(0, '\n')
-
-        # Write Contributors in table
-        pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-        pdf.multi_cell(0, h=0, text='2. Contributors\n', align='L')
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-        with pdf.table(
-            headings_style=HEADINGS_STYLE,
-            col_widths=(1, 0.5, 1)
-        ) as table:
-            row = table.row()
-            row.cell('Name')
-            row.cell('Bibliographic?')
-            row.cell('Profile Link')
-            for data_row in project['contributors']:
-                row = table.row()
-                for idx, datum in enumerate(data_row):
-                    if datum is True:
-                        datum = 'Yes'
-                    if datum is False:
-                        datum = 'No'
-                    if idx == 2:
-                        row.cell(text=datum, link=datum)
-                    else:
-                        row.cell(datum)
-        pdf.write(0, '\n')
-        pdf.write(0, '\n')
-
-        # List files stored in storage providers
-        # For now only OSF Storage is involved
-        pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-        pdf.multi_cell(0, h=0, text='3. Files in Main Project\n', align='L')
-        pdf.write(0, '\n')
-        pdf.set_font(pdf.font, size=FONT_SIZES['h3'], style='B')
-        pdf.multi_cell(0, h=0, text='OSF Storage\n', align='L')
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-        if len(project['files']) > 0:
-            with pdf.table(
-                headings_style=HEADINGS_STYLE,
-                col_widths=(1, 0.5, 1)
-            ) as table:
-                row = table.row()
-                row.cell('File Name')
-                row.cell('Size (MB)')
-                row.cell('Download Link')
-                for data_row in project['files']:
-                    row = table.row()
-                    for idx, datum in enumerate(data_row):
-                        if datum is True:
-                            datum = 'Yes'
-                        if datum is False or datum is None:
-                            datum = 'N/A'
-                        if idx == 2:
-                            row.cell(text=datum, link=datum)
-                        else:
-                            row.cell(datum)
-        else:
-            pdf.write(0, '\n')
-            pdf.multi_cell(
-                0, h=0, text='No files found for this project.\n', align='L'
-            )
-            pdf.write(0, '\n')
-
-        # Write wikis separately to more easily handle Markdown parsing
-        pdf.ln()
-        pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
-        pdf.multi_cell(0, h=0, text='4. Wiki\n', align='L')
-        pdf.ln()
-        for i, wiki in enumerate(wikis.keys()):
-            pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-            pdf.multi_cell(0, h=0, text=f'{wiki}\n')
-            pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-            html = markdown(wikis[wiki])
-            pdf.write_html(html)
-            if i < len(wikis.keys())-1:
-                pdf.add_page()
-
-        return pdf
-
-    def explore_project_tree(project, projects, pdf=None):
-        """Recursively find child projects and write them to the PDF.
-
-        Parameters
-        -----------
-            project: dict
-                Dictionary containing project data to write.
-            projects: list[dict]
-                List of all projects to explore.
-            pdf: PDF
-                PDF object to write to. If None, a new PDF will be created.
-            parent_title: str
-                Title of the parent project.
-
-        Returns
-        -----------
-            pdf: PDF
-                PDF object with the project and its children written to it."""
-
-        # Start with no PDF at root projects
-        if not pdf:
-            pdf = PDF(
-                parent_title=project['metadata']['title'],
-                parent_url=project['metadata']['url']
-            )
-
-        # Add current project to PDF
-        pdf = write_project_body(pdf, project)
-
-        # Do children last so that come at end of the PDF
-        children = project['children']
-        for child_id in children:
-            child_project = next(
-                (p for p in projects if p['metadata']['id'] == child_id), None
-            )
-            if child_project:
-                pdf = explore_project_tree(
-                    child_project, projects, pdf=pdf
-                )
-
-        return pdf
-
-    curr_project = projects[root_idx]
-    title = curr_project['metadata']['title']
-    pdf = explore_project_tree(curr_project, projects)
-
-    # Remove spaces in file name for better behaviour on Linux
-    # Add timestamp to allow distinguishing between PDFs at a glance
-    timestamp = pdf.date_printed.strftime(
-        '%Y-%m-%d %H:%M:%S %Z'
-    ).replace(' ', '-')
-    filename = f'{title.replace(' ', '-')}-{timestamp}.pdf'
-
-    if folder:
-        if not os.path.exists(folder):
-            os.mkdir(folder)
-        path = os.path.join(os.getcwd(), folder, filename)
+def get_category(project, **kwargs):
+    # Define nice representations of categories if needed
+    CATEGORY_STRS = {
+        '': 'Uncategorized',
+        'methods and measures': 'Methods and Measures'
+    }
+    if project['attributes']['category'] in CATEGORY_STRS:
+        return CATEGORY_STRS[project['attributes']['category']]
     else:
-        path = os.path.join(os.getcwd(), filename)
-    pdf.output(path)
+        return project['attributes']['category'].title()
 
-    return pdf, path
+
+def get_tags(project, **kwargs):
+    if project['attributes']['tags']:
+        return ', '.join(project['attributes']['tags'])
+    else:
+        return 'NA'
+
+
+def get_contributors(project, **kwargs):
+    dryrun = kwargs.pop('dryrun', True)
+    key = kwargs.pop('key', 'contributors')
+    pat = kwargs.pop('pat', '')
+    if not dryrun:
+        # Check relationship exists and can get link to linked data
+        # Otherwise just pass a placeholder dict
+        try:
+            link = project['relationships'][key]['links']['related']['href']
+            json_data = json.loads(
+                call_api(
+                    link, pat,
+                    filters=URL_FILTERS.get(key, {})
+                ).read()
+            )
+        except KeyError:
+            json_data = {'data': None}
+    else:
+        json_data = MockAPIResponse.read(key)
+    values = []
+    for item in json_data['data']:
+        values.append((
+            item['embeds']['users']['data']
+            ['attributes']['full_name'],
+            item['attributes']['bibliographic'],
+            item['embeds']['users']['data']['links']['html']
+        ))
+    return values
+
+
+def get_affiliated_institutions(project, **kwargs):
+    dryrun = kwargs.pop('dryrun', True)
+    key = kwargs.pop('key', 'affiliated_institutions')
+    pat = kwargs.pop('pat', '')
+    if not dryrun:
+        # Check relationship exists and can get link to linked data
+        # Otherwise just pass a placeholder dict
+        try:
+            link = project['relationships'][key]['links']['related']['href']
+            json_data = json.loads(
+                call_api(
+                    link, pat,
+                    filters=URL_FILTERS.get(key, {})
+                ).read()
+            )
+        except KeyError:
+            json_data = {'data': None}
+    else:
+        json_data = MockAPIResponse.read(key)
+    values = []
+    for item in json_data['data']:
+        values.append(item['attributes']['name'])
+    values = ', '.join(values)
+    return values
+
+
+def get_identifiers(project, **kwargs):
+    dryrun = kwargs.pop('dryrun', True)
+    key = kwargs.pop('key', 'identifiers')
+    pat = kwargs.pop('pat', '')
+    if not dryrun:
+        # Check relationship exists and can get link to linked data
+        # Otherwise just pass a placeholder dict
+        try:
+            link = project['relationships'][key]['links']['related']['href']
+            json_data = json.loads(
+                call_api(
+                    link, pat,
+                    filters=URL_FILTERS.get(key, {})
+                ).read()
+            )
+        except KeyError:
+            json_data = {'data': None}
+    else:
+        json_data = MockAPIResponse.read(key)
+    values = []
+    for item in json_data['data']:
+        values.append(item['attributes']['value'])
+    values = ', '.join(values)
+    return values
+
+
+def get_license(project, **kwargs):
+    dryrun = kwargs.pop('dryrun', True)
+    key = kwargs.pop('key', 'license')
+    pat = kwargs.pop('pat', '')
+    if not dryrun:
+        # Check relationship exists and can get link to linked data
+        # Otherwise just pass a placeholder dict
+        try:
+            link = project['relationships'][key]['links']['related']['href']
+            json_data = json.loads(
+                call_api(
+                    link, pat,
+                    filters=URL_FILTERS.get(key, {})
+                ).read()
+            )
+        except KeyError:
+            json_data = {'data': None}
+    else:
+        json_data = MockAPIResponse.read(key)
+    if json_data['data'] is not None:
+        return json_data['data']['attributes']['name']
+    else:
+        return None
+
+
+def get_subjects(project, **kwargs):
+    dryrun = kwargs.pop('dryrun', True)
+    key = kwargs.pop('key', 'subjects')
+    pat = kwargs.pop('pat', '')
+    if not dryrun:
+        # Check relationship exists and can get link to linked data
+        # Otherwise just pass a placeholder dict
+        try:
+            link = project['relationships'][key]['links']['related']['href']
+            json_data = json.loads(
+                call_api(
+                    link, pat,
+                    filters=URL_FILTERS.get(key, {})
+                ).read()
+            )
+        except KeyError:
+            raise KeyError()  # Subjects should have a href link
+    else:
+        json_data = MockAPIResponse.read(key)
+    values = []
+    for item in json_data['data']:
+        values.append(item['attributes']['text'])
+    values = ', '.join(values)
+    return values

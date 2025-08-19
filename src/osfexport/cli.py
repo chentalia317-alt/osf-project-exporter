@@ -4,6 +4,7 @@ import urllib.request as webhelper
 import click
 
 import src.osfexport.exporter as exporter
+import src.osfexport.formatter as formatter
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
@@ -84,7 +85,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
         pat = prompt_pat(project_id=project_id, usetest=usetest)
 
     click.echo('Downloading project data...')
-    projects, root_nodes = exporter.get_project_data(
+    projects, root_nodes = exporter.get_nodes(
         pat, dryrun=dryrun, project_id=project_id, usetest=usetest
     )
     click.echo(f'Found {len(root_nodes)} projects.')
@@ -92,7 +93,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
     for idx in root_nodes:
         title = projects[idx]['metadata']['title']
         click.echo(f'Exporting project {title}...')
-        pdf, path = exporter.write_pdf(projects, idx, folder)
+        pdf, path = formatter.write_pdf(projects, idx, folder)
         click.echo(f'Project exported to {path}')
 
 
