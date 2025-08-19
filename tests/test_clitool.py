@@ -565,8 +565,8 @@ class TestExporter(TestCase):
         import_two = PdfReader(os.path.join(
             FOLDER_OUT, f'{title_two}-{date_two}.pdf'
         ))
-        assert len(import_one.pages) == 4, (
-            'Expected 4 pages in the first PDF, got: ',
+        assert len(import_one.pages) == 5, (
+            'Expected 5 pages in the first PDF, got: ',
             len(import_one.pages)
         )
 
@@ -576,7 +576,7 @@ class TestExporter(TestCase):
         content_second_page = import_two.pages[0].extract_text(
             extraction_mode='layout'
         )
-        content_third_page = import_one.pages[2].extract_text(
+        content_third_page = import_one.pages[3].extract_text(
             extraction_mode='layout'
         )
         assert f'{projects[0]['metadata']['title']}' in content_third_page, (
