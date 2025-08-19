@@ -323,8 +323,6 @@ class TestExporter(TestCase):
         assert root_nodes[2] == 4
 
     def test_get_single_mock_project(self):
-        # import pdb
-        # pdb.set_trace()
         projects, roots = get_nodes(
             pat='', dryrun=True, usetest=True,
             project_id='x'
@@ -534,7 +532,6 @@ class TestExporter(TestCase):
         url = projects[0]['metadata']['url']
         url_comp = projects[1]['metadata']['url']
 
-        # pdb.set_trace()
         # Can we specify where to write PDFs?
         pdf_one, path_one = write_pdf(projects, root_nodes[0], FOLDER_OUT)
         pdf_two, path_two = write_pdf(projects, root_nodes[1], FOLDER_OUT)
