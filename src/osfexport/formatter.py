@@ -18,6 +18,7 @@ FONT_SIZES = {
     'h5': 10  # Footer
 }
 LINE_PADDING = 0  # Gaps between lines
+CELL_WIDTH = 180  # Width of text cells
 
 
 class PDF(FPDF):
@@ -121,7 +122,7 @@ def write_pdf(projects, root_idx, folder=''):
             pdf.write(0, '\n')
             pdf.set_font(pdf.font, size=FONT_SIZES['h3'])
             pdf.multi_cell(
-                w=180, h=None,
+                w=CELL_WIDTH, h=None,
                 text=f'**{field_name}**\n',
                 align='L', markdown=True, padding=LINE_PADDING
             )
@@ -134,7 +135,7 @@ def write_pdf(projects, root_idx, folder=''):
                         field_name = subkey.replace('_', ' ').title()
 
                     pdf.multi_cell(
-                        w=180, h=None,
+                        w=CELL_WIDTH, h=None,
                         text=f'**{field_name}:** {item[subkey]}\n',
                         align='L', markdown=True, padding=LINE_PADDING
                     )
@@ -142,7 +143,7 @@ def write_pdf(projects, root_idx, folder=''):
         else:
             # Simple key-value attributes can go on one-line
             pdf.multi_cell(
-                w=180,
+                w=CELL_WIDTH,
                 h=None,
                 text=f'**{field_name}:** {fielddict[key]}\n',
                 align='L',
@@ -175,7 +176,7 @@ def write_pdf(projects, root_idx, folder=''):
         # Write parent header and title first
         if pdf.parent_title:
             pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
-            pdf.multi_cell(w=180, h=None, text=f'{pdf.parent_title}\n', align='L')
+            pdf.multi_cell(w=CELL_WIDTH, h=None, text=f'{pdf.parent_title}\n', align='L')
         if pdf.parent_url:
             pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
             pdf.cell(
@@ -191,7 +192,7 @@ def write_pdf(projects, root_idx, folder=''):
         if pdf.parent_title != title:
             pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
             pdf.multi_cell(
-                w=180, h=None, text=f'{title}\n',
+                w=CELL_WIDTH, h=None, text=f'{title}\n',
                 align='L', padding=LINE_PADDING
             )
 
@@ -219,7 +220,7 @@ def write_pdf(projects, root_idx, folder=''):
         pdf.ln()
         pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
         pdf.multi_cell(
-            w=180, h=None, text='1. Project Metadata\n',
+            w=CELL_WIDTH, h=None, text='1. Project Metadata\n',
             align='L', padding=LINE_PADDING)
         pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
         for key in project['metadata']:
@@ -228,7 +229,7 @@ def write_pdf(projects, root_idx, folder=''):
 
         # Write Contributors in table
         pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-        pdf.multi_cell(w=180, h=None, text='2. Contributors\n', align='L')
+        pdf.multi_cell(w=CELL_WIDTH, h=None, text='2. Contributors\n', align='L')
         pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
         with pdf.table(
             headings_style=HEADINGS_STYLE,
@@ -254,9 +255,9 @@ def write_pdf(projects, root_idx, folder=''):
         # List files stored in storage providers
         # For now only OSF Storage is involved
         pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-        pdf.multi_cell(w=180, h=None, text='3. Files in Main Project\n', align='L')
+        pdf.multi_cell(w=CELL_WIDTH, h=None, text='3. Files in Main Project\n', align='L')
         pdf.set_font(pdf.font, size=FONT_SIZES['h3'], style='B')
-        pdf.multi_cell(w=180, h=None, text='OSF Storage\n', align='L')
+        pdf.multi_cell(w=CELL_WIDTH, h=None, text='OSF Storage\n', align='L')
         pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
         if len(project['files']) > 0:
             with pdf.table(
@@ -281,18 +282,18 @@ def write_pdf(projects, root_idx, folder=''):
         else:
             pdf.write(0, '\n')
             pdf.multi_cell(
-                w=180, h=None, text='No files found for this project.\n', align='L'
+                w=CELL_WIDTH, h=None, text='No files found for this project.\n', align='L'
             )
             pdf.write(0, '\n')
 
         # Write wikis separately to more easily handle Markdown parsing
         pdf.ln()
         pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
-        pdf.multi_cell(w=180, h=None, text='4. Wiki\n', align='L')
+        pdf.multi_cell(w=CELL_WIDTH, h=None, text='4. Wiki\n', align='L')
         pdf.ln()
         for i, wiki in enumerate(wikis.keys()):
             pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-            pdf.multi_cell(w=180, h=None, text=f'{wiki}\n')
+            pdf.multi_cell(w=CELL_WIDTH, h=None, text=f'{wiki}\n')
             pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
             html = markdown(wikis[wiki])
             pdf.write_html(html)
