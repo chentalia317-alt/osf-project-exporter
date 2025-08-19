@@ -708,7 +708,6 @@ class TestExporter(TestCase):
         def add_x(json, **kwargs):
             x = kwargs.get('x', 0)
             return json['data'] + x
-        
 
         results = paginate_json_result(
             start='http://api.example.com/page1', action=add_x, x=5

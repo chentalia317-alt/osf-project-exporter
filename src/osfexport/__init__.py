@@ -26,5 +26,6 @@ __all__ = [
     'get_nodes',
     'paginate_json_result',
     'extract_project_id',
-    'prompt_pat'
+    'prompt_pat',
+    'cli'
 ]
