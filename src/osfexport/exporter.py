@@ -523,11 +523,12 @@ def get_project_data(nodes, **kwargs):
             'category': get_category,
             'tags': get_tags,
             'resource_type': lambda project, **kwargs: 'NA',
-            'funders': lambda project, **kwargs: [],
+            'resource_lang': lambda project, **kwargs: 'NA',
             'affiliated_institutions': get_affiliated_institutions,
             'identifiers': get_identifiers,
             'license': get_license,
             'subjects': get_subjects,
+            'funders': lambda project, **kwargs: [],
         },
         'contributors': get_contributors
     }
