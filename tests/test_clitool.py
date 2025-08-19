@@ -11,7 +11,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from src.osfexport.exporter import (
+from osfexport import (
     MockAPIResponse,
     call_api,
     get_project_data,
@@ -20,13 +20,9 @@ from src.osfexport.exporter import (
     explore_wikis,
     is_public,
     extract_project_id,
-    paginate_json_result
-)
-from src.osfexport.cli import (
-    cli, prompt_pat
-)
-from src.osfexport.formatter import (
-    write_pdf
+    paginate_json_result,
+    prompt_pat, write_pdf,
+    cli
 )
 
 TEST_PDF_FOLDER = 'good-pdfs'
@@ -696,7 +692,7 @@ class TestExporter(TestCase):
         url = ''
         project_id = extract_project_id(url)
 
-    @patch('src.osfexport.exporter.call_api')
+    @patch('osfexport.exporter.call_api')
     def test_add_on_paginated_results(self, mock_get):
         # Mock JSON responses
         page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
@@ -712,6 +708,7 @@ class TestExporter(TestCase):
         def add_x(json, **kwargs):
             x = kwargs.get('x', 0)
             return json['data'] + x
+        
 
         results = paginate_json_result(
             start='http://api.example.com/page1', action=add_x, x=5
