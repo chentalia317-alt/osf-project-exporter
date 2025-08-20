@@ -11,7 +11,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from src.osfexport.exporter import (
+from osfexport.exporter import (
     MockAPIResponse,
     call_api,
     get_project_data,
@@ -22,10 +22,10 @@ from src.osfexport.exporter import (
     extract_project_id,
     paginate_json_result
 )
-from src.osfexport.cli import (
+from osfexport.cli import (
     cli, prompt_pat
 )
-from src.osfexport.formatter import (
+from osfexport.formatter import (
     write_pdf
 )
 
@@ -335,6 +335,68 @@ class TestExporter(TestCase):
         assert projects[0]['children'] == ['a', 'b'], (
             projects[0]['children']
         )
+
+    def test_use_dryrun_in_user_default_dir(self):
+        cwd = os.getcwd()
+        try:
+            # Go to user's home directory in cross-platform way
+            os.chdir(os.path.expanduser("~"))
+            projects, roots = get_nodes('', dryrun=True, usetest=True)
+        except Exception as e:
+            raise e
+        finally:
+            # Reverse state changes for reproducibility
+            os.chdir(cwd)
+            assert os.getcwd() == cwd
+
+    def test_extract_project_id_from_strings(self):
+        url = 'https://osf.io/x/'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        url = 'https://api.test.osf.io/v2/nodes/x/'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        # TODO: add test for passing a URL for test site when
+        # we are using production site, and vice versa
+
+        url = 'x'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        # Should just run normally
+        url = ''
+        project_id = extract_project_id(url)
+
+    @patch('src.osfexport.exporter.call_api')
+    def test_add_on_paginated_results(self, mock_get):
+        # Mock JSON responses
+        page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
+        page2 = {'data': 3, 'links': {'next': 'http://api.example.com/page3'}}
+        page3 = {'data': 5, 'links': {'next': None}}
+        # Configure mock to return these responses in sequence
+        mock_get.side_effect = [
+            page1,
+            page2,
+            page3
+        ]
+
+        def add_x(json, **kwargs):
+            x = kwargs.get('x', 0)
+            return json['data'] + x
+
+        results = paginate_json_result(
+            start='http://api.example.com/page1', action=add_x, x=5
+        )
+        assert isinstance(results, deque)
+        self.assertEqual(results.popleft(), 1+5)
+        self.assertEqual(results.popleft(), 3+5)
+        self.assertEqual(results.popleft(), 5+5)
+
+
+class TestFormatter(TestCase):
+    """Tests for the PDF formatter."""
 
     def test_write_pdf_no_folder_given(self):
         projects = [
@@ -662,64 +724,22 @@ class TestExporter(TestCase):
         # Remove files only if all good - keep for debugging otherwise
         os.remove(path_one)
         os.remove(path_two)
-
-    def test_use_dryrun_in_user_default_dir(self):
-        cwd = os.getcwd()
-        try:
-            # Go to user's home directory in cross-platform way
-            os.chdir(os.path.expanduser("~"))
-            projects, roots = get_nodes('', dryrun=True, usetest=True)
-        except Exception as e:
-            raise e
-        finally:
-            # Reverse state changes for reproducibility
-            os.chdir(cwd)
-            assert os.getcwd() == cwd
-
-    def test_extract_project_id_from_strings(self):
-        url = 'https://osf.io/x/'
-        project_id = extract_project_id(url)
-        assert project_id == 'x', f'Expected "x", got {project_id}'
-
-        url = 'https://api.test.osf.io/v2/nodes/x/'
-        project_id = extract_project_id(url)
-        assert project_id == 'x', f'Expected "x", got {project_id}'
-
-        # TODO: add test for passing a URL for test site when
-        # we are using production site, and vice versa
-
-        url = 'x'
-        project_id = extract_project_id(url)
-        assert project_id == 'x', f'Expected "x", got {project_id}'
-
-        # Should just run normally
-        url = ''
-        project_id = extract_project_id(url)
-
-    @patch('src.osfexport.exporter.call_api')
-    def test_add_on_paginated_results(self, mock_get):
-        # Mock JSON responses
-        page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
-        page2 = {'data': 3, 'links': {'next': 'http://api.example.com/page3'}}
-        page3 = {'data': 5, 'links': {'next': None}}
-        # Configure mock to return these responses in sequence
-        mock_get.side_effect = [
-            page1,
-            page2,
-            page3
-        ]
-
-        def add_x(json, **kwargs):
-            x = kwargs.get('x', 0)
-            return json['data'] + x
-
-        results = paginate_json_result(
-            start='http://api.example.com/page1', action=add_x, x=5
-        )
-        assert isinstance(results, deque)
-        self.assertEqual(results.popleft(), 1+5)
-        self.assertEqual(results.popleft(), 3+5)
-        self.assertEqual(results.popleft(), 5+5)
+    
+    # def test_write_image_with_size_into_pdf(self):
+    #     markdown = """
+    #     This has an image in the wiki page.
+    #     ![Someone taking a pic on their phone camera][1]This is an image above this text.
+        
+    #     Another paragraph.
+        
+    #     Another image:
+    #     ![enter image description here][2]
+        
+    #     [1]: https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png
+    #     [2]: https://upload.wikimedia.org/wikipedia/commons/6/6e/Abundant_Crop_-_geograph.org.uk_-_510746.jpg
+    #     """
+    #     pdf = 
+    #     assert False
 
 
 class TestCLI(TestCase):
