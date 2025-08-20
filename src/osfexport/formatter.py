@@ -17,7 +17,7 @@ FONT_SIZES = {
     'h4': 12,  # Body
     'h5': 10  # Footer
 }
-LINE_PADDING = 0.5  # Gaps between liness
+LINE_PADDING = 0.5  # Gaps between lines
 
 
 class PDF(FPDF):
@@ -71,31 +71,10 @@ class PDF(FPDF):
         self.set_y(-25)
         qr_img = self.generate_qr_code()
         self.image(qr_img, w=15, h=15, x=Align.C)
-
-
-def write_pdf(projects, root_idx, folder=''):
-    """Make PDF for each project.
-
-    Parameters
-    ------------
-        projects: dict[str, str|tuple]
-            Projects found to export into the PDF.
-        root_idx: int
-            Position of root node (no parent) in the projects list.
-            This is used for accessing root projects without sorting the list.
-        folder: str
-            The path to the folder to output the project PDFs in.
-            Default is the current working directory.
-
-    Returns
-    ------------
-        pdfs: list
-            List of created PDF files.
-    """
-
-    def write_list_section(key, fielddict, pdf):
-        """Handle writing fields based on their type to PDF.
-        Possible types are lists or strings.
+    
+    def _write_list_section(self, key, fielddict):
+        """Handle writing fields of different types inplace to a PDF.
+        Possible types are lists, strings or dictionaries.
 
         Parameters
         -----------
@@ -103,8 +82,7 @@ def write_pdf(projects, root_idx, folder=''):
                 Name of the field to write.
             fielddict: dict
                 Dictionary containing the field data.
-            pdf: PDF
-                PDF object to write to."""
+        """
 
         # Set nicer display names for certain PDF fields
         pdf_display_names = {
@@ -118,14 +96,14 @@ def write_pdf(projects, root_idx, folder=''):
 
         if isinstance(fielddict[key], list):
             # Create separate paragraphs for more complex attributes
-            pdf.write(0, '\n')
-            pdf.set_font(pdf.font, size=FONT_SIZES['h3'])
-            pdf.multi_cell(
+            self.write(0, '\n')
+            self.set_font(self.font, size=FONT_SIZES['h3'])
+            self.multi_cell(
                 0, h=0,
                 text=f'**{field_name}**\n\n',
                 align='L', markdown=True, padding=LINE_PADDING
             )
-            pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
+            self.set_font(self.font, size=FONT_SIZES['h4'])
             for item in fielddict[key]:
                 for subkey in item.keys():
                     if subkey in pdf_display_names:
@@ -133,15 +111,15 @@ def write_pdf(projects, root_idx, folder=''):
                     else:
                         field_name = subkey.replace('_', ' ').title()
 
-                    pdf.multi_cell(
+                    self.multi_cell(
                         0, h=0,
                         text=f'**{field_name}:** {item[subkey]}\n\n',
                         align='L', markdown=True, padding=LINE_PADDING
                     )
-                pdf.write(0, '\n')
+                self.write(0, '\n')
         else:
             # Simple key-value attributes can go on one-line
-            pdf.multi_cell(
+            self.multi_cell(
                 0,
                 h=0,
                 text=f'**{field_name}:** {fielddict[key]}\n\n',
@@ -149,48 +127,45 @@ def write_pdf(projects, root_idx, folder=''):
                 markdown=True,
                 padding=LINE_PADDING
             )
-
-    def write_project_body(pdf, project):
-        """Write the body of a project to the PDF.
+    
+    def _write_project_body(self, project):
+        """Write inplace the body of a project to the PDF.
 
         Parameters
         -----------
-            pdf: PDF
-                PDF object to write to.
             project: dict
                 Dictionary containing project data to write.
             parent_title: str
                 Title of the parent project.
-        Returns
-        -----------
-            pdf: PDF"""
-        pdf.add_page()
-        pdf.set_line_width(0.05)
-        pdf.set_left_margin(10)
-        pdf.set_right_margin(10)
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
+        """
+        
+        self.add_page()
+        self.set_line_width(0.05)
+        self.set_left_margin(10)
+        self.set_right_margin(10)
+        self.set_font(self.font, size=FONT_SIZES['h4'])
         wikis = project['wikis']
 
         # Write header section
         # Write parent header and title first
-        if pdf.parent_title:
-            pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
-            pdf.multi_cell(0, h=0, text=f'{pdf.parent_title}\n', align='L')
-        if pdf.parent_url:
-            pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-            pdf.cell(
+        if self.parent_title:
+            self.set_font(self.font, size=FONT_SIZES['h1'], style='B')
+            self.multi_cell(0, h=0, text=f'{self.parent_title}\n', align='L')
+        if self.parent_url:
+            self.set_font(self.font, size=FONT_SIZES['h4'])
+            self.cell(
                 text='Main Project URL:', align='L'
             )
-            pdf.cell(
-                text=f'{pdf.parent_url}\n', align='L', link=pdf.parent_url
+            self.cell(
+                text=f'{self.parent_url}\n', align='L', link=self.parent_url
             )
-            pdf.write(0, '\n\n')
+            self.write(0, '\n\n')
 
         # Check if title, url is of parent's to avoid duplication
         title = project['metadata']['title']
-        if pdf.parent_title != title:
-            pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
-            pdf.multi_cell(
+        if self.parent_title != title:
+            self.set_font(self.font, size=FONT_SIZES['h1'], style='B')
+            self.multi_cell(
                 0, h=0, text=f'{title}\n',
                 align='L', padding=LINE_PADDING
             )
@@ -198,42 +173,42 @@ def write_pdf(projects, root_idx, folder=''):
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')
 
-        pdf.url = url  # Set current URL to use in QR codes
-        qr_img = pdf.generate_qr_code()
-        pdf.image(qr_img, w=30, x=Align.R, y=5)
+        self.url = url  # Set current URL to use in QR codes
+        qr_img = self.generate_qr_code()
+        self.image(qr_img, w=30, x=Align.R, y=5)
 
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-        if url and pdf.parent_url != url:
-            pdf.cell(
+        self.set_font(self.font, size=FONT_SIZES['h4'])
+        if url and self.parent_url != url:
+            self.cell(
                 text='Component URL:',
                 align='L'
             )
-            pdf.cell(
+            self.cell(
                 text=f'{url}',
                 align='L',
                 link=url
             )
-            pdf.write(0, '\n\n')
+            self.write(0, '\n\n')
 
-        pdf.ln()
-        pdf.ln()
+        self.ln()
+        self.ln()
 
         # Write title for metadata section, then actual fields
-        pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-        pdf.multi_cell(
+        self.set_font(self.font, size=FONT_SIZES['h2'], style='B')
+        self.multi_cell(
             0, h=0, text='1. Project Metadata\n',
             align='L', padding=LINE_PADDING)
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
+        self.set_font(self.font, size=FONT_SIZES['h4'])
         for key in project['metadata']:
-            write_list_section(key, project['metadata'], pdf)
-        pdf.write(0, '\n')
-        pdf.write(0, '\n')
+            self._write_list_section(key, project['metadata'])
+        self.write(0, '\n')
+        self.write(0, '\n')
 
         # Write Contributors in table
-        pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-        pdf.multi_cell(0, h=0, text='2. Contributors\n', align='L')
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
-        with pdf.table(
+        self.set_font(self.font, size=FONT_SIZES['h2'], style='B')
+        self.multi_cell(0, h=0, text='2. Contributors\n', align='L')
+        self.set_font(self.font, size=FONT_SIZES['h4'])
+        with self.table(
             headings_style=HEADINGS_STYLE,
             col_widths=(1, 0.5, 1)
         ) as table:
@@ -252,19 +227,19 @@ def write_pdf(projects, root_idx, folder=''):
                         row.cell(text=datum, link=datum)
                     else:
                         row.cell(datum)
-        pdf.write(0, '\n')
-        pdf.write(0, '\n')
+        self.write(0, '\n')
+        self.write(0, '\n')
 
         # List files stored in storage providers
         # For now only OSF Storage is involved
-        pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-        pdf.multi_cell(0, h=0, text='3. Files in Main Project\n', align='L')
-        pdf.write(0, '\n')
-        pdf.set_font(pdf.font, size=FONT_SIZES['h3'], style='B')
-        pdf.multi_cell(0, h=0, text='OSF Storage\n', align='L')
-        pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
+        self.set_font(self.font, size=FONT_SIZES['h2'], style='B')
+        self.multi_cell(0, h=0, text='3. Files in Main Project\n', align='L')
+        self.write(0, '\n')
+        self.set_font(self.font, size=FONT_SIZES['h3'], style='B')
+        self.multi_cell(0, h=0, text='OSF Storage\n', align='L')
+        self.set_font(self.font, size=FONT_SIZES['h4'])
         if len(project['files']) > 0:
-            with pdf.table(
+            with self.table(
                 headings_style=HEADINGS_STYLE,
                 col_widths=(1, 0.5, 1)
             ) as table:
@@ -284,30 +259,29 @@ def write_pdf(projects, root_idx, folder=''):
                         else:
                             row.cell(datum)
         else:
-            pdf.write(0, '\n')
-            pdf.multi_cell(
+            self.write(0, '\n')
+            self.multi_cell(
                 0, h=0, text='No files found for this project.\n', align='L'
             )
-            pdf.write(0, '\n')
+            self.write(0, '\n')
 
         # Write wikis separately to more easily handle Markdown parsing
-        pdf.ln()
-        pdf.set_font(pdf.font, size=FONT_SIZES['h1'], style='B')
-        pdf.multi_cell(0, h=0, text='4. Wiki\n', align='L')
-        pdf.ln()
+        self.ln()
+        self.set_font(self.font, size=FONT_SIZES['h1'], style='B')
+        self.multi_cell(0, h=0, text='4. Wiki\n', align='L')
+        self.ln()
         for i, wiki in enumerate(wikis.keys()):
-            pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-            pdf.multi_cell(0, h=0, text=f'{wiki}\n')
-            pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
+            self.set_font(self.font, size=FONT_SIZES['h2'], style='B')
+            self.multi_cell(0, h=0, text=f'{wiki}\n')
+            self.set_font(self.font, size=FONT_SIZES['h4'])
             html = markdown(wikis[wiki])
-            pdf.write_html(html)
+            self.write_html(html)
             if i < len(wikis.keys())-1:
-                pdf.add_page()
+                self.add_page()
 
-        return pdf
 
-    def explore_project_tree(project, projects, pdf=None):
-        """Recursively find child projects and write them to the PDF.
+def explore_project_tree(project, projects, pdf=None):
+        """Recursively find child projects and write them to a PDF.
 
         Parameters
         -----------
@@ -333,9 +307,9 @@ def write_pdf(projects, root_idx, folder=''):
             )
 
         # Add current project to PDF
-        pdf = write_project_body(pdf, project)
+        pdf._write_project_body(project)
 
-        # Do children last so that come at end of the PDF
+        # Do children last so that they come at end of the PDF
         children = project['children']
         for child_id in children:
             child_project = next(
@@ -347,6 +321,26 @@ def write_pdf(projects, root_idx, folder=''):
                 )
 
         return pdf
+
+def write_pdf(projects, root_idx, folder=''):
+    """Make PDF for each project.
+
+    Parameters
+    ------------
+        projects: dict[str, str|tuple]
+            Projects found to export into the PDF.
+        root_idx: int
+            Position of root node (no parent) in the projects list.
+            This is used for accessing root projects without sorting the list.
+        folder: str
+            The path to the folder to output the project PDFs in.
+            Default is the current working directory.
+
+    Returns
+    ------------
+        pdfs: list
+            List of created PDF files.
+    """
 
     curr_project = projects[root_idx]
     title = curr_project['metadata']['title']

@@ -369,7 +369,7 @@ class TestExporter(TestCase):
         url = ''
         project_id = extract_project_id(url)
 
-    @patch('src.osfexport.exporter.call_api')
+    @patch('osfexport.exporter.call_api')
     def test_add_on_paginated_results(self, mock_get):
         # Mock JSON responses
         page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
@@ -743,14 +743,14 @@ class TestFormatter(TestCase):
 
 
 class TestCLI(TestCase):
-    @patch('src.osfexport.exporter.is_public', lambda x: True)
+    @patch('osfexport.exporter.is_public', lambda x: True)
     def test_prompt_pat_if_public_project_id_given(self):
         pat = prompt_pat('x')
         assert pat == '', (
             pat
         )
 
-    @patch('src.osfexport.exporter.is_public', lambda x: False)
+    @patch('osfexport.exporter.is_public', lambda x: False)
     @patch('click.prompt', return_value='strinput')
     def test_prompt_pat_if_private_project_id_given(self, mock_obj):
         pat = prompt_pat('x')
