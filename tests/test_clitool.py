@@ -26,7 +26,7 @@ from osfexport.cli import (
     cli, prompt_pat
 )
 from osfexport.formatter import (
-    write_pdf
+    write_pdf, PDF
 )
 
 TEST_PDF_FOLDER = 'good-pdfs'
@@ -725,22 +725,52 @@ class TestFormatter(TestCase):
         os.remove(path_one)
         os.remove(path_two)
     
-    # def test_write_image_with_size_into_pdf(self):
-    #     markdown = """
-    #     This has an image in the wiki page.
-    #     ![Someone taking a pic on their phone camera][1]This is an image above this text.
-        
-    #     Another paragraph.
-        
-    #     Another image:
-    #     ![enter image description here][2]
-        
-    #     [1]: https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png
-    #     [2]: https://upload.wikimedia.org/wikipedia/commons/6/6e/Abundant_Crop_-_geograph.org.uk_-_510746.jpg
-    #     """
-    #     pdf = 
-    #     assert False
+    def test_write_image_with_size_into_pdf(self):
+        markdown = """"This has an image in the wiki page.
+![Someone taking a pic on their phone camera][1]This is an image above this text.
+Another paragraph.
 
+  [1]: https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png"""
+#         markdown_page2 = """![enter image description here][1]
+
+
+# [1]: https://files.us.test.osf.io/v1/resources/4a5fs/providers/osfstorage/68a5f5d97f532e0f0bf8dd30?mode=render"""
+
+        pdf = PDF()
+        pdf._write_project_body({
+            'metadata': {
+                'title': 'Test Project',
+                'id': 'test-id',
+                'url': 'https://test.osf.io/test-id',
+                'category': 'Uncategorized',
+                'description': 'This is a test project with images.',
+                'date_created': datetime.datetime.now(),
+                'date_modified': datetime.datetime.now(),
+                'tags': '',
+                'resource_type': '',
+                'resource_lang': '',
+                'affiliated_institutions': '',
+                'identifiers': '',
+                'license': '',
+                'subjects': ''
+            },
+            'contributors': [],
+            'files': [],
+            'funders': [],
+            'wikis': {'Home': markdown},
+            "parent": None,
+            'children': []
+        })
+        pdf_output_path = 'test_project.pdf'
+        pdf.output(pdf_output_path)
+        try:
+            assert os.path.exists(pdf_output_path), (
+                'PDF file was not created.'
+            )
+            #os.remove(pdf_output_path)
+        except AssertionError as e:
+            #os.remove(pdf_output_path)
+            raise e
 
 class TestCLI(TestCase):
     @patch('osfexport.exporter.is_public', lambda x: True)
