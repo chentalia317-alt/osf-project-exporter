@@ -726,41 +726,15 @@ class TestFormatter(TestCase):
         os.remove(path_two)
     
     def test_write_image_with_size_into_pdf(self):
-        markdown = """"This has an image in the wiki page.
+        markdown = """This has an image in the wiki page.
 ![Someone taking a pic on their phone camera][1]This is an image above this text.
 Another paragraph.
 
   [1]: https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png"""
-#         markdown_page2 = """![enter image description here][1]
-
-
-# [1]: https://files.us.test.osf.io/v1/resources/4a5fs/providers/osfstorage/68a5f5d97f532e0f0bf8dd30?mode=render"""
 
         pdf = PDF()
-        pdf._write_project_body({
-            'metadata': {
-                'title': 'Test Project',
-                'id': 'test-id',
-                'url': 'https://test.osf.io/test-id',
-                'category': 'Uncategorized',
-                'description': 'This is a test project with images.',
-                'date_created': datetime.datetime.now(),
-                'date_modified': datetime.datetime.now(),
-                'tags': '',
-                'resource_type': '',
-                'resource_lang': '',
-                'affiliated_institutions': '',
-                'identifiers': '',
-                'license': '',
-                'subjects': ''
-            },
-            'contributors': [],
-            'files': [],
-            'funders': [],
-            'wikis': {'Home': markdown},
-            "parent": None,
-            'children': []
-        })
+        pdf.add_page()
+        pdf._write_wiki_pages({'Home': markdown})
         pdf_output_path = 'test_project.pdf'
         pdf.output(pdf_output_path)
         try:

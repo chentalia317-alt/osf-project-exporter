@@ -7,18 +7,6 @@ from fpdf.fonts import FontFace
 from mistletoe import markdown
 import qrcode
 
-# Global styles for PDF
-BLUE = (173, 216, 230)
-HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
-FONT_SIZES = {
-    'h1': 18,  # Project titles
-    'h2': 16,  # Section titles
-    'h3': 14,  # Section sub-titles
-    'h4': 12,  # Body
-    'h5': 10  # Footer
-}
-LINE_PADDING = 0.5  # Gaps between lines
-
 
 class PDF(FPDF):
     """Custom PDF class to implement extra customisation.
@@ -32,6 +20,18 @@ class PDF(FPDF):
         parent_title: str
             Title of root project to use in component sections.
     """
+
+    # Global styles for PDF
+    BLUE = (173, 216, 230)
+    HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
+    FONT_SIZES = {
+        'h1': 18,  # Project titles
+        'h2': 16,  # Section titles
+        'h3': 14,  # Section sub-titles
+        'h4': 12,  # Body
+        'h5': 10  # Footer
+    }
+    LINE_PADDING = 0.5  # Gaps between lines
 
     def __init__(self, url='', parent_url='', parent_title=''):
         super().__init__()
@@ -60,7 +60,7 @@ class PDF(FPDF):
     def footer(self):
         self.set_y(-15)
         self.set_x(-30)
-        self.set_font(self.font, size=FONT_SIZES['h5'])
+        self.set_font(self.font, size=PDF.FONT_SIZES['h5'])
         self.cell(0, 10, f"Page: {self.page_no()}", align="C")
         self.set_x(10)
         timestamp = self.date_printed.strftime(
@@ -97,13 +97,13 @@ class PDF(FPDF):
         if isinstance(fielddict[key], list):
             # Create separate paragraphs for more complex attributes
             self.write(0, '\n')
-            self.set_font(self.font, size=FONT_SIZES['h3'])
+            self.set_font(self.font, size=PDF.FONT_SIZES['h3'])
             self.multi_cell(
                 0, h=0,
                 text=f'**{field_name}**\n\n',
-                align='L', markdown=True, padding=LINE_PADDING
+                align='L', markdown=True, padding=PDF.LINE_PADDING
             )
-            self.set_font(self.font, size=FONT_SIZES['h4'])
+            self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
             for item in fielddict[key]:
                 for subkey in item.keys():
                     if subkey in pdf_display_names:
@@ -114,7 +114,7 @@ class PDF(FPDF):
                     self.multi_cell(
                         0, h=0,
                         text=f'**{field_name}:** {item[subkey]}\n\n',
-                        align='L', markdown=True, padding=LINE_PADDING
+                        align='L', markdown=True, padding=PDF.LINE_PADDING
                     )
                 self.write(0, '\n')
         else:
@@ -125,7 +125,7 @@ class PDF(FPDF):
                 text=f'**{field_name}:** {fielddict[key]}\n\n',
                 align='L',
                 markdown=True,
-                padding=LINE_PADDING
+                padding=PDF.LINE_PADDING
             )
     
     def _write_project_body(self, project):
@@ -143,16 +143,15 @@ class PDF(FPDF):
         self.set_line_width(0.05)
         self.set_left_margin(10)
         self.set_right_margin(10)
-        self.set_font(self.font, size=FONT_SIZES['h4'])
+        self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         wikis = project['wikis']
 
-        # Write header section
-        # Write parent header and title first
+        # Start with parent, project headers and links
         if self.parent_title:
-            self.set_font(self.font, size=FONT_SIZES['h1'], style='B')
+            self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
             self.multi_cell(0, h=0, text=f'{self.parent_title}\n', align='L')
         if self.parent_url:
-            self.set_font(self.font, size=FONT_SIZES['h4'])
+            self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
             self.cell(
                 text='Main Project URL:', align='L'
             )
@@ -160,24 +159,21 @@ class PDF(FPDF):
                 text=f'{self.parent_url}\n', align='L', link=self.parent_url
             )
             self.write(0, '\n\n')
-
         # Check if title, url is of parent's to avoid duplication
         title = project['metadata']['title']
         if self.parent_title != title:
-            self.set_font(self.font, size=FONT_SIZES['h1'], style='B')
+            self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
             self.multi_cell(
                 0, h=0, text=f'{title}\n',
-                align='L', padding=LINE_PADDING
+                align='L', padding=PDF.LINE_PADDING
             )
 
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')
-
         self.url = url  # Set current URL to use in QR codes
         qr_img = self.generate_qr_code()
         self.image(qr_img, w=30, x=Align.R, y=5)
-
-        self.set_font(self.font, size=FONT_SIZES['h4'])
+        self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         if url and self.parent_url != url:
             self.cell(
                 text='Component URL:',
@@ -189,27 +185,26 @@ class PDF(FPDF):
                 link=url
             )
             self.write(0, '\n\n')
-
         self.ln()
         self.ln()
 
         # Write title for metadata section, then actual fields
-        self.set_font(self.font, size=FONT_SIZES['h2'], style='B')
+        self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
         self.multi_cell(
             0, h=0, text='1. Project Metadata\n',
-            align='L', padding=LINE_PADDING)
-        self.set_font(self.font, size=FONT_SIZES['h4'])
+            align='L', padding=PDF.LINE_PADDING)
+        self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         for key in project['metadata']:
             self._write_list_section(key, project['metadata'])
         self.write(0, '\n')
         self.write(0, '\n')
 
         # Write Contributors in table
-        self.set_font(self.font, size=FONT_SIZES['h2'], style='B')
+        self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
         self.multi_cell(0, h=0, text='2. Contributors\n', align='L')
-        self.set_font(self.font, size=FONT_SIZES['h4'])
+        self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         with self.table(
-            headings_style=HEADINGS_STYLE,
+            headings_style=PDF.HEADINGS_STYLE,
             col_widths=(1, 0.5, 1)
         ) as table:
             row = table.row()
@@ -232,15 +227,15 @@ class PDF(FPDF):
 
         # List files stored in storage providers
         # For now only OSF Storage is involved
-        self.set_font(self.font, size=FONT_SIZES['h2'], style='B')
+        self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
         self.multi_cell(0, h=0, text='3. Files in Main Project\n', align='L')
         self.write(0, '\n')
-        self.set_font(self.font, size=FONT_SIZES['h3'], style='B')
+        self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='B')
         self.multi_cell(0, h=0, text='OSF Storage\n', align='L')
-        self.set_font(self.font, size=FONT_SIZES['h4'])
+        self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         if len(project['files']) > 0:
             with self.table(
-                headings_style=HEADINGS_STYLE,
+                headings_style=PDF.HEADINGS_STYLE,
                 col_widths=(1, 0.5, 1)
             ) as table:
                 row = table.row()
@@ -264,16 +259,27 @@ class PDF(FPDF):
                 0, h=0, text='No files found for this project.\n', align='L'
             )
             self.write(0, '\n')
-
+        
         # Write wikis separately to more easily handle Markdown parsing
         self.ln()
-        self.set_font(self.font, size=FONT_SIZES['h1'], style='B')
+        self._write_wiki_pages(wikis)
+    
+    def _write_wiki_pages(self, wikis):
+        """Write inplace the wiki pages to the PDF.
+
+        Parameters
+        -----------
+            wikis: dict
+                Dictionary containing wiki data to write.
+        """
+        
+        self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
         self.multi_cell(0, h=0, text='4. Wiki\n', align='L')
         self.ln()
         for i, wiki in enumerate(wikis.keys()):
-            self.set_font(self.font, size=FONT_SIZES['h2'], style='B')
+            self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
             self.multi_cell(0, h=0, text=f'{wiki}\n')
-            self.set_font(self.font, size=FONT_SIZES['h4'])
+            self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
             html = markdown(wikis[wiki])
             self.write_html(html)
             if i < len(wikis.keys())-1:
