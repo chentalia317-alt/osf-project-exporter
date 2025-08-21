@@ -1,11 +1,33 @@
 import datetime
 import os
 import io
+import html
 
 from fpdf import FPDF, Align
 from fpdf.fonts import FontFace
-from mistletoe import markdown
+from mistletoe import markdown, HTMLRenderer
 import qrcode
+
+class HTMLImageSizeCapRenderer(HTMLRenderer):
+    """Custom Markdown to HTML renderer which caps image size."""
+
+    max_width = 300
+    max_height = 300
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def render_image(self, token):
+        """Render an image with a specified size."""
+
+        template = '<img src="{}" alt="{}"{}{}{} />'
+        width = ' width="{}"'.format(html.escape(str(HTMLImageSizeCapRenderer.max_width)))
+        height = ' height="{}"'.format(html.escape(str(HTMLImageSizeCapRenderer.max_height)))
+        if token.title:
+            title = ' title="{}"'.format(html.escape(token.title))
+        else:
+            title = ""
+        return template.format(token.src, self.render_to_plain(token), title, width, height)
 
 
 class PDF(FPDF):
@@ -280,7 +302,10 @@ class PDF(FPDF):
             self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
             self.multi_cell(0, h=0, text=f'{wiki}\n')
             self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
-            html = markdown(wikis[wiki])
+            html = markdown(
+                wikis[wiki],
+                renderer=HTMLImageSizeCapRenderer
+            )
             self.write_html(html)
             if i < len(wikis.keys())-1:
                 self.add_page()
