@@ -26,8 +26,9 @@ from osfexport.cli import (
     cli, prompt_pat
 )
 from osfexport.formatter import (
-    write_pdf, PDF
+    write_pdf, HTMLImageSizeCapRenderer
 )
+from mistletoe import markdown
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
@@ -725,26 +726,34 @@ class TestFormatter(TestCase):
         os.remove(path_one)
         os.remove(path_two)
     
-    def test_write_image_with_size_into_pdf(self):
-        markdown = """This has an image in the wiki page.
+    def test_write_image_html_with_new_size(self):
+        text = """This has an image in the wiki page.
 ![Someone taking a pic on their phone camera][1]This is an image above this text.
 Another paragraph.
 
   [1]: https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png"""
+        
+        HTMLImageSizeCapRenderer.max_width = 400
+        HTMLImageSizeCapRenderer.max_height = 400
 
-        pdf = PDF()
-        pdf.add_page()
-        pdf._write_wiki_pages({'Home': markdown})
-        pdf_output_path = 'test_project.pdf'
-        pdf.output(pdf_output_path)
-        try:
-            assert os.path.exists(pdf_output_path), (
-                'PDF file was not created.'
-            )
-            #os.remove(pdf_output_path)
-        except AssertionError as e:
-            #os.remove(pdf_output_path)
-            raise e
+        html = markdown(
+            text,
+            renderer=HTMLImageSizeCapRenderer
+        )
+        expected_html = (
+            '<p>This has an image in the wiki page.\n'
+            '<img src="https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png" '
+            'alt="Someone taking a pic on their phone camera" '
+            f'width="{HTMLImageSizeCapRenderer.max_width}" height="{HTMLImageSizeCapRenderer.max_width}" />'
+            'This is an image above this text.\n'
+            'Another paragraph.</p>\n'
+        )
+        assert html == expected_html, (
+            'Expected HTML: ',
+            expected_html,
+            'Actual HTML: ',
+            html
+        )
 
 class TestCLI(TestCase):
     @patch('osfexport.exporter.is_public', lambda x: True)
