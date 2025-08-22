@@ -5,6 +5,7 @@ import html
 
 from fpdf import FPDF, Align
 from fpdf.fonts import FontFace
+from fpdf.image_parsing import get_img_info
 from mistletoe import markdown, HTMLRenderer
 import qrcode
 
@@ -21,8 +22,21 @@ class HTMLImageSizeCapRenderer(HTMLRenderer):
         """Render an image with a specified size."""
 
         template = '<img src="{}" alt="{}"{}{}{} />'
-        width = ' width="{}"'.format(html.escape(str(HTMLImageSizeCapRenderer.max_width)))
-        height = ' height="{}"'.format(html.escape(str(HTMLImageSizeCapRenderer.max_height)))
+
+        # Cap image size if needed so they can fit on the page
+        img_info = get_img_info(token.src)
+        if img_info['w'] > HTMLImageSizeCapRenderer.max_width:
+            new_width = HTMLImageSizeCapRenderer.max_width
+        else:
+            new_width = img_info['w']
+        width = ' width="{}"'.format(html.escape(str(new_width)))
+        
+        if img_info['h'] > HTMLImageSizeCapRenderer.max_height:
+            new_height = HTMLImageSizeCapRenderer.max_height
+        else:
+            new_height = img_info['h']
+        height = ' height="{}"'.format(html.escape(str(new_height)))
+        
         if token.title:
             title = ' title="{}"'.format(html.escape(token.title))
         else:
