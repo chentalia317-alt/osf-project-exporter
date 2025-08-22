@@ -30,7 +30,7 @@ Issues = "https://github.com/CenterForOpenScience/osf-project-exporter/issues"
 
 [project.scripts]
 # Executable scripts, names are commands
-clirun = "osfexport.cli:cli"
+osfget = "osfexport.cli:cli"
 
 [build-system]
 requires = ["flit_core<4"]

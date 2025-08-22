@@ -27,6 +27,6 @@ You could also setup a Python virtual environment (e.g. using virtualenv):
 
 ## Usage
 
-- Run `clirun` to get a list of basic commands you can use.
-- To see what a command needs as input, type `--help` after the command name (e.g. `clirun show-welcome --help`; `clirun --help`)
-- To export all your projects from the OSF into a PDF, run `clirun export-projects`.
+- Run `osfget` to get a list of basic commands you can use.
+- To see what a command needs as input, type `--help` after the command name (e.g. `osfget show-welcome --help`; `osfget --help`)
+- To export all your projects from the OSF into a PDF, run `osfget export-projects`.
