@@ -1,11 +1,11 @@
 [project]
 name = "osfio-export-tool"
-version = "0.1.1"
+version = "0.1.0"
 authors = [
-  "Ramiro Bravo <ramiro.bravo@manchester.ac.uk>",
-  "Sarah Jaffa <sarah.jaffa@manchester.ac.uk>",
-  "Benito Matischen <benito.matischen@manchester.ac.uk>",
-  "Center for Open Science <contact@cos.io>"
+  { name="Ramiro Bravo", email="ramiro.bravo@manchester.ac.uk" },
+  { name="Sarah Jaffa", email="sarah.jaffa@manchester.ac.uk" },
+  { name="Benito Matischen", email="benito.matischen@manchester.ac.uk" },
+  { name="Center for Open Science <contact@cos.io>", email="contact@cos.io" }
 ]
 description = "A package for exporting projects from the Open Science Framework web app. Comes with a CLI."
 readme = "README.md"
