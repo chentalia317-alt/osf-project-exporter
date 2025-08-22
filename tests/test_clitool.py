@@ -11,7 +11,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from osfexport.exporter import (
+from osfexport import (
     MockAPIResponse,
     call_api,
     get_project_data,
@@ -20,6 +20,9 @@ from osfexport.exporter import (
     explore_wikis,
     is_public,
     extract_project_id,
+    paginate_json_result,
+    prompt_pat, write_pdf,
+    cli
     paginate_json_result
 )
 from osfexport.cli import (
