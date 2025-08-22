@@ -5,7 +5,7 @@ authors = [
   { name="Ramiro Bravo", email="ramiro.bravo@manchester.ac.uk" },
   { name="Sarah Jaffa", email="sarah.jaffa@manchester.ac.uk" },
   { name="Benito Matischen", email="benito.matischen@manchester.ac.uk" },
-  { name="Center for Open Science <contact@cos.io>", email="contact@cos.io>" }
+  { name="Center for Open Science <contact@cos.io>", email="contact@cos.io" }
 ]
 description = "A package for exporting projects from the Open Science Framework web app. Comes with a CLI."
 readme = "README.md"
