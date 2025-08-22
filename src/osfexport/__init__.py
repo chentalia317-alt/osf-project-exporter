@@ -1,9 +1,16 @@
-from .exporter import (
-    call_api, get_nodes,
-    is_public, extract_project_id
+from osfexport.exporter import (
+    call_api, get_project_data,
+    explore_file_tree, explore_wikis,
+    is_public, extract_project_id,
+    MockAPIResponse, get_nodes,
+    paginate_json_result
 )
 
-from .formatter import (
+from osfexport.cli import (
+    prompt_pat, cli
+)
+
+from osfexport.formatter import (
     write_pdf
 )
 
@@ -12,5 +19,11 @@ __all__ = [
     'get_nodes',
     'write_pdf',
     'is_public',
-    'extract_project_id'
+    'extract_project_id',
+    'MockAPIResponse',
+    'get_nodes',
+    'paginate_json_result',
+    'extract_project_id',
+    'prompt_pat',
+    'cli'
 ]
