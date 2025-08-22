@@ -308,11 +308,13 @@ class PDF(FPDF):
             wikis: dict
                 Dictionary containing wiki data to write.
         """
-        
-        self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-        self.multi_cell(0, h=0, text='4. Wiki\n', align='L')
-        self.ln()
+
         for i, wiki in enumerate(wikis.keys()):
+            self.add_page()
+            if i == 0:
+                self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
+                self.multi_cell(0, h=0, text='4. Wiki\n', align='L')
+                self.ln()
             self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
             self.multi_cell(0, h=0, text=f'{wiki}\n')
             self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
@@ -321,8 +323,6 @@ class PDF(FPDF):
                 renderer=HTMLImageSizeCapRenderer
             )
             self.write_html(html)
-            if i < len(wikis.keys())-1:
-                self.add_page()
 
 
 def explore_project_tree(project, projects, pdf=None):

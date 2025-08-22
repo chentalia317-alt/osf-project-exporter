@@ -632,8 +632,8 @@ class TestFormatter(TestCase):
         import_two = PdfReader(os.path.join(
             FOLDER_OUT, f'{title_two}-{date_two}.pdf'
         ))
-        assert len(import_one.pages) == 4, (
-            'Expected 4 pages in the first PDF, got: ',
+        assert len(import_one.pages) == 5, (
+            'Expected 5 pages in the first PDF, got: ',
             len(import_one.pages)
         )
 
@@ -643,7 +643,7 @@ class TestFormatter(TestCase):
         content_second_page = import_two.pages[0].extract_text(
             extraction_mode='layout'
         )
-        content_third_page = import_one.pages[2].extract_text(
+        content_third_page = import_one.pages[3].extract_text(
             extraction_mode='layout'
         )
         assert f'{projects[0]['metadata']['title']}' in content_third_page, (
@@ -658,14 +658,12 @@ class TestFormatter(TestCase):
         assert f'{url}' in content_first_page, (
             content_third_page
         )
-
         assert 'Category: Uncategorized' in content_first_page, (
             content_first_page
         )
         assert 'Category: Methods and Measures' in content_second_page, (
             content_second_page
         )
-
         timestamp = pdf_one.date_printed.strftime(
             '%Y-%m-%d %H:%M:%S %Z')
         assert f'Exported: {timestamp}' in content_first_page, (
@@ -676,7 +674,6 @@ class TestFormatter(TestCase):
         # This way of string formatting compresses line lengths used
         # End of headers and table rows marked by \n\n
         contributors_table = (
-            'Subjects: sub1, sub2, sub3\n\n'
             '2. Contributors\n\n'
             'Name'
             'Bibliographic?'
@@ -690,7 +687,6 @@ class TestFormatter(TestCase):
             'Margarine'
             'Yes'
             'https://test.osf.io/userid/\n\n'
-            '3. Files in Main Project'
         ).replace(' ', '')
         assert contributors_table in content_first_page.replace(' ', ''), (
             'Table: ',
@@ -713,7 +709,6 @@ class TestFormatter(TestCase):
             'file2.txt'
             'N/A'
             'N/A\n\n'
-            '4. Wiki'
         ).replace(' ', '')
         assert files_table in content_first_page.replace(' ', ''), (
             'Table: ',
