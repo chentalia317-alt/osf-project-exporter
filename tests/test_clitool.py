@@ -727,7 +727,7 @@ class TestFormatter(TestCase):
 ![Someone taking a pic on their phone camera][1]This is an image above this text.
 Another paragraph.
 
-  [1]: https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png"""
+  [1]: https://tinyurl.com/3453t48r"""
 
         HTMLImageSizeCapRenderer.max_width = 200
         HTMLImageSizeCapRenderer.max_height = 200

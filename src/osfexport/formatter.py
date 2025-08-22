@@ -68,7 +68,7 @@ class PDF(FPDF):
         'h4': 12,  # Body
         'h5': 10  # Footer
     }
-    LINE_PADDING = 0.5  # Gaps between lines
+    LINE_PADDING = 0  # Gaps between lines
     CELL_WIDTH = 180  # Width of text cells
 
     def __init__(self, url='', parent_url='', parent_title=''):
@@ -267,7 +267,6 @@ class PDF(FPDF):
         # For now only OSF Storage is involved
         self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
         self.multi_cell(w=PDF.CELL_WIDTH, h=None, text='3. Files in Main Project\n', align='L')
-        self.write(0, '\n')
         self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='B')
         self.multi_cell(w=PDF.CELL_WIDTH, h=None, text='OSF Storage\n', align='L')
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
