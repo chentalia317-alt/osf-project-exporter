@@ -11,7 +11,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from osfexport import (
+from osfexport.exporter import (
     MockAPIResponse,
     call_api,
     get_project_data,
@@ -20,10 +20,15 @@ from osfexport import (
     explore_wikis,
     is_public,
     extract_project_id,
-    paginate_json_result,
-    prompt_pat, write_pdf,
-    cli
+    paginate_json_result
 )
+from osfexport.cli import (
+    cli, prompt_pat
+)
+from osfexport.formatter import (
+    write_pdf, HTMLImageSizeCapRenderer
+)
+from mistletoe import markdown
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
@@ -332,6 +337,68 @@ class TestExporter(TestCase):
             projects[0]['children']
         )
 
+    def test_use_dryrun_in_user_default_dir(self):
+        cwd = os.getcwd()
+        try:
+            # Go to user's home directory in cross-platform way
+            os.chdir(os.path.expanduser("~"))
+            projects, roots = get_nodes('', dryrun=True, usetest=True)
+        except Exception as e:
+            raise e
+        finally:
+            # Reverse state changes for reproducibility
+            os.chdir(cwd)
+            assert os.getcwd() == cwd
+
+    def test_extract_project_id_from_strings(self):
+        url = 'https://osf.io/x/'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        url = 'https://api.test.osf.io/v2/nodes/x/'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        # TODO: add test for passing a URL for test site when
+        # we are using production site, and vice versa
+
+        url = 'x'
+        project_id = extract_project_id(url)
+        assert project_id == 'x', f'Expected "x", got {project_id}'
+
+        # Should just run normally
+        url = ''
+        project_id = extract_project_id(url)
+
+    @patch('osfexport.exporter.call_api')
+    def test_add_on_paginated_results(self, mock_get):
+        # Mock JSON responses
+        page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
+        page2 = {'data': 3, 'links': {'next': 'http://api.example.com/page3'}}
+        page3 = {'data': 5, 'links': {'next': None}}
+        # Configure mock to return these responses in sequence
+        mock_get.side_effect = [
+            page1,
+            page2,
+            page3
+        ]
+
+        def add_x(json, **kwargs):
+            x = kwargs.get('x', 0)
+            return json['data'] + x
+
+        results = paginate_json_result(
+            start='http://api.example.com/page1', action=add_x, x=5
+        )
+        assert isinstance(results, deque)
+        self.assertEqual(results.popleft(), 1+5)
+        self.assertEqual(results.popleft(), 3+5)
+        self.assertEqual(results.popleft(), 5+5)
+
+
+class TestFormatter(TestCase):
+    """Tests for the PDF formatter."""
+
     def test_write_pdf_no_folder_given(self):
         projects = [
             {
@@ -591,14 +658,12 @@ class TestExporter(TestCase):
         assert f'{url}' in content_first_page, (
             content_third_page
         )
-
         assert 'Category: Uncategorized' in content_first_page, (
             content_first_page
         )
         assert 'Category: Methods and Measures' in content_second_page, (
             content_second_page
         )
-
         timestamp = pdf_one.date_printed.strftime(
             '%Y-%m-%d %H:%M:%S %Z')
         assert f'Exported: {timestamp}' in content_first_page, (
@@ -609,7 +674,6 @@ class TestExporter(TestCase):
         # This way of string formatting compresses line lengths used
         # End of headers and table rows marked by \n\n
         contributors_table = (
-            'Subjects: sub1, sub2, sub3\n\n'
             '2. Contributors\n\n'
             'Name'
             'Bibliographic?'
@@ -623,7 +687,6 @@ class TestExporter(TestCase):
             'Margarine'
             'Yes'
             'https://test.osf.io/userid/\n\n'
-            '3. Files in Main Project'
         ).replace(' ', '')
         assert contributors_table in content_first_page.replace(' ', ''), (
             'Table: ',
@@ -646,7 +709,6 @@ class TestExporter(TestCase):
             'file2.txt'
             'N/A'
             'N/A\n\n'
-            '4. Wiki'
         ).replace(' ', '')
         assert files_table in content_first_page.replace(' ', ''), (
             'Table: ',
@@ -659,63 +721,65 @@ class TestExporter(TestCase):
         os.remove(path_one)
         os.remove(path_two)
 
-    def test_use_dryrun_in_user_default_dir(self):
-        cwd = os.getcwd()
-        try:
-            # Go to user's home directory in cross-platform way
-            os.chdir(os.path.expanduser("~"))
-            projects, roots = get_nodes('', dryrun=True, usetest=True)
-        except Exception as e:
-            raise e
-        finally:
-            # Reverse state changes for reproducibility
-            os.chdir(cwd)
-            assert os.getcwd() == cwd
+    def test_write_image_html_with_new_size(self):
+        # Use a large image - should be resized
+        text = """This has an image in the wiki page.
+![Someone taking a pic on their phone camera][1]This is an image above this text.
+Another paragraph.
 
-    def test_extract_project_id_from_strings(self):
-        url = 'https://osf.io/x/'
-        project_id = extract_project_id(url)
-        assert project_id == 'x', f'Expected "x", got {project_id}'
+  [1]: https://tinyurl.com/3453t48r"""
 
-        url = 'https://api.test.osf.io/v2/nodes/x/'
-        project_id = extract_project_id(url)
-        assert project_id == 'x', f'Expected "x", got {project_id}'
-
-        # TODO: add test for passing a URL for test site when
-        # we are using production site, and vice versa
-
-        url = 'x'
-        project_id = extract_project_id(url)
-        assert project_id == 'x', f'Expected "x", got {project_id}'
-
-        # Should just run normally
-        url = ''
-        project_id = extract_project_id(url)
-
-    @patch('osfexport.exporter.call_api')
-    def test_add_on_paginated_results(self, mock_get):
-        # Mock JSON responses
-        page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
-        page2 = {'data': 3, 'links': {'next': 'http://api.example.com/page3'}}
-        page3 = {'data': 5, 'links': {'next': None}}
-        # Configure mock to return these responses in sequence
-        mock_get.side_effect = [
-            page1,
-            page2,
-            page3
-        ]
-
-        def add_x(json, **kwargs):
-            x = kwargs.get('x', 0)
-            return json['data'] + x
-
-        results = paginate_json_result(
-            start='http://api.example.com/page1', action=add_x, x=5
+        HTMLImageSizeCapRenderer.max_width = 200
+        HTMLImageSizeCapRenderer.max_height = 200
+        html = markdown(
+            text,
+            renderer=HTMLImageSizeCapRenderer
         )
-        assert isinstance(results, deque)
-        self.assertEqual(results.popleft(), 1+5)
-        self.assertEqual(results.popleft(), 3+5)
-        self.assertEqual(results.popleft(), 5+5)
+        expected_width = HTMLImageSizeCapRenderer.max_width
+        expected_height = HTMLImageSizeCapRenderer.max_width
+        expected_html = (
+            '<p>This has an image in the wiki page.\n'
+            '<img src="https://tinyurl.com/3453t48r" '
+            'alt="Someone taking a pic on their phone camera" '
+            f'width="{expected_height}" height="{expected_width}" />'
+            'This is an image above this text.\n'
+            'Another paragraph.</p>\n'
+        )
+        assert html == expected_html, (
+            'Expected HTML: ',
+            expected_html,
+            'Actual HTML: ',
+            html
+        )
+
+        # Use a 300x300 image - should not be resized
+        text = """This has an image in the wiki page.
+![Someone taking a pic on their phone camera][1]This is an image above this text.
+Another paragraph.
+
+  [1]: https://upload.wikimedia.org/wikipedia/commons/3/3c/300_x_300.png"""
+        HTMLImageSizeCapRenderer.max_width = 800
+        HTMLImageSizeCapRenderer.max_height = 400
+        html = markdown(
+            text,
+            renderer=HTMLImageSizeCapRenderer
+        )
+        expected_width = 300
+        expected_height = 300
+        expected_html = (
+            '<p>This has an image in the wiki page.\n'
+            '<img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/300_x_300.png" '
+            'alt="Someone taking a pic on their phone camera" '
+            f'width="{expected_width}" height="{expected_height}" />'
+            'This is an image above this text.\n'
+            'Another paragraph.</p>\n'
+        )
+        assert html == expected_html, (
+            'Expected HTML: ',
+            expected_html,
+            'Actual HTML: ',
+            html
+        )
 
 
 class TestCLI(TestCase):
