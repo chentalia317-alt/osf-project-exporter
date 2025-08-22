@@ -21,12 +21,15 @@ You could also setup a Python virtual environment (e.g. using virtualenv):
 
 1. Clone this repository onto your local machine.
 2. Create a virtual environment, e.g., ``virtualenv myenv --python='"/usr/bin/python3.12"'``. Make sure your virtual environment is setup to use Python 3.12 or above.
-3. Activate your virtual environment and run ``pip install -e osfio-export-tool` to install the CLI tool inside the environment.
-4. From TestPyPI: `python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps osfio-export-tool==0.0.5`, and install other requirements separately via `pip install -r requirements.txt`.
-5. On the OSF website, create or log in to your account.  Set up a personal access token (PAT) by going into your account settings, selecting "Personal access tokens" in the left side menu, and clicking "Create token". You should give the token a name that helps you remember why you made it, like "PDF export", and choose the "osf.full_read" scope - this allows this token to read all public and private projects on your account. You can delete this token once you have finished exporting your projects.
+3. From local Git repo: Activate your virtual environment and run ``pip install -e osfio-export-tool` to install this repository as a modifiable package. Then install other requirements separately via `pip install -r requirements.txt`.
+4. On the OSF website, create or log in to your account.  Set up a personal access token (PAT) by going into your account settings, selecting "Personal access tokens" in the left side menu, and clicking "Create token". You should give the token a name that helps you remember why you made it, like "PDF export", and choose the "osf.full_read" scope - this allows this token to read all public and private projects on your account. You can delete this token once you have finished exporting your projects.
+
+## Installation
+
+From TestPyPI: Activate your virtual environment and run `#python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple osfio-export-tool`. This will download the packages needed from the PyPI index and the packaged version of this CLI tool on the TestPyPI index.
 
 ## Usage
 
-- Run `clirun` to get a list of basic commands you can use.
-- To see what a command needs as input, type `--help` after the command name (e.g. `clirun show-welcome --help`; `clirun --help`)
-- To export all your projects from the OSF into a PDF, run `clirun export-projects`.
+- Run `osfget` to get a list of basic commands you can use.
+- To see what a command needs as input, type `--help` after the command name (e.g. `osfget show-welcome --help`; `osfget --help`)
+- To export all your projects from the OSF into a PDF, run `osfget export-projects`.
