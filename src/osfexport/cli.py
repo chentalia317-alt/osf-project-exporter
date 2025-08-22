@@ -3,8 +3,8 @@ import urllib.request as webhelper
 
 import click
 
-import src.osfexport.exporter as exporter
-import src.osfexport.formatter as formatter
+import osfexport.exporter as exporter
+import osfexport.formatter as formatter
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')

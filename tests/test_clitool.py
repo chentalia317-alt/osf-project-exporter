@@ -11,7 +11,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from src.osfexport.exporter import (
+from osfexport.exporter import (
     MockAPIResponse,
     call_api,
     get_project_data,
@@ -22,10 +22,10 @@ from src.osfexport.exporter import (
     extract_project_id,
     paginate_json_result
 )
-from src.osfexport.cli import (
+from osfexport.cli import (
     cli, prompt_pat
 )
-from src.osfexport.formatter import (
+from osfexport.formatter import (
     write_pdf
 )
 
@@ -696,7 +696,7 @@ class TestExporter(TestCase):
         url = ''
         project_id = extract_project_id(url)
 
-    @patch('src.osfexport.exporter.call_api')
+    @patch('osfexport.exporter.call_api')
     def test_add_on_paginated_results(self, mock_get):
         # Mock JSON responses
         page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
@@ -723,14 +723,14 @@ class TestExporter(TestCase):
 
 
 class TestCLI(TestCase):
-    @patch('src.osfexport.exporter.is_public', lambda x: True)
+    @patch('osfexport.exporter.is_public', lambda x: True)
     def test_prompt_pat_if_public_project_id_given(self):
         pat = prompt_pat('x')
         assert pat == '', (
             pat
         )
 
-    @patch('src.osfexport.exporter.is_public', lambda x: False)
+    @patch('osfexport.exporter.is_public', lambda x: False)
     @patch('click.prompt', return_value='strinput')
     def test_prompt_pat_if_private_project_id_given(self, mock_obj):
         pat = prompt_pat('x')
