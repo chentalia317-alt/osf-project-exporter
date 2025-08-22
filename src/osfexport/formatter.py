@@ -312,15 +312,14 @@ class PDF(FPDF):
         """
 
         for i, wiki in enumerate(wikis.keys()):
-            pdf.set_font(pdf.font, size=FONT_SIZES['h2'], style='B')
-            pdf.multi_cell(w=PDF.CELL_WIDTH, h=None, text=f'{wiki}\n')
-            pdf.set_font(pdf.font, size=FONT_SIZES['h4'])
+            self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
+            self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=f'{wiki}\n')
+            self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
             html = markdown(wikis[wiki])
-            pdf.write_html(html)
+            self.write_html(html)
             if i < len(wikis.keys())-1:
-                pdf.add_page()
+                self.add_page()
 
-        return pdf
 
 def explore_project_tree(project, projects, pdf=None):
     """Recursively find child projects and write them to a PDF.

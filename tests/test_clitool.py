@@ -22,7 +22,7 @@ from osfexport import (
     extract_project_id,
     paginate_json_result,
     prompt_pat, write_pdf,
-    cli
+    cli,
     paginate_json_result
 )
 from osfexport.cli import (
