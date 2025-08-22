@@ -544,10 +544,10 @@ def get_project_data(nodes, **kwargs):
         }
         for field in fields['metadata']:
             project_data['metadata'][field] = fields['metadata'][field](
-                project, dryrun=dryrun, key=field
+                project, dryrun=dryrun, key=field, pat=pat
             )
         project_data['contributors'] = fields['contributors'](
-            project, dryrun=dryrun, key='contributors'
+            project, dryrun=dryrun, key='contributors', pat=pat
         )
 
         # TODO: split into function
