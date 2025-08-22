@@ -727,15 +727,15 @@ class TestFormatter(TestCase):
         os.remove(path_two)
     
     def test_write_image_html_with_new_size(self):
+        # Use a large image - should be resized
         text = """This has an image in the wiki page.
 ![Someone taking a pic on their phone camera][1]This is an image above this text.
 Another paragraph.
 
   [1]: https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png"""
         
-        HTMLImageSizeCapRenderer.max_width = 400
-        HTMLImageSizeCapRenderer.max_height = 400
-
+        HTMLImageSizeCapRenderer.max_width = 200
+        HTMLImageSizeCapRenderer.max_height = 200
         html = markdown(
             text,
             renderer=HTMLImageSizeCapRenderer
@@ -745,6 +745,35 @@ Another paragraph.
             '<img src="https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png" '
             'alt="Someone taking a pic on their phone camera" '
             f'width="{HTMLImageSizeCapRenderer.max_width}" height="{HTMLImageSizeCapRenderer.max_width}" />'
+            'This is an image above this text.\n'
+            'Another paragraph.</p>\n'
+        )
+        assert html == expected_html, (
+            'Expected HTML: ',
+            expected_html,
+            'Actual HTML: ',
+            html
+        )
+
+        # Use a 300x300 image - should not be resized
+        text = """This has an image in the wiki page.
+![Someone taking a pic on their phone camera][1]This is an image above this text.
+Another paragraph.
+
+  [1]: https://upload.wikimedia.org/wikipedia/commons/3/3c/300_x_300.png"""
+        HTMLImageSizeCapRenderer.max_width = 800
+        HTMLImageSizeCapRenderer.max_height = 400
+        html = markdown(
+            text,
+            renderer=HTMLImageSizeCapRenderer
+        )
+        expected_width = 300
+        expected_height = 300
+        expected_html = (
+            '<p>This has an image in the wiki page.\n'
+            '<img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/300_x_300.png" '
+            'alt="Someone taking a pic on their phone camera" '
+            f'width="{expected_width}" height="{expected_height}" />'
             'This is an image above this text.\n'
             'Another paragraph.</p>\n'
         )
