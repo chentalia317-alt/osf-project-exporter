@@ -9,6 +9,7 @@ from fpdf.image_parsing import get_img_info
 from mistletoe import markdown, HTMLRenderer
 import qrcode
 
+
 class HTMLImageSizeCapRenderer(HTMLRenderer):
     """Custom Markdown to HTML renderer which caps image size."""
 
@@ -30,13 +31,13 @@ class HTMLImageSizeCapRenderer(HTMLRenderer):
         else:
             new_width = img_info['w']
         width = ' width="{}"'.format(html.escape(str(new_width)))
-        
+
         if img_info['h'] > HTMLImageSizeCapRenderer.max_height:
             new_height = HTMLImageSizeCapRenderer.max_height
         else:
             new_height = img_info['h']
         height = ' height="{}"'.format(html.escape(str(new_height)))
-        
+
         if token.title:
             title = ' title="{}"'.format(html.escape(token.title))
         else:
@@ -107,7 +108,7 @@ class PDF(FPDF):
         self.set_y(-25)
         qr_img = self.generate_qr_code()
         self.image(qr_img, w=15, h=15, x=Align.C)
-    
+
     def _write_list_section(self, key, fielddict):
         """Handle writing fields of different types inplace to a PDF.
         Possible types are lists, strings or dictionaries.
@@ -163,7 +164,7 @@ class PDF(FPDF):
                 markdown=True,
                 padding=PDF.LINE_PADDING
             )
-    
+
     def _write_project_body(self, project):
         """Write inplace the body of a project to the PDF.
 
@@ -174,7 +175,7 @@ class PDF(FPDF):
             parent_title: str
                 Title of the parent project.
         """
-        
+
         self.add_page()
         self.set_line_width(0.05)
         self.set_left_margin(10)
@@ -295,11 +296,11 @@ class PDF(FPDF):
                 0, h=0, text='No files found for this project.\n', align='L'
             )
             self.write(0, '\n')
-        
+
         # Write wikis separately to more easily handle Markdown parsing
         self.ln()
         self._write_wiki_pages(wikis)
-    
+
     def _write_wiki_pages(self, wikis):
         """Write inplace the wiki pages to the PDF.
 
@@ -326,46 +327,47 @@ class PDF(FPDF):
 
 
 def explore_project_tree(project, projects, pdf=None):
-        """Recursively find child projects and write them to a PDF.
+    """Recursively find child projects and write them to a PDF.
 
-        Parameters
-        -----------
-            project: dict
-                Dictionary containing project data to write.
-            projects: list[dict]
-                List of all projects to explore.
-            pdf: PDF
-                PDF object to write to. If None, a new PDF will be created.
-            parent_title: str
-                Title of the parent project.
+    Parameters
+    -----------
+        project: dict
+            Dictionary containing project data to write.
+        projects: list[dict]
+            List of all projects to explore.
+        pdf: PDF
+            PDF object to write to. If None, a new PDF will be created.
+        parent_title: str
+            Title of the parent project.
 
-        Returns
-        -----------
-            pdf: PDF
-                PDF object with the project and its children written to it."""
+    Returns
+    -----------
+        pdf: PDF
+            PDF object with the project and its children written to it."""
 
-        # Start with no PDF at root projects
-        if not pdf:
-            pdf = PDF(
-                parent_title=project['metadata']['title'],
-                parent_url=project['metadata']['url']
+    # Start with no PDF at root projects
+    if not pdf:
+        pdf = PDF(
+            parent_title=project['metadata']['title'],
+            parent_url=project['metadata']['url']
+        )
+
+    # Add current project to PDF
+    pdf._write_project_body(project)
+
+    # Do children last so that they come at end of the PDF
+    children = project['children']
+    for child_id in children:
+        child_project = next(
+            (p for p in projects if p['metadata']['id'] == child_id), None
+        )
+        if child_project:
+            pdf = explore_project_tree(
+                child_project, projects, pdf=pdf
             )
 
-        # Add current project to PDF
-        pdf._write_project_body(project)
+    return pdf
 
-        # Do children last so that they come at end of the PDF
-        children = project['children']
-        for child_id in children:
-            child_project = next(
-                (p for p in projects if p['metadata']['id'] == child_id), None
-            )
-            if child_project:
-                pdf = explore_project_tree(
-                    child_project, projects, pdf=pdf
-                )
-
-        return pdf
 
 def write_pdf(projects, root_idx, folder=''):
     """Make PDF for each project.

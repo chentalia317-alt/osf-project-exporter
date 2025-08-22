@@ -720,7 +720,7 @@ class TestFormatter(TestCase):
         # Remove files only if all good - keep for debugging otherwise
         os.remove(path_one)
         os.remove(path_two)
-    
+
     def test_write_image_html_with_new_size(self):
         # Use a large image - should be resized
         text = """This has an image in the wiki page.
@@ -728,18 +728,20 @@ class TestFormatter(TestCase):
 Another paragraph.
 
   [1]: https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png"""
-        
+
         HTMLImageSizeCapRenderer.max_width = 200
         HTMLImageSizeCapRenderer.max_height = 200
         html = markdown(
             text,
             renderer=HTMLImageSizeCapRenderer
         )
+        expected_width = HTMLImageSizeCapRenderer.max_width
+        expected_height = HTMLImageSizeCapRenderer.max_width
         expected_html = (
             '<p>This has an image in the wiki page.\n'
-            '<img src="https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png" '
+            '<img src="https://tinyurl.com/3453t48r" '
             'alt="Someone taking a pic on their phone camera" '
-            f'width="{HTMLImageSizeCapRenderer.max_width}" height="{HTMLImageSizeCapRenderer.max_width}" />'
+            f'width="{expected_height}" height="{expected_width}" />'
             'This is an image above this text.\n'
             'Another paragraph.</p>\n'
         )
@@ -778,6 +780,7 @@ Another paragraph.
             'Actual HTML: ',
             html
         )
+
 
 class TestCLI(TestCase):
     @patch('osfexport.exporter.is_public', lambda x: True)
