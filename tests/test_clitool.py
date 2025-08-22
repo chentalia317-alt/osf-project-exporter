@@ -11,7 +11,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pypdf import PdfReader
 
-from src.osfexport.exporter import (
+from osfexport import (
     MockAPIResponse,
     call_api,
     get_project_data,
@@ -20,13 +20,9 @@ from src.osfexport.exporter import (
     explore_wikis,
     is_public,
     extract_project_id,
-    paginate_json_result
-)
-from src.osfexport.cli import (
-    cli, prompt_pat
-)
-from src.osfexport.formatter import (
-    write_pdf
+    paginate_json_result,
+    prompt_pat, write_pdf,
+    cli
 )
 
 TEST_PDF_FOLDER = 'good-pdfs'
@@ -569,8 +565,8 @@ class TestExporter(TestCase):
         import_two = PdfReader(os.path.join(
             FOLDER_OUT, f'{title_two}-{date_two}.pdf'
         ))
-        assert len(import_one.pages) == 4, (
-            'Expected 4 pages in the first PDF, got: ',
+        assert len(import_one.pages) == 5, (
+            'Expected 5 pages in the first PDF, got: ',
             len(import_one.pages)
         )
 
@@ -580,7 +576,7 @@ class TestExporter(TestCase):
         content_second_page = import_two.pages[0].extract_text(
             extraction_mode='layout'
         )
-        content_third_page = import_one.pages[2].extract_text(
+        content_third_page = import_one.pages[3].extract_text(
             extraction_mode='layout'
         )
         assert f'{projects[0]['metadata']['title']}' in content_third_page, (
@@ -696,7 +692,7 @@ class TestExporter(TestCase):
         url = ''
         project_id = extract_project_id(url)
 
-    @patch('src.osfexport.exporter.call_api')
+    @patch('osfexport.exporter.call_api')
     def test_add_on_paginated_results(self, mock_get):
         # Mock JSON responses
         page1 = {'data': 1, 'links': {'next': 'http://api.example.com/page2'}}
@@ -723,14 +719,14 @@ class TestExporter(TestCase):
 
 
 class TestCLI(TestCase):
-    @patch('src.osfexport.exporter.is_public', lambda x: True)
+    @patch('osfexport.exporter.is_public', lambda x: True)
     def test_prompt_pat_if_public_project_id_given(self):
         pat = prompt_pat('x')
         assert pat == '', (
             pat
         )
 
-    @patch('src.osfexport.exporter.is_public', lambda x: False)
+    @patch('osfexport.exporter.is_public', lambda x: False)
     @patch('click.prompt', return_value='strinput')
     def test_prompt_pat_if_private_project_id_given(self, mock_obj):
         pat = prompt_pat('x')
