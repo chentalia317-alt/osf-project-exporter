@@ -114,6 +114,7 @@ class TestAPI(TestCase):
 
 # Commenting out this test as it needs fixing
 # By replacing links to images with OSF-hosted images
+# See https://github.com/CenterForOpenScience/osf-project-exporter/issues/84
 #     def test_write_image_html_with_new_size(self):
 #         # Use a large image - should be resized
 #         text = """This has an image in the wiki page.
