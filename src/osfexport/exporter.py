@@ -504,7 +504,7 @@ def get_project_data(nodes, **kwargs):
         nodes = {'data': [MockAPIResponse.read(project_id)['data']]}
 
     projects = []
-    root_nodes = []  # Track indexes of root nodes for quick access
+    root_nodes = []  # Track indexes of start nodes for PDFs
     added_node_ids = set()  # Track added node IDs to avoid duplicates
 
     # Dispatch table used to define how to process JSON
@@ -588,11 +588,17 @@ def get_project_data(nodes, **kwargs):
             pat=pat, dryrun=dryrun
         )
 
+        # In general, start nodes for PDFs have no parents
         if 'links' in project['relationships']['parent']:
             project_data['parent'] = project['relationships']['parent'][
                 'links']['related']['href'].split('/')[-1]
         else:
             project_data['parent'] = None
+            root_nodes.append(idx)
+        
+        # Projects specified by ID to export also count as start nodes for PDFs
+        # This will be the first node in list of root nodes
+        if project_data['metadata']['id'] == project_id and 0 not in root_nodes:
             root_nodes.append(idx)
 
         def get_children(json_page, **kwargs):
