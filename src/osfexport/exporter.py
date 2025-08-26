@@ -591,7 +591,7 @@ def get_project_data(nodes, **kwargs):
         # In general, start nodes for PDFs have no parents
         if 'links' in project['relationships']['parent']:
             project_data['parent'] = project['relationships']['parent'][
-                'links']['related']['href'].split('/')[-1]
+                'links']['related']['href']
         else:
             project_data['parent'] = None
             root_nodes.append(idx)
