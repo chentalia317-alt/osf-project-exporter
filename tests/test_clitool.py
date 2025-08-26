@@ -395,6 +395,16 @@ class TestExporter(TestCase):
         self.assertEqual(results.popleft(), 3+5)
         self.assertEqual(results.popleft(), 5+5)
 
+    def test_get_single_component_mock_project(self):
+        projects, roots = get_nodes(
+            pat='', dryrun=True, usetest=True,
+            project_id='a'
+        )
+        assert len(roots) == 1
+        assert len(projects) == 1, (
+            print(projects)
+        )
+        assert projects[0]['metadata']['id'] == 'a'
 
 class TestFormatter(TestCase):
     """Tests for the PDF formatter."""
