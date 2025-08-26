@@ -431,7 +431,7 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
             List of all project objects found
         root_nodes: list[int]
             List of indexes for root nodes in projects list.
-            Make PDFs for these.
+            These are the nodes to make PDFs for and start from in PDFs.
     """
 
     # Set start link and page size filter based on flags
@@ -458,7 +458,9 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
     )
     l1, l2 = zip(*list(results))
     projects = [item for sublist in l1 for item in sublist]
-    # Convert local indexes into global ones for order of projects
+
+    # After pagination we get indexes of root nodes local to each page
+    # We need to convert these to global indexes before merging the list
     page_idx = -1
     for page in l2:
         page_idx += 1
@@ -595,7 +597,7 @@ def get_project_data(nodes, **kwargs):
         else:
             project_data['parent'] = None
             root_nodes.append(idx)
-        
+
         # Projects specified by ID to export also count as start nodes for PDFs
         # This will be the first node in list of root nodes
         if project_data['metadata']['id'] == project_id and 0 not in root_nodes:

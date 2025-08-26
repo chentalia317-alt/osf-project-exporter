@@ -111,7 +111,7 @@ class TestAPI(TestCase):
         assert len(root_projects) == 1, (root_projects)
         assert projects[0]['metadata']['title'] == node['attributes']['title']
         assert isinstance(projects[0]['files'], list)
-    
+
     def test_write_image_html_with_new_size(self):
         # Use a large image - should be resized
         text = """This has an image in the wiki page.
@@ -473,6 +473,7 @@ class TestExporter(TestCase):
             projects[0]['parent']
         )
 
+
 class TestFormatter(TestCase):
     """Tests for the PDF formatter."""
 
@@ -544,7 +545,7 @@ class TestFormatter(TestCase):
         assert is_filename_match, (
             'Unable to create file in current directory.'
         )
-    
+
     def test_write_component_pdf_with_one_off_parent(self):
         projects = [
             {
@@ -921,4 +922,3 @@ class TestCLI(TestCase):
 
         if os.path.exists(FOLDER_OUT):
             shutil.rmtree(FOLDER_OUT)
-

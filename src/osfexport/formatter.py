@@ -210,8 +210,8 @@ class PDF(FPDF):
             if project['parent']:
                 self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
                 self.cell(
-                text='Component of:', align='L'
-            )
+                    text='Component of:', align='L'
+                )
             self.cell(
                 text=f'{project['parent']}\n', align='L', link=project['parent']
             )
