@@ -388,7 +388,9 @@ class TestExporter(TestCase):
             pat='', dryrun=True, usetest=True,
             project_id='x'
         )
-        assert len(roots) == 1
+        assert len(roots) == 1, (
+            roots
+        )
         assert len(projects) == 3, (
             print(projects)
         )
@@ -460,9 +462,9 @@ class TestExporter(TestCase):
             pat='', dryrun=True, usetest=True,
             project_id='a'
         )
-        # assert len(roots) == 1, (
-        #     print('Roots: ', roots)
-        # )
+        assert len(roots) == 1, (
+            roots
+        )
         assert len(projects) == 1, (
             projects
         )
