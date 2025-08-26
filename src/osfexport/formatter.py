@@ -205,6 +205,16 @@ class PDF(FPDF):
                 w=PDF.CELL_WIDTH, h=None, text=f'{title}\n',
                 align='L', padding=PDF.LINE_PADDING
             )
+        # Add link to parent if top-level project is a component
+        else:
+            if project['parent']:
+                self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
+                self.cell(
+                    text='Component of:', align='L'
+                )
+            self.cell(
+                text=f'{project['parent']}\n', align='L', link=project['parent']
+            )
 
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')

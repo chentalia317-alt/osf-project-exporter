@@ -29,6 +29,8 @@ class MockAPIResponse:
             STUBS_DIR, 'nodestubs2.json'),
         'x': os.path.join(
             STUBS_DIR, 'singlenode.json'),
+        'a': os.path.join(
+            STUBS_DIR, 'asingle.json'),
         'affiliated_institutions': os.path.join(
             STUBS_DIR, 'institutionstubs.json'),
         'contributors': os.path.join(
@@ -429,7 +431,7 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
             List of all project objects found
         root_nodes: list[int]
             List of indexes for root nodes in projects list.
-            Make PDFs for these.
+            These are the nodes to make PDFs for and start from in PDFs.
     """
 
     # Set start link and page size filter based on flags
@@ -456,7 +458,9 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
     )
     l1, l2 = zip(*list(results))
     projects = [item for sublist in l1 for item in sublist]
-    # Convert local indexes into global ones for order of projects
+
+    # After pagination we get indexes of root nodes local to each page
+    # We need to convert these to global indexes before merging the list
     page_idx = -1
     for page in l2:
         page_idx += 1
@@ -502,7 +506,7 @@ def get_project_data(nodes, **kwargs):
         nodes = {'data': [MockAPIResponse.read(project_id)['data']]}
 
     projects = []
-    root_nodes = []  # Track indexes of root nodes for quick access
+    root_nodes = []  # Track indexes of start nodes for PDFs
     added_node_ids = set()  # Track added node IDs to avoid duplicates
 
     # Dispatch table used to define how to process JSON
@@ -586,11 +590,17 @@ def get_project_data(nodes, **kwargs):
             pat=pat, dryrun=dryrun
         )
 
+        # In general, start nodes for PDFs have no parents
         if 'links' in project['relationships']['parent']:
             project_data['parent'] = project['relationships']['parent'][
-                'links']['related']['href'].split('/')[-1]
+                'links']['related']['href']
         else:
             project_data['parent'] = None
+            root_nodes.append(idx)
+
+        # Projects specified by ID to export also count as start nodes for PDFs
+        # This will be the first node in list of root nodes
+        if project_data['metadata']['id'] == project_id and 0 not in root_nodes:
             root_nodes.append(idx)
 
         def get_children(json_page, **kwargs):
