@@ -29,6 +29,8 @@ class MockAPIResponse:
             STUBS_DIR, 'nodestubs2.json'),
         'x': os.path.join(
             STUBS_DIR, 'singlenode.json'),
+        'a': os.path.join(
+            STUBS_DIR, 'asingle.json'),
         'affiliated_institutions': os.path.join(
             STUBS_DIR, 'institutionstubs.json'),
         'contributors': os.path.join(
