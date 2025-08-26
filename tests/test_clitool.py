@@ -469,6 +469,9 @@ class TestExporter(TestCase):
             projects
         )
         assert projects[0]['metadata']['id'] == 'a'
+        assert projects[0]['parent'] == 'x', (
+            projects[0]['parent']
+        )
 
 class TestFormatter(TestCase):
     """Tests for the PDF formatter."""
@@ -526,7 +529,85 @@ class TestFormatter(TestCase):
             expected_filename = f'{title_one}-{date_one}.pdf'
 
             is_filename_match = expected_filename in os.listdir(os.getcwd())
+            assert 'Component of:' not in PdfReader(path_one).pages[0].extract_text(), (
+                'Did not expect parent URL in PDF, got: ',
+                PdfReader(path_one).pages[0].extract_text()
+            )
         except Exception as e:
+            if isinstance(e, AssertionError):
+                raise e
+            print(e)
+        finally:
+            if os.path.exists(path_one):
+                os.remove(path_one)
+
+        assert is_filename_match, (
+            'Unable to create file in current directory.'
+        )
+    
+    def test_write_component_pdf_with_one_off_parent(self):
+        projects = [
+            {
+                'metadata': {
+                    'title': 'Component1',
+                    'id': 'id',
+                    'url': 'https://test.osf.io/x',
+                    'category': 'Uncategorized',
+                    'description': 'This is a description of the project',
+                    'date_created': datetime.datetime.fromisoformat(
+                        '2025-06-12T15:54:42.105112Z'
+                    ),
+                    'date_modified': datetime.datetime.fromisoformat(
+                        '2001-01-01T01:01:01.105112Z'
+                    ),
+                    'tags': 'tag1, tag2, tag3',
+                    'resource_type': 'na',
+                    'resource_lang': 'english',
+                    'affiliated_institutions': 'University of Manchester',
+                    'identifiers': 'N/A',
+                    'license': 'Apache 2.0',
+                    'subjects': 'sub1, sub2, sub3',
+                },
+                'contributors': [
+                    ('Pineapple Pizza', False, 'https://test.osf.io/userid/'),
+                    ('Margarita', True, 'https://test.osf.io/userid/'),
+                    ('Margarine', True, 'https://test.osf.io/userid/')
+                ],
+                'files': [
+                    ('file1.txt', None, 'https://test.osf.io/userid/'),
+                    ('file2.txt', None, None),
+                ],
+                'funders': [],
+                'wikis': {
+                    'Home': 'hello world',
+                    'Page2': 'another page'
+                },
+                "parent": 'https://test.osf.io/parent-id',
+                'children': ['a']
+            }
+        ]
+        root_nodes = [0]
+        is_filename_match = False  # Flag for if exported PDF has expected name
+        try:
+            pdf_one, path_one = write_pdf(projects, root_nodes[0], '')
+
+            title_one = projects[0]['metadata']['title'].replace(' ', '-')
+            date_one = pdf_one.date_printed.strftime(
+                '%Y-%m-%d %H:%M:%S %Z'
+            ).replace(' ', '-')
+            expected_filename = f'{title_one}-{date_one}.pdf'
+
+            is_filename_match = expected_filename in os.listdir(os.getcwd())
+
+            page_one = PdfReader(path_one)
+            text = page_one.pages[0].extract_text()
+            assert 'Component of: https://test.osf.io/parent-id' in text, (
+                'Expected parent URL in PDF, got: ',
+                text
+            )
+        except Exception as e:
+            if isinstance(e, AssertionError):
+                raise e
             print(e)
         finally:
             if os.path.exists(path_one):
@@ -792,8 +873,8 @@ class TestFormatter(TestCase):
         )
 
         # Remove files only if all good - keep for debugging otherwise
-        os.remove(path_one)
-        os.remove(path_two)
+        if os.path.exists(FOLDER_OUT):
+            shutil.rmtree(FOLDER_OUT)
 
 
 class TestCLI(TestCase):
@@ -837,3 +918,7 @@ class TestCLI(TestCase):
             result.exc_info,
             traceback.format_tb(result.exc_info[2])
         )
+
+        if os.path.exists(FOLDER_OUT):
+            shutil.rmtree(FOLDER_OUT)
+
