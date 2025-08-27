@@ -126,12 +126,11 @@ class TestExporter(TestCase):
         call_api('https://test.osf.io', pat='pat', is_json=True)
         version = importlib.metadata.version("osfio-export-tool")
         expected_calls = [
-            call().add_header('Authorization', f'Bearer pat'),
+            call().add_header('Authorization', 'Bearer pat'),
             call().add_header('User-Agent', f'osfio-export-tool/{version} (Python)'),
             call().add_header('Accept', 'application/vnd.api+json;version=2.20')
         ]
         mock_request_class.assert_has_calls(expected_calls, any_order=False)
-
 
     def test_get_public_status(self):
         # Public url

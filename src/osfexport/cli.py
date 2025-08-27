@@ -1,6 +1,4 @@
 import os
-import urllib.request as webhelper
-import importlib.metadata
 
 import click
 
@@ -113,7 +111,7 @@ def show_welcome(pat, usetest):
         api_host = API_HOST_TEST
     else:
         api_host = API_HOST_PROD
-    
+
     result = exporter.call_api(f'{api_host}/', pat=pat, method='GET')
     click.echo(result.read())
     click.echo(result.status)
