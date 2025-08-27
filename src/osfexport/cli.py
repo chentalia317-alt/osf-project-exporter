@@ -113,12 +113,8 @@ def show_welcome(pat, usetest):
         api_host = API_HOST_TEST
     else:
         api_host = API_HOST_PROD
-
-    request = webhelper.Request(f'{api_host}/', method='GET')
-    request.add_header('Authorization', f'Bearer {pat}')
-    version = importlib.metadata.version("osfio-export-tool")
-    request.add_header('User-Agent', f'osfio-export-tool/{version} (Python)')
-    result = webhelper.urlopen(request)
+    
+    result = exporter.call_api(f'{api_host}/', pat=pat, method='GET')
     click.echo(result.read())
     click.echo(result.status)
 
