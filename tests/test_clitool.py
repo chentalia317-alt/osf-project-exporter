@@ -4,9 +4,9 @@ from unittest import TestCase
 import os
 import shutil
 import json
-# import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
+import importlib.metadata
 
 from click.testing import CliRunner
 from pypdf import PdfReader
@@ -115,6 +115,23 @@ class TestAPI(TestCase):
 
 class TestExporter(TestCase):
     """Tests for the exporter without real API usage."""
+
+    @patch('urllib.request.urlopen')
+    @patch('urllib.request.Request')
+    def test_call_api_add_headers(self, mock_request_class, mock_urlopen):
+        # Mock Request instances to check headers
+        # Mock urlopen to avoid real HTTP calls
+        mock_request_instance = MagicMock()
+        mock_request_class.return_value = mock_request_instance
+        call_api('https://test.osf.io', pat='pat', is_json=True)
+        version = importlib.metadata.version("osfio-export-tool")
+        expected_calls = [
+            call().add_header('Authorization', f'Bearer pat'),
+            call().add_header('User-Agent', f'osfio-export-tool/{version} (Python)'),
+            call().add_header('Accept', 'application/vnd.api+json;version=2.20')
+        ]
+        mock_request_class.assert_has_calls(expected_calls, any_order=False)
+
 
     def test_get_public_status(self):
         # Public url
