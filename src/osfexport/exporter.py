@@ -155,11 +155,10 @@ def is_public(url):
         The URL to test.
     """
 
-    request = webhelper.Request(url, method='GET')
-    version = importlib.metadata.version("osfio-export-tool")
-    request.add_header('User-Agent', f'osfio-export-tool/{version} (Python)')
     try:
-        result = webhelper.urlopen(request).status
+        result = call_api(
+            url, pat='', method='GET'
+        ).status
     except webhelper.HTTPError as e:
         result = e
     return result == 200
