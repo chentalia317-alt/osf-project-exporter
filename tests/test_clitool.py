@@ -6,7 +6,7 @@ import shutil
 import json
 # import pdb  # Use pdb.set_trace() to help with debugging
 import traceback
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from click.testing import CliRunner
 from pypdf import PdfReader
@@ -115,6 +115,29 @@ class TestAPI(TestCase):
 
 class TestExporter(TestCase):
     """Tests for the exporter without real API usage."""
+
+    def test_get_public_status(self):
+        # Public url
+        mock_response = MagicMock()
+        mock_response.status = 200
+        with patch('osfexport.exporter.call_api') as mock_call_api:
+            mock_call_api.return_value = mock_response
+            result = is_public('url')
+            mock_call_api.assert_called_once_with(
+                'url', pat='', method='GET'
+            )
+            assert result is True
+
+        # Private url
+        mock_response = MagicMock()
+        mock_response.status = 401
+        with patch('osfexport.exporter.call_api') as mock_call_api:
+            mock_call_api.return_value = mock_response
+            result = is_public('url')
+            mock_call_api.assert_called_once_with(
+                'url', pat='', method='GET'
+            )
+            assert result is False
 
     def test_explore_mock_file_tree(self):
         files = explore_file_tree(
