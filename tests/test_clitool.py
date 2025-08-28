@@ -586,7 +586,7 @@ class TestFormatter(TestCase):
                     'Home': 'hello world',
                     'Page2': 'another page'
                 },
-                "parent": 'https://test.osf.io/parent-id',
+                "parent": ('apple', 'https://test.osf.io/parent-id'),
                 'children': ['a']
             }
         ]
@@ -605,7 +605,8 @@ class TestFormatter(TestCase):
 
             page_one = PdfReader(path_one)
             text = page_one.pages[0].extract_text()
-            assert 'Component of: https://test.osf.io/parent-id' in text, (
+            assert f'Parent: {projects[0]['parent'][0]}' in text
+            assert f'Parent URL: {projects[0]['parent'][1]}' in text, (
                 'Expected parent URL in PDF, got: ',
                 text
             )
@@ -889,9 +890,11 @@ class TestFormatter(TestCase):
         assert f'{projects[0]['metadata']['title']}' not in content_fourth_page, (
             'Incorrect parent title for component'
         )
-        assert f'{projects[2]['metadata']['title']}' in content_fourth_page
-        assert f'Parent: {projects[2]['parent'][0]}' in content_fourth_page
-        assert f'Parent URL: {projects[2]['parent'][1]}' in content_fourth_page
+        assert f'{projects[3]['metadata']['title']}' in content_fourth_page
+        assert f'Parent: {projects[3]['parent'][0]}' in content_fourth_page
+        assert f'Parent URL:   {projects[3]['parent'][1]}' in content_fourth_page, (
+            projects[3]['parent'][1], content_fourth_page
+        )
 
         # Remove files only if all good - keep for debugging otherwise
         if os.path.exists(FOLDER_OUT):
