@@ -29,7 +29,7 @@ class HTMLImageSizeCapRenderer(HTMLRenderer):
         # Cap image size if needed so they can fit on the page
         try:
             img_info = get_img_info(token.src)
-        except (urllib.error.HTTPError, PIL.UnidentifiedImageError) as e:
+        except (urllib.error.HTTPError, PIL.UnidentifiedImageError):
             return f'<a href="{html.escape(token.src)}">{token.src}</a>'
 
         if img_info['w'] > HTMLImageSizeCapRenderer.max_width:

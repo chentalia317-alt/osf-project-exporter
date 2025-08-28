@@ -123,16 +123,12 @@ class TestAPI(TestCase):
 Another paragraph.
 
   [1]: {url}"""
-        HTMLImageSizeCapRenderer.max_width = 800
-        HTMLImageSizeCapRenderer.max_height = 400
-        expected_width = HTMLImageSizeCapRenderer.max_width
-        expected_height = HTMLImageSizeCapRenderer.max_height
-        
+
         # Mock requests to simulate errors when trying to download images
         with patch('urllib.request.urlopen') as mock_get:
             mock_get.side_effect = urllib.error.HTTPError(
-                url='https://osf.io/download/x/', 
-                code=401, 
+                url='https://osf.io/download/x/',
+                code=401,
                 msg='Unauthorized',
                 hdrs={},
                 fp=None
@@ -149,7 +145,6 @@ Another paragraph.
                 f'<a href="{url}">{url}</a>',
                 html
             )
-
 
 
 class TestExporter(TestCase):
