@@ -3,11 +3,13 @@ import os
 import io
 import html
 
+import PIL
 from fpdf import FPDF, Align
 from fpdf.fonts import FontFace
 from fpdf.image_parsing import get_img_info
 from mistletoe import markdown, HTMLRenderer
 import qrcode
+import urllib
 
 
 class HTMLImageSizeCapRenderer(HTMLRenderer):
@@ -25,7 +27,11 @@ class HTMLImageSizeCapRenderer(HTMLRenderer):
         template = '<img src="{}" alt="{}"{}{}{} />'
 
         # Cap image size if needed so they can fit on the page
-        img_info = get_img_info(token.src)
+        try:
+            img_info = get_img_info(token.src)
+        except (urllib.error.HTTPError, PIL.UnidentifiedImageError) as e:
+            return f'<a href="{html.escape(token.src)}">{token.src}</a>'
+
         if img_info['w'] > HTMLImageSizeCapRenderer.max_width:
             new_width = HTMLImageSizeCapRenderer.max_width
         else:
