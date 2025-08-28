@@ -690,7 +690,7 @@ class TestFormatter(TestCase):
                     ('file2.txt', None, None),
                 ],
                 'wikis': {},
-                "parent": 'id',
+                "parent": ('My Project Title', 'https://test.osf.io/x'),
                 'children': ['b']
             },
             {
@@ -743,7 +743,7 @@ class TestFormatter(TestCase):
                     ('file2.txt', None, None),
                 ],
                 'wikis': {},
-                "parent": 'a',
+                "parent": ('child1', 'https://test.osf.io/a'),
                 'children': []
             },
         ]
@@ -799,9 +799,17 @@ class TestFormatter(TestCase):
         content_first_page = import_one.pages[0].extract_text(
             extraction_mode='layout'
         )
+        assert f'{projects[0]['metadata']['title']}' in content_first_page, (
+            content_first_page
+        )
+
         content_second_page = import_two.pages[0].extract_text(
             extraction_mode='layout'
         )
+        assert 'Category: Methods and Measures' in content_second_page, (
+            content_second_page
+        )
+
         content_third_page = import_one.pages[3].extract_text(
             extraction_mode='layout'
         )
@@ -819,9 +827,6 @@ class TestFormatter(TestCase):
         )
         assert 'Category: Uncategorized' in content_first_page, (
             content_first_page
-        )
-        assert 'Category: Methods and Measures' in content_second_page, (
-            content_second_page
         )
         timestamp = pdf_one.date_printed.strftime(
             '%Y-%m-%d %H:%M:%S %Z')
@@ -875,6 +880,18 @@ class TestFormatter(TestCase):
             'Actual: ',
             content_first_page.replace(' ', '')
         )
+
+        #print(import_one.pages[4].extract_text(extraction_mode='layout'))
+
+        content_fourth_page = import_one.pages[4].extract_text(
+            extraction_mode='layout'
+        )
+        assert f'{projects[0]['metadata']['title']}' not in content_fourth_page, (
+            'Incorrect parent title for component'
+        )
+        assert f'{projects[2]['metadata']['title']}' in content_fourth_page
+        assert f'Parent: {projects[2]['parent'][0]}' in content_fourth_page
+        assert f'Parent URL: {projects[2]['parent'][1]}' in content_fourth_page
 
         # Remove files only if all good - keep for debugging otherwise
         if os.path.exists(FOLDER_OUT):
