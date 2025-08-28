@@ -1,6 +1,5 @@
 # PDFs
 *.pdf
-!osfio-export-tool/tests/good-pdfs/*.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
