@@ -1,5 +1,5 @@
 [project]
-name = "osfio-export-tool"
+name = "osf-project-exporter"
 version = "0.1.2"
 authors = [
   { name="Ramiro Bravo", email="ramiro.bravo@manchester.ac.uk" },

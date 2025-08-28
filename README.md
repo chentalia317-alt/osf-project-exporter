@@ -21,12 +21,12 @@ You could also setup a Python virtual environment (e.g. using virtualenv):
 
 1. Clone this repository onto your local machine.
 2. Create a virtual environment, e.g., ``virtualenv myenv --python='"/usr/bin/python3.12"'``. Make sure your virtual environment is setup to use Python 3.12 or above.
-3. From local Git repo: Activate your virtual environment and run ``pip install -e osfio-export-tool` to install this repository as a modifiable package. Then install other requirements separately via `pip install -r requirements.txt`.
+3. From local Git repo: Activate your virtual environment and run ``pip install -e osf-project-exporter` to install this repository as a modifiable package. Then install other requirements separately via `pip install -r requirements.txt`.
 4. On the OSF website, create or log in to your account.  Set up a personal access token (PAT) by going into your account settings, selecting "Personal access tokens" in the left side menu, and clicking "Create token". You should give the token a name that helps you remember why you made it, like "PDF export", and choose the "osf.full_read" scope - this allows this token to read all public and private projects on your account. You can delete this token once you have finished exporting your projects.
 
 ## Installation
 
-From TestPyPI: Activate your virtual environment and run `#python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple osfio-export-tool`. This will download the packages needed from the PyPI index and the packaged version of this CLI tool on the TestPyPI index.
+From TestPyPI: Activate your virtual environment and run `#python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple osf-project-exporter`. This will download the packages needed from the PyPI index and the packaged version of this CLI tool on the TestPyPI index.
 
 ## Usage
 
