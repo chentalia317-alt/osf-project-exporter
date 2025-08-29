@@ -368,6 +368,17 @@ class TestExporter(TestCase):
             projects[1]['metadata']['category']
         )
 
+        assert projects[3]['parent'][0] == projects[2]['metadata']['title'], (
+            projects[3]['parent'],
+            'Expected: ', projects[2]['metadata']['title']
+        )
+
+        # For mock tests, the URL of the parent is the same as the parent GUID
+        assert projects[3]['parent'][1] == projects[2]['metadata']['id'], (
+            projects[3]['parent'][1],
+            f'Expected: {projects[2]['metadata']['id']}'
+        )
+
     def test_get_paginated_projects(self):
         projects, root_nodes = get_nodes(
             pat='',
@@ -472,7 +483,7 @@ class TestExporter(TestCase):
             projects
         )
         assert projects[0]['metadata']['id'] == 'a'
-        assert projects[0]['parent'] == 'x', (
+        assert projects[0]['parent'] == ['Test1', 'x'], (
             projects[0]['parent']
         )
 
@@ -586,7 +597,7 @@ class TestFormatter(TestCase):
                     'Home': 'hello world',
                     'Page2': 'another page'
                 },
-                "parent": ('apple', 'https://test.osf.io/parent-id'),
+                "parent": ['apple', 'https://test.osf.io/parent-id'],
                 'children': ['a']
             }
         ]
@@ -744,7 +755,7 @@ class TestFormatter(TestCase):
                     ('file2.txt', None, None),
                 ],
                 'wikis': {},
-                "parent": ('child1', 'https://test.osf.io/a'),
+                "parent": ['child1', 'https://test.osf.io/a'],
                 'children': []
             },
         ]
