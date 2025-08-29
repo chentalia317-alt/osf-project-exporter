@@ -109,6 +109,10 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
             click.echo(
                 f"""You aren't able to access {"these projects" if not project_id else "this project"}. Please double-check you have assigned the "osf.full_read" permission to your token{", and you are a contributor if it's private" if project_id else ""}."""
             )
+        else:
+            click.echo(
+                f"Unexpected error: {e.code}. Please try again later."
+            )
 
 
 @click.command()
