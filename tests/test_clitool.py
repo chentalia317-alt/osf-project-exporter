@@ -172,9 +172,9 @@ class TestExporter(TestCase):
         assert mock_get_inst.call_count == 4, (
             f'Wrong num of calls: {mock_get_inst.call_count}'
         )
-    
+
     @patch('osfexport.exporter.get_project_data')
-    def test_paginate_json_result_does_next_page_despite_errors_from_get_project_data(self, mock_get_data):
+    def test_paginate_json_result_gets_next_page_despite_function_errors(self, mock_get_data):
         mock_get_data.side_effect = urllib.error.HTTPError(
             url='https://test.osf.io',
             code=401,
@@ -990,7 +990,7 @@ class TestCLI(TestCase):
     def test_prompt_pat_if_exporting_all_projects(self, mock_obj):
         pat = prompt_pat()
         assert pat == 'strinput'
-    
+
     @patch('osfexport.cli.prompt_pat')
     @patch('osfexport.exporter.get_nodes')
     def test_export_projects_handles_http_errors(self, mock_func, mock_prompt):

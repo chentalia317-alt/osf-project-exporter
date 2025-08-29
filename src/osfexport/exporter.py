@@ -252,7 +252,7 @@ def paginate_json_result(start, action, fail_on_first=True, **kwargs):
 
     next_link = start
     is_last_page = False
-    is_first_item = True # Want to throw error if very first item fails
+    is_first_item = True  # Want to throw error if very first item fails
     results = deque()
     per_page = kwargs.pop('per_page', 100)
     filters = kwargs.pop('filters', {})
@@ -467,7 +467,7 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
             start = project_id
         else:
             start = 'nodes'
-    
+
     results = paginate_json_result(
         start, get_project_data, dryrun=dryrun, usetest=usetest,
         pat=pat, filters=node_filter, project_id=project_id, per_page=page_size
@@ -670,7 +670,7 @@ def get_project_data(nodes, **kwargs):
             if isinstance(e, HTTPError):
                 click.echo(f"A project failed to export: {e.code}")
             else:
-                click.echo(f"A project failed to export: Unexpected API response.")
+                click.echo("A project failed to export: Unexpected API response.")
             click.echo("Continuing with exporting other projects...")
 
     return projects, root_nodes

@@ -99,15 +99,20 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
         click.echo("Exporting failed as an error occurred:\n")
         if e.code == 401:
             click.echo(
-                f"""The PAT used could not be used to authenticate you. Did you enter your PAT correctly?"""
+                "The PAT used could not authenticate you. Did you enter your PAT correctly?"
             )
+            click.echo()
         elif e.code == 404:
             click.echo(
-                """The project could not be found. Please check the URL or project ID given is correct."""
+                """The project couldn't be found. Please check the URL or project ID is correct."""
             )
         elif e.code == 403:
             click.echo(
-                f"""You aren't able to access {"these projects" if not project_id else "this project"}. Please double-check you have assigned the "osf.full_read" permission to your token{", and you are a contributor if it's private" if project_id else ""}."""
+                f"You aren't able to access {"this project" if project_id else "these projects"}."
+            )
+            click.echo(
+                f"""Please check your PAT has the \"osf.full_read\" permission
+                {", and you are a contributor if it's private" if project_id else ""}."""
             )
         else:
             click.echo(
