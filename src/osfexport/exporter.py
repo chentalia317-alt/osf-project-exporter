@@ -3,6 +3,8 @@ import json
 import os
 import datetime
 import urllib.request as webhelper
+import importlib.metadata
+
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
@@ -155,9 +157,10 @@ def is_public(url):
         The URL to test.
     """
 
-    request = webhelper.Request(url, method='GET')
     try:
-        result = webhelper.urlopen(request).status
+        result = call_api(
+            url, pat='', method='GET'
+        ).status
     except webhelper.HTTPError as e:
         result = e
     return result == 200
@@ -200,6 +203,9 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
 
     request = webhelper.Request(url, method=method)
     request.add_header('Authorization', f'Bearer {pat}')
+
+    version = importlib.metadata.version("osfio-export-tool")
+    request.add_header('User-Agent', f'osfio-export-tool/{version} (Python)')
 
     # Pin API version so that JSON has correct format
     API_VERSION = '2.20'
