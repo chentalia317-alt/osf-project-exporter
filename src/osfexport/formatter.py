@@ -77,11 +77,9 @@ class PDF(FPDF):
     LINE_PADDING = 0  # Gaps between lines
     CELL_WIDTH = 180  # Width of text cells
 
-    def __init__(self, url='', parent_url='', parent_title=''):
+    def __init__(self, url=''):
         super().__init__()
         self.date_printed = datetime.datetime.now().astimezone()
-        self.parent_url = parent_url
-        self.parent_title = parent_title
         self.url = url
         # Setup unicode font for use. Can have 4 styles
         self.font = 'dejavu-sans'
@@ -191,36 +189,25 @@ class PDF(FPDF):
         wikis = project['wikis']
 
         # Start with parent, project headers and links
-        if self.parent_title:
+        parent = project['parent']
+        if parent:
             self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-            self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=f'{self.parent_title}\n', align='L')
-        if self.parent_url:
+            self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=f'Parent: {parent[0]}\n', align='L')
             self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
             self.cell(
-                text='Main Project URL:', align='L'
+                text='Parent URL:', align='L'
             )
             self.cell(
-                text=f'{self.parent_url}\n', align='L', link=self.parent_url
+                text=f'{parent[1]}\n', align='L', link=parent[1]
             )
             self.write(0, '\n\n')
-        # Check if title, url is of parent's to avoid duplication
+
         title = project['metadata']['title']
-        if self.parent_title != title:
-            self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-            self.multi_cell(
-                w=PDF.CELL_WIDTH, h=None, text=f'{title}\n',
-                align='L', padding=PDF.LINE_PADDING
-            )
-        # Add link to parent if top-level project is a component
-        else:
-            if project['parent']:
-                self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
-                self.cell(
-                    text='Component of:', align='L'
-                )
-            self.cell(
-                text=f'{project['parent']}\n', align='L', link=project['parent']
-            )
+        self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
+        self.multi_cell(
+            w=PDF.CELL_WIDTH, h=None, text=f'{title}\n',
+            align='L', padding=PDF.LINE_PADDING
+        )
 
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')
@@ -228,17 +215,16 @@ class PDF(FPDF):
         qr_img = self.generate_qr_code()
         self.image(qr_img, w=30, x=Align.R, y=5)
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
-        if url and self.parent_url != url:
-            self.cell(
-                text='Component URL:',
-                align='L'
-            )
-            self.cell(
-                text=f'{url}',
-                align='L',
-                link=url
-            )
-            self.write(0, '\n\n')
+        self.cell(
+            text='Project URL:',
+            align='L'
+        )
+        self.cell(
+            text=f'{url}',
+            align='L',
+            link=url
+        )
+        self.write(0, '\n\n')
         self.ln()
         self.ln()
 
@@ -363,10 +349,7 @@ def explore_project_tree(project, projects, pdf=None):
 
     # Start with no PDF at root projects
     if not pdf:
-        pdf = PDF(
-            parent_title=project['metadata']['title'],
-            parent_url=project['metadata']['url']
-        )
+        pdf = PDF()
 
     # Add current project to PDF
     pdf._write_project_body(project)

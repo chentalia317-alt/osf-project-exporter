@@ -596,13 +596,37 @@ def get_project_data(nodes, **kwargs):
             pat=pat, dryrun=dryrun
         )
 
-        # In general, start nodes for PDFs have no parents
-        if 'links' in project['relationships']['parent']:
-            project_data['parent'] = project['relationships']['parent'][
-                'links']['related']['href']
-        else:
+        # Check if parent info has been passed down to save effort
+        # If not then search for links to parent
+        try:
+            project_data['parent'] = project['parent']
+        except KeyError:
             project_data['parent'] = None
-            root_nodes.append(idx)
+
+            # In general, start nodes for PDFs have no parents
+            if 'links' not in project['relationships']['parent']:
+                root_nodes.append(idx)
+            elif project_data['parent'] is None:
+                parent_link = project['relationships']['parent'][
+                    'links']['related']['href']
+                try:
+                    if not dryrun:
+                        parent = json.loads(
+                            call_api(
+                                parent_link,
+                                pat=pat,
+                                is_json=True
+                            ).read()
+                        )
+                    else:
+                        parent = MockAPIResponse.read(parent_link)
+                    project_data['parent'] = (
+                        parent['data']['attributes']['title'],
+                        parent['data']['links']['html']
+                    )
+                except (webhelper.HTTPError, ValueError):
+                    print(f"Failed to load parent for {project_data['metadata']['title']}")
+                    print("Try to give a PAT beforehand using the --pat flag.", "\n")
 
         # Projects specified by ID to export also count as start nodes for PDFs
         # This will be the first node in list of root nodes
@@ -612,9 +636,14 @@ def get_project_data(nodes, **kwargs):
         def get_children(json_page, **kwargs):
             children = []
             for child in json_page['data']:
+                child['parent'] = [
+                    project_data['metadata']['title'],
+                    project_data['metadata']['url']
+                ]
                 children.append(child['id'])
                 nodes['data'].append(child)  # Add to list of nodes to search
             return children
+
         children_link = relations['children']['links']['related']['href']
         children = list(paginate_json_result(
             children_link, dryrun=dryrun, pat=pat, action=get_children

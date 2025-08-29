@@ -378,6 +378,15 @@ class TestExporter(TestCase):
             projects[1]['metadata']['category']
         )
 
+        assert projects[3]['parent'][0] == projects[2]['metadata']['title'], (
+            projects[3]['parent'][0],
+            f'Expected: {projects[2]['metadata']['title']}'
+        )
+        assert projects[3]['parent'][1] == projects[2]['metadata']['url'], (
+            projects[3]['parent'][1],
+            f'Expected: {projects[2]['metadata']['url']}'
+        )
+
     def test_get_paginated_projects(self):
         projects, root_nodes = get_nodes(
             pat='',
@@ -482,8 +491,13 @@ class TestExporter(TestCase):
             projects
         )
         assert projects[0]['metadata']['id'] == 'a'
-        assert projects[0]['parent'] == 'x', (
-            projects[0]['parent']
+        assert projects[0]['parent'][0] == 'Test1', (
+            projects[0]['parent'][0],
+            'Expected: Test1'
+        )
+        assert projects[0]['parent'][1] == 'https://test.osf.io/x/', (
+            projects[0]['parent'][1],
+            'Expected: https://test.osf.io/x/'
         )
 
 
@@ -596,7 +610,7 @@ class TestFormatter(TestCase):
                     'Home': 'hello world',
                     'Page2': 'another page'
                 },
-                "parent": 'https://test.osf.io/parent-id',
+                "parent": ['apple', 'https://test.osf.io/parent-id'],
                 'children': ['a']
             }
         ]
@@ -615,7 +629,8 @@ class TestFormatter(TestCase):
 
             page_one = PdfReader(path_one)
             text = page_one.pages[0].extract_text()
-            assert 'Component of: https://test.osf.io/parent-id' in text, (
+            assert f'Parent: {projects[0]['parent'][0]}' in text
+            assert f'Parent URL: {projects[0]['parent'][1]}' in text, (
                 'Expected parent URL in PDF, got: ',
                 text
             )
@@ -700,7 +715,7 @@ class TestFormatter(TestCase):
                     ('file2.txt', None, None),
                 ],
                 'wikis': {},
-                "parent": 'id',
+                "parent": ('My Project Title', 'https://test.osf.io/x'),
                 'children': ['b']
             },
             {
@@ -753,7 +768,7 @@ class TestFormatter(TestCase):
                     ('file2.txt', None, None),
                 ],
                 'wikis': {},
-                "parent": 'a',
+                "parent": ['child1', 'https://test.osf.io/a'],
                 'children': []
             },
         ]
@@ -809,9 +824,17 @@ class TestFormatter(TestCase):
         content_first_page = import_one.pages[0].extract_text(
             extraction_mode='layout'
         )
+        assert f'{projects[0]['metadata']['title']}' in content_first_page, (
+            content_first_page
+        )
+
         content_second_page = import_two.pages[0].extract_text(
             extraction_mode='layout'
         )
+        assert 'Category: Methods and Measures' in content_second_page, (
+            content_second_page
+        )
+
         content_third_page = import_one.pages[3].extract_text(
             extraction_mode='layout'
         )
@@ -829,9 +852,6 @@ class TestFormatter(TestCase):
         )
         assert 'Category: Uncategorized' in content_first_page, (
             content_first_page
-        )
-        assert 'Category: Methods and Measures' in content_second_page, (
-            content_second_page
         )
         timestamp = pdf_one.date_printed.strftime(
             '%Y-%m-%d %H:%M:%S %Z')
@@ -884,6 +904,18 @@ class TestFormatter(TestCase):
             files_table,
             'Actual: ',
             content_first_page.replace(' ', '')
+        )
+
+        content_fourth_page = import_one.pages[4].extract_text(
+            extraction_mode='layout'
+        )
+        assert f'{projects[0]['metadata']['title']}' not in content_fourth_page, (
+            'Incorrect parent title for component'
+        )
+        assert f'{projects[3]['metadata']['title']}' in content_fourth_page
+        assert f'Parent: {projects[3]['parent'][0]}' in content_fourth_page
+        assert f'Parent URL:   {projects[3]['parent'][1]}' in content_fourth_page, (
+            projects[3]['parent'][1], content_fourth_page
         )
 
         # Remove files only if all good - keep for debugging otherwise
