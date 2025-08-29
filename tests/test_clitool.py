@@ -369,14 +369,12 @@ class TestExporter(TestCase):
         )
 
         assert projects[3]['parent'][0] == projects[2]['metadata']['title'], (
-            projects[3]['parent'],
-            'Expected: ', projects[2]['metadata']['title']
+            projects[3]['parent'][0],
+            f'Expected: {projects[2]['metadata']['title']}'
         )
-
-        # For mock tests, the URL of the parent is the same as the parent GUID
-        assert projects[3]['parent'][1] == projects[2]['metadata']['id'], (
+        assert projects[3]['parent'][1] == projects[2]['metadata']['url'], (
             projects[3]['parent'][1],
-            f'Expected: {projects[2]['metadata']['id']}'
+            f'Expected: {projects[2]['metadata']['url']}'
         )
 
     def test_get_paginated_projects(self):
@@ -483,8 +481,13 @@ class TestExporter(TestCase):
             projects
         )
         assert projects[0]['metadata']['id'] == 'a'
-        assert projects[0]['parent'] == ['Test1', 'x'], (
-            projects[0]['parent']
+        assert projects[0]['parent'][0] == 'Test1', (
+            projects[0]['parent'][0],
+            f'Expected: Test1'
+        )
+        assert projects[0]['parent'][1] == 'https://test.osf.io/x/', (
+            projects[0]['parent'][1],
+            'Expected: https://test.osf.io/x/'
         )
 
 
