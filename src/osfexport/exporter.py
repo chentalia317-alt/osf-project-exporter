@@ -111,7 +111,7 @@ class MockAPIResponse:
             with open(MockAPIResponse.MARKDOWN_FILES[field], 'r') as file:
                 return file.read()
         else:
-            return {}
+            return {'data': {}}
 
 
 def extract_project_id(url):
