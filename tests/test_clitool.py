@@ -994,23 +994,25 @@ class TestCLI(TestCase):
     @patch('osfexport.cli.prompt_pat')
     @patch('osfexport.exporter.get_nodes')
     def test_export_projects_handles_http_errors(self, mock_func, mock_prompt):
-        mock_prompt.return_value = '-'
-        mock_func.side_effect = urllib.error.HTTPError(
-            url='https://test.osf.io',
-            code=401,
-            msg='HTTP Error 401: Unauthorized',
-            hdrs={},
-            fp=None
-        )
-        runner = CliRunner()
-        result = runner.invoke(
-            cli, [
-                'export-projects',
-                '--usetest'
-            ],
-            terminal_width=60
-        )
-        assert "Exporting failed as an error occurred:" in result.output
+        codes = [401, 402, 403, 404, 500]
+        for code in codes:
+            mock_prompt.return_value = '-'
+            mock_func.side_effect = urllib.error.HTTPError(
+                url='https://test.osf.io',
+                code=code,
+                msg='HTTP Error',
+                hdrs={},
+                fp=None
+            )
+            runner = CliRunner()
+            result = runner.invoke(
+                cli, [
+                    'export-projects',
+                    '--usetest'
+                ],
+                terminal_width=60
+            )
+            assert "Exporting failed as an error occurred:" in result.output
 
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
