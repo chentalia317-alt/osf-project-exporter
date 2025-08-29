@@ -1,5 +1,4 @@
 import os
-import urllib.request as webhelper
 
 import click
 
@@ -113,9 +112,7 @@ def show_welcome(pat, usetest):
     else:
         api_host = API_HOST_PROD
 
-    request = webhelper.Request(f'{api_host}/', method='GET')
-    request.add_header('Authorization', f'Bearer {pat}')
-    result = webhelper.urlopen(request)
+    result = exporter.call_api(f'{api_host}/', pat=pat, method='GET')
     click.echo(result.read())
     click.echo(result.status)
 
