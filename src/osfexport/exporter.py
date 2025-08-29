@@ -2,8 +2,11 @@ from collections import deque
 import json
 import os
 import datetime
+from urllib.error import HTTPError
 import urllib.request as webhelper
 import importlib.metadata
+
+import click
 
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
@@ -110,7 +113,7 @@ class MockAPIResponse:
             with open(MockAPIResponse.MARKDOWN_FILES[field], 'r') as file:
                 return file.read()
         else:
-            return {}
+            return {'data': {}}
 
 
 def extract_project_id(url):
@@ -218,7 +221,7 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     return result
 
 
-def paginate_json_result(start, action, **kwargs):
+def paginate_json_result(start, action, fail_on_first=True, **kwargs):
     """Loop through paginated JSON responses and perform action on each.
 
     Parameters
@@ -249,6 +252,7 @@ def paginate_json_result(start, action, **kwargs):
 
     next_link = start
     is_last_page = False
+    is_first_item = True  # Want to throw error if very first item fails
     results = deque()
     per_page = kwargs.pop('per_page', 100)
     filters = kwargs.pop('filters', {})
@@ -256,25 +260,31 @@ def paginate_json_result(start, action, **kwargs):
     pat = kwargs.get('pat', '')
     dryrun = kwargs.get('dryrun', False)
     while not is_last_page:
-        if not dryrun:
-            curr_page = call_api(
-                next_link, pat, per_page=per_page, filters=filters,
-                is_json=is_json)
-            # Catch error if call_api is replaced with mock in tests
-            try:
-                curr_page = curr_page.read()
-                if is_json:
-                    curr_page = json.loads(curr_page)
-            except AttributeError:
-                pass
-        else:
-            curr_page = MockAPIResponse.read(next_link)
-        results.append(action(curr_page, **kwargs))
+        try:
+            if not dryrun:
+                curr_page = call_api(
+                    next_link, pat, per_page=per_page, filters=filters,
+                    is_json=is_json)
+                # Catch error if call_api is replaced with mock in tests
+                try:
+                    curr_page = curr_page.read()
+                    if is_json:
+                        curr_page = json.loads(curr_page)
+                except AttributeError:
+                    pass
+            else:
+                curr_page = MockAPIResponse.read(next_link)
+            results.append(action(curr_page, **kwargs))
+        except HTTPError as e:
+            if fail_on_first and is_first_item:
+                raise e
+            else:
+                click.echo("Error whilst parsing JSON page; continuing with other pages...")
         # Stop if no next link found
         try:
             next_link = curr_page['links']['next']
             is_last_page = not next_link
-        except KeyError:
+        except (KeyError, UnboundLocalError):
             is_last_page = True
     return results
 
@@ -462,7 +472,10 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
         start, get_project_data, dryrun=dryrun, usetest=usetest,
         pat=pat, filters=node_filter, project_id=project_id, per_page=page_size
     )
-    l1, l2 = zip(*list(results))
+    if len(results) > 0:
+        l1, l2 = zip(*list(results))
+    else:
+        l1, l2 = (), ()
     projects = [item for sublist in l1 for item in sublist]
 
     # After pagination we get indexes of root nodes local to each page
@@ -544,114 +557,121 @@ def get_project_data(nodes, **kwargs):
     }
 
     for idx, project in enumerate(nodes['data']):
-        if project['id'] in added_node_ids:
-            continue
-        else:
-            added_node_ids.add(project['id'])
-
-        project_data = {
-            'metadata': {}
-        }
-        for field in fields['metadata']:
-            project_data['metadata'][field] = fields['metadata'][field](
-                project, dryrun=dryrun, key=field, pat=pat
-            )
-        project_data['contributors'] = fields['contributors'](
-            project, dryrun=dryrun, key='contributors', pat=pat
-        )
-
-        # TODO: split into function
-        # Resource type/lang/funding info share specific endpoint
-        # that isn't linked to in user nodes' responses
-        if dryrun:
-            metadata = MockAPIResponse.read('custom_metadata')
-        else:
-            metadata = json.loads(call_api(
-                f"{api_host}/custom_item_metadata_records/{project['id']}/",
-                pat
-            ).read())
-        metadata = metadata['data']['attributes']
-        resource_type = metadata['resource_type_general']
-        resource_lang = metadata['language']
-        project_data['metadata']['resource_type'] = resource_type
-        project_data['metadata']['resource_lang'] = resource_lang
-        for funder in metadata['funders']:
-            project_data['metadata']['funders'].append(funder)
-        # =========
-
-        relations = project['relationships']
-
-        # Get list of files in project
-        if dryrun:
-            link = 'root'
-            use_mocks = True
-        else:
-            link = relations['files']['links']['related']['href']
-            link += 'osfstorage/'  # ID for OSF Storage
-            use_mocks = False
-        project_data['files'] = explore_file_tree(link, pat, dryrun=use_mocks)
-
-        project_data['wikis'] = explore_wikis(
-            f'{api_host}/nodes/{project['id']}/wikis/',
-            pat=pat, dryrun=dryrun
-        )
-
-        # Check if parent info has been passed down to save effort
-        # If not then search for links to parent
         try:
-            project_data['parent'] = project['parent']
-        except KeyError:
-            project_data['parent'] = None
+            if project['id'] in added_node_ids:
+                continue
+            else:
+                added_node_ids.add(project['id'])
 
-            # In general, start nodes for PDFs have no parents
-            if 'links' not in project['relationships']['parent']:
-                root_nodes.append(idx)
-            elif project_data['parent'] is None:
-                parent_link = project['relationships']['parent'][
-                    'links']['related']['href']
-                try:
-                    if not dryrun:
-                        parent = json.loads(
-                            call_api(
-                                parent_link,
-                                pat=pat,
-                                is_json=True
-                            ).read()
+            project_data = {
+                'metadata': {}
+            }
+            for field in fields['metadata']:
+                project_data['metadata'][field] = fields['metadata'][field](
+                    project, dryrun=dryrun, key=field, pat=pat
+                )
+            project_data['contributors'] = fields['contributors'](
+                project, dryrun=dryrun, key='contributors', pat=pat
+            )
+
+            # TODO: split into function
+            # Resource type/lang/funding info share specific endpoint
+            # that isn't linked to in user nodes' responses
+            if dryrun:
+                metadata = MockAPIResponse.read('custom_metadata')
+            else:
+                metadata = json.loads(call_api(
+                    f"{api_host}/custom_item_metadata_records/{project['id']}/",
+                    pat
+                ).read())
+            metadata = metadata['data']['attributes']
+            resource_type = metadata['resource_type_general']
+            resource_lang = metadata['language']
+            project_data['metadata']['resource_type'] = resource_type
+            project_data['metadata']['resource_lang'] = resource_lang
+            for funder in metadata['funders']:
+                project_data['metadata']['funders'].append(funder)
+            # =========
+
+            relations = project['relationships']
+
+            # Get list of files in project
+            if dryrun:
+                link = 'root'
+                use_mocks = True
+            else:
+                link = relations['files']['links']['related']['href']
+                link += 'osfstorage/'  # ID for OSF Storage
+                use_mocks = False
+            project_data['files'] = explore_file_tree(link, pat, dryrun=use_mocks)
+
+            project_data['wikis'] = explore_wikis(
+                f'{api_host}/nodes/{project['id']}/wikis/',
+                pat=pat, dryrun=dryrun
+            )
+
+            # Check if parent info has been passed down to save effort
+            # If not then search for links to parent
+            try:
+                project_data['parent'] = project['parent']
+            except KeyError:
+                project_data['parent'] = None
+
+                # In general, start nodes for PDFs have no parents
+                if 'links' not in project['relationships']['parent']:
+                    root_nodes.append(idx)
+                elif project_data['parent'] is None:
+                    parent_link = project['relationships']['parent'][
+                        'links']['related']['href']
+                    try:
+                        if not dryrun:
+                            parent = json.loads(
+                                call_api(
+                                    parent_link,
+                                    pat=pat,
+                                    is_json=True
+                                ).read()
+                            )
+                        else:
+                            parent = MockAPIResponse.read(parent_link)
+                        project_data['parent'] = (
+                            parent['data']['attributes']['title'],
+                            parent['data']['links']['html']
                         )
-                    else:
-                        parent = MockAPIResponse.read(parent_link)
-                    project_data['parent'] = (
-                        parent['data']['attributes']['title'],
-                        parent['data']['links']['html']
-                    )
-                except (webhelper.HTTPError, ValueError):
-                    print(f"Failed to load parent for {project_data['metadata']['title']}")
-                    print("Try to give a PAT beforehand using the --pat flag.", "\n")
+                    except (webhelper.HTTPError, ValueError):
+                        click.echo(f"Failed to load parent for {project_data['metadata']['title']}")
+                        click.echo("Try to give a PAT beforehand using the --pat flag.", "\n")
 
-        # Projects specified by ID to export also count as start nodes for PDFs
-        # This will be the first node in list of root nodes
-        if project_data['metadata']['id'] == project_id and 0 not in root_nodes:
-            root_nodes.append(idx)
+            # Projects specified by ID to export also count as start nodes for PDFs
+            # This will be the first node in list of root nodes
+            if project_data['metadata']['id'] == project_id and 0 not in root_nodes:
+                root_nodes.append(idx)
 
-        def get_children(json_page, **kwargs):
-            children = []
-            for child in json_page['data']:
-                child['parent'] = [
-                    project_data['metadata']['title'],
-                    project_data['metadata']['url']
-                ]
-                children.append(child['id'])
-                nodes['data'].append(child)  # Add to list of nodes to search
-            return children
+            def get_children(json_page, **kwargs):
+                children = []
+                for child in json_page['data']:
+                    child['parent'] = [
+                        project_data['metadata']['title'],
+                        project_data['metadata']['url']
+                    ]
+                    children.append(child['id'])
+                    nodes['data'].append(child)  # Add to list of nodes to search
+                return children
 
-        children_link = relations['children']['links']['related']['href']
-        children = list(paginate_json_result(
-            children_link, dryrun=dryrun, pat=pat, action=get_children
-        ))
-        newlist = [item for sublist in children for item in sublist]
-        project_data['children'] = newlist
+            children_link = relations['children']['links']['related']['href']
+            children = list(paginate_json_result(
+                children_link, dryrun=dryrun, pat=pat, action=get_children
+            ))
+            newlist = [item for sublist in children for item in sublist]
+            project_data['children'] = newlist
 
-        projects.append(project_data)
+            projects.append(project_data)
+        except (HTTPError, KeyError) as e:
+            if isinstance(e, HTTPError):
+                click.echo(f"A project failed to export: {e.code}")
+            else:
+                click.echo("A project failed to export: Unexpected API response.")
+            click.echo("Continuing with exporting other projects...")
 
     return projects, root_nodes
 

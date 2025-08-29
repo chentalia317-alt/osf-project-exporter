@@ -150,6 +150,55 @@ Another paragraph.
 class TestExporter(TestCase):
     """Tests for the exporter without real API usage."""
 
+    @patch('osfexport.exporter.get_affiliated_institutions')
+    def test_get_project_data_handles_HTTP_errors(self, mock_get_inst):
+        mock_get_inst.side_effect = urllib.error.HTTPError(
+            url='https://test.osf.io',
+            code=401,
+            msg=' HTTP Error 401: Unauthorized',
+            hdrs={},
+            fp=None
+        )
+        nodes = MockAPIResponse.read('nodes')
+        projects, root_nodes = get_project_data(
+            nodes,
+            pat='',
+            dryrun=False,
+            usetest=True
+        )
+        assert isinstance(projects, list)
+        assert isinstance(root_nodes, list)
+        # There are 4 real nodes in the mock JSON data
+        assert mock_get_inst.call_count == 4, (
+            f'Wrong num of calls: {mock_get_inst.call_count}'
+        )
+
+    @patch('osfexport.exporter.get_project_data')
+    def test_paginate_json_result_gets_next_page_despite_function_errors(self, mock_get_data):
+        mock_get_data.side_effect = urllib.error.HTTPError(
+            url='https://test.osf.io',
+            code=401,
+            msg=' HTTP Error 401: Unauthorized',
+            hdrs={},
+            fp=None
+        )
+        results = paginate_json_result(
+            start='nodes', action=mock_get_data, dryrun=True, usetest=False,
+            pat='', filters={}, project_id='', per_page=20, fail_on_first=False
+        )
+        # There are 2 pages of nodes to read in the mock JSON data
+        assert mock_get_data.call_count == 2, (
+            f'Wrong num of calls: {mock_get_data.call_count}'
+        )
+        assert results is not None
+
+        # Raise error on first error
+        with self.assertRaises(urllib.error.HTTPError):
+            results = paginate_json_result(
+                start='nodes', action=mock_get_data, dryrun=True, usetest=False,
+                pat='', filters={}, project_id='', per_page=20
+            )
+
     @patch('urllib.request.urlopen')
     @patch('urllib.request.Request')
     def test_call_api_add_headers(self, mock_request_class, mock_urlopen):
@@ -941,6 +990,29 @@ class TestCLI(TestCase):
     def test_prompt_pat_if_exporting_all_projects(self, mock_obj):
         pat = prompt_pat()
         assert pat == 'strinput'
+
+    @patch('osfexport.cli.prompt_pat')
+    @patch('osfexport.exporter.get_nodes')
+    def test_export_projects_handles_http_errors(self, mock_func, mock_prompt):
+        codes = [401, 402, 403, 404, 500]
+        for code in codes:
+            mock_prompt.return_value = '-'
+            mock_func.side_effect = urllib.error.HTTPError(
+                url='https://test.osf.io',
+                code=code,
+                msg='HTTP Error',
+                hdrs={},
+                fp=None
+            )
+            runner = CliRunner()
+            result = runner.invoke(
+                cli, [
+                    'export-projects',
+                    '--usetest'
+                ],
+                terminal_width=60
+            )
+            assert "Exporting failed as an error occurred:" in result.output
 
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.

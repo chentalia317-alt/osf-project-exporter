@@ -1,4 +1,5 @@
 import os
+from urllib.error import HTTPError
 
 import click
 
@@ -84,16 +85,39 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
         pat = prompt_pat(project_id=project_id, usetest=usetest)
 
     click.echo('Downloading project data...')
-    projects, root_nodes = exporter.get_nodes(
-        pat, dryrun=dryrun, project_id=project_id, usetest=usetest
-    )
-    click.echo(f'Found {len(root_nodes)} projects.')
-
-    for idx in root_nodes:
-        title = projects[idx]['metadata']['title']
-        click.echo(f'Exporting project {title}...')
-        pdf, path = formatter.write_pdf(projects, idx, folder)
-        click.echo(f'Project exported to {path}')
+    try:
+        projects, root_nodes = exporter.get_nodes(
+            pat, dryrun=dryrun, project_id=project_id, usetest=usetest
+        )
+        click.echo(f'Found {len(root_nodes)} projects.')
+        for idx in root_nodes:
+            title = projects[idx]['metadata']['title']
+            click.echo(f'Exporting project {title}...')
+            pdf, path = formatter.write_pdf(projects, idx, folder)
+            click.echo(f'Project exported to {path}')
+    except HTTPError as e:
+        click.echo("Exporting failed as an error occurred:\n")
+        if e.code == 401:
+            click.echo(
+                "The PAT used could not authenticate you. Did you enter your PAT correctly?"
+            )
+            click.echo()
+        elif e.code == 404:
+            click.echo(
+                """The project couldn't be found. Please check the URL or project ID is correct."""
+            )
+        elif e.code == 403:
+            click.echo(
+                f"You aren't able to access {"this project" if project_id else "these projects"}."
+            )
+            click.echo(
+                f"""Please check your PAT has the \"osf.full_read\" permission
+                {", and you are a contributor if it's private" if project_id else ""}."""
+            )
+        else:
+            click.echo(
+                f"Unexpected error: {e.code}. Please try again later."
+            )
 
 
 @click.command()
