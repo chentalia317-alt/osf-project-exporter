@@ -219,7 +219,7 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     return result
 
 
-def paginate_json_result(start, action, **kwargs):
+def paginate_json_result(start, action, fail_on_first=True, **kwargs):
     """Loop through paginated JSON responses and perform action on each.
 
     Parameters
@@ -250,6 +250,7 @@ def paginate_json_result(start, action, **kwargs):
 
     next_link = start
     is_last_page = False
+    is_first_item = True # Want to throw error if very first item fails
     results = deque()
     per_page = kwargs.pop('per_page', 100)
     filters = kwargs.pop('filters', {})
@@ -273,7 +274,10 @@ def paginate_json_result(start, action, **kwargs):
                 curr_page = MockAPIResponse.read(next_link)
             results.append(action(curr_page, **kwargs))
         except HTTPError as e:
-            print("Error whilst parsing JSON page; skipping to next one...")
+            if fail_on_first and is_first_item:
+                raise e
+            else:
+                print("Error whilst parsing JSON page; skipping to next one...")
         # Stop if no next link found
         try:
             next_link = curr_page['links']['next']
