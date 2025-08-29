@@ -6,6 +6,8 @@ from urllib.error import HTTPError
 import urllib.request as webhelper
 import importlib.metadata
 
+import click
+
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
 API_HOST_PROD = os.getenv('API_HOST_PROD', 'https://api.osf.io/v2')
@@ -277,7 +279,7 @@ def paginate_json_result(start, action, fail_on_first=True, **kwargs):
             if fail_on_first and is_first_item:
                 raise e
             else:
-                print("Error whilst parsing JSON page; skipping to next one...")
+                click.echo("Error whilst parsing JSON page; continuing with other pages...")
         # Stop if no next link found
         try:
             next_link = curr_page['links']['next']
@@ -637,8 +639,8 @@ def get_project_data(nodes, **kwargs):
                             parent['data']['links']['html']
                         )
                     except (webhelper.HTTPError, ValueError):
-                        print(f"Failed to load parent for {project_data['metadata']['title']}")
-                        print("Try to give a PAT beforehand using the --pat flag.", "\n")
+                        click.echo(f"Failed to load parent for {project_data['metadata']['title']}")
+                        click.echo("Try to give a PAT beforehand using the --pat flag.", "\n")
 
             # Projects specified by ID to export also count as start nodes for PDFs
             # This will be the first node in list of root nodes
@@ -665,7 +667,11 @@ def get_project_data(nodes, **kwargs):
 
             projects.append(project_data)
         except (HTTPError, KeyError) as e:
-            pass
+            if isinstance(e, HTTPError):
+                click.echo(f"A project failed to export: {e.code}")
+            else:
+                click.echo(f"A project failed to export: Unexpected API response.")
+            click.echo("COntinuing with exporting other projects...")
 
     return projects, root_nodes
 
