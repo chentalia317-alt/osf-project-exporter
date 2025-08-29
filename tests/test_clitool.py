@@ -150,6 +150,48 @@ Another paragraph.
 class TestExporter(TestCase):
     """Tests for the exporter without real API usage."""
 
+    @patch('osfexport.exporter.get_affiliated_institutions')
+    def test_get_project_data_handles_HTTP_errors(self, mock_get_inst):
+        mock_get_inst.side_effect = urllib.error.HTTPError(
+            url='https://test.osf.io',
+            code=401,
+            msg=' HTTP Error 401: Unauthorized',
+            hdrs={},
+            fp=None
+        )
+        nodes = MockAPIResponse.read('nodes')
+        projects, root_nodes = get_project_data(
+            nodes,
+            pat='',
+            dryrun=False,
+            usetest=True
+        )
+        assert isinstance(projects, list)
+        assert isinstance(root_nodes, list)
+        # There are 4 real nodes in the mock JSON data
+        assert mock_get_inst.call_count == 4, (
+            f'Wrong num of calls: {mock_get_inst.call_count}'
+        )
+    
+    @patch('osfexport.exporter.get_project_data')
+    def test_paginate_json_result_does_next_page_despite_errors_from_get_project_data(self, mock_get_data):
+        mock_get_data.side_effect = urllib.error.HTTPError(
+            url='https://test.osf.io',
+            code=401,
+            msg=' HTTP Error 401: Unauthorized',
+            hdrs={},
+            fp=None
+        )
+        results = paginate_json_result(
+            start='nodes', action=mock_get_data, dryrun=True, usetest=False,
+            pat='', filters={}, project_id='', per_page=20
+        )
+        # There are 2 pages of nodes to read in the mock JSON data
+        assert mock_get_data.call_count == 2, (
+            f'Wrong num of calls: {mock_get_data.call_count}'
+        )
+        assert results is not None
+
     @patch('urllib.request.urlopen')
     @patch('urllib.request.Request')
     def test_call_api_add_headers(self, mock_request_class, mock_urlopen):
