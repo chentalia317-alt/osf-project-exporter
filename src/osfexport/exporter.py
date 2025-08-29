@@ -466,7 +466,10 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
         start, get_project_data, dryrun=dryrun, usetest=usetest,
         pat=pat, filters=node_filter, project_id=project_id, per_page=page_size
     )
-    l1, l2 = zip(*list(results)) if len(results) > 0 else (), ()
+    if len(results) > 0:
+        l1, l2 = zip(*list(results))
+    else:
+        l1, l2 = (), ()
     projects = [item for sublist in l1 for item in sublist]
 
     # After pagination we get indexes of root nodes local to each page
