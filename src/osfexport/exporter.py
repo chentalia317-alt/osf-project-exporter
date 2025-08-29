@@ -611,8 +611,8 @@ def get_project_data(nodes, **kwargs):
                                 parent_link,
                                 pat=pat,
                                 is_json=True
-                            )
-                        ).read()
+                            ).read()
+                        )
                     else:
                         parent = MockAPIResponse.read(parent_link)
                     project_data['parent'] = (
@@ -620,7 +620,8 @@ def get_project_data(nodes, **kwargs):
                         parent['data']['links']['html']
                     )
                 except (webhelper.HTTPError, ValueError):
-                    print("Failed to load parent, leaving title blank")
+                    print(f"Failed to load parent for {project_data['metadata']['title']}")
+                    print(f"Try to give a PAT beforehand using the --pat flag.", "\n")
 
         # Projects specified by ID to export also count as start nodes for PDFs
         # This will be the first node in list of root nodes
