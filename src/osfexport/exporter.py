@@ -671,7 +671,7 @@ def get_project_data(nodes, **kwargs):
                 click.echo(f"A project failed to export: {e.code}")
             else:
                 click.echo(f"A project failed to export: Unexpected API response.")
-            click.echo("COntinuing with exporting other projects...")
+            click.echo("Continuing with exporting other projects...")
 
     return projects, root_nodes
 
