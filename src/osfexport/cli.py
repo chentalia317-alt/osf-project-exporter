@@ -1,4 +1,5 @@
 import os
+from urllib.error import HTTPError
 
 import click
 
@@ -84,16 +85,22 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
         pat = prompt_pat(project_id=project_id, usetest=usetest)
 
     click.echo('Downloading project data...')
-    projects, root_nodes = exporter.get_nodes(
-        pat, dryrun=dryrun, project_id=project_id, usetest=usetest
-    )
-    click.echo(f'Found {len(root_nodes)} projects.')
-
-    for idx in root_nodes:
-        title = projects[idx]['metadata']['title']
-        click.echo(f'Exporting project {title}...')
-        pdf, path = formatter.write_pdf(projects, idx, folder)
-        click.echo(f'Project exported to {path}')
+    try:
+        projects, root_nodes = exporter.get_nodes(
+            pat, dryrun=dryrun, project_id=project_id, usetest=usetest
+        )
+        click.echo(f'Found {len(root_nodes)} projects.')
+        for idx in root_nodes:
+            title = projects[idx]['metadata']['title']
+            click.echo(f'Exporting project {title}...')
+            pdf, path = formatter.write_pdf(projects, idx, folder)
+            click.echo(f'Project exported to {path}')
+    except HTTPError as e:
+        if e.code == 401:
+            click.echo(
+                """The PAT given does not have permission to export the chosen projects.
+            Please double-check you have assigned the "osf.full_read" permission to your token, and you are a contributor on this project if it's private."""
+            )
 
 
 @click.command()
