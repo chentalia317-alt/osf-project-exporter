@@ -98,8 +98,11 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
     except HTTPError as e:
         if e.code == 401:
             click.echo(
-                """The PAT given does not have permission to export the chosen projects.
-            Please double-check you have assigned the "osf.full_read" permission to your token, and you are a contributor on this project if it's private."""
+                """The PAT given does not have permission to export the chosen projects. Please double-check you have assigned the "osf.full_read" permission to your token, and you are a contributor on this project if it's private."""
+            )
+        elif e.code == 404:
+            click.echo(
+                """The project could not be found. Please check the URL or project ID given is correct."""
             )
 
 
