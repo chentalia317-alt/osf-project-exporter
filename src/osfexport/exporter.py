@@ -602,24 +602,23 @@ def get_project_data(nodes, **kwargs):
                 root_nodes.append(idx)
             
             elif project_data['parent'] is None:
-                # If first project is a component, try to get its parent's title
-                project_data['parent'] = [
-                    '',
-                    project['relationships']['parent'][
+                parent_link = project['relationships']['parent'][
                     'links']['related']['href']
-                ]
                 try:
                     if not dryrun:
                         parent = json.loads(
                             call_api(
-                                project_data['parent'][1],
+                                parent_link,
                                 pat=pat,
                                 is_json=True
                             )
                         ).read()
                     else:
-                        parent = MockAPIResponse.read(project_data['parent'][1])
-                    project_data['parent'][0] = parent['data']['attributes']['title']
+                        parent = MockAPIResponse.read(parent_link)
+                    project_data['parent'] = (
+                        parent['data']['attributes']['title'],
+                        parent['data']['links']['html']
+                    )
                 except (webhelper.HTTPError, ValueError):
                     print("Failed to load parent, leaving title blank")
 
