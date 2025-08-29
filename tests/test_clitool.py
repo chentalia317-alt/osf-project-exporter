@@ -5,11 +5,14 @@ import os
 import shutil
 import json
 import traceback
+import urllib.error
 from unittest.mock import patch, MagicMock, call
 import importlib.metadata
 
+import PIL
 from click.testing import CliRunner
 from pypdf import PdfReader
+from mistletoe import markdown
 
 from osfexport.exporter import (
     MockAPIResponse,
@@ -26,6 +29,7 @@ from osfexport.cli import (
     cli, prompt_pat
 )
 from osfexport.formatter import (
+    HTMLImageSizeCapRenderer,
     write_pdf
 )
 # from mistletoe import markdown
@@ -112,68 +116,35 @@ class TestAPI(TestCase):
         assert projects[0]['metadata']['title'] == node['attributes']['title']
         assert isinstance(projects[0]['files'], list)
 
-# Commenting out this test as it needs fixing
-# By replacing links to images with OSF-hosted images
-# See https://github.com/CenterForOpenScience/osf-project-exporter/issues/84
-#     def test_write_image_html_with_new_size(self):
-#         # Use a large image - should be resized
-#         text = """This has an image in the wiki page.
-# ![Someone taking a pic on their phone camera][1]This is an image above this text.
-# Another paragraph.
+    def test_write_image_html_with_new_size(self):
+        url = 'https://osf.io/download/x/'
+        text = f"""This has an image in the wiki page.
+![Someone taking a pic on their phone camera][1]This is an image above this text.
+Another paragraph.
 
-#   [1]: https://tinyurl.com/3453t48r"""
+  [1]: {url}"""
 
-#         HTMLImageSizeCapRenderer.max_width = 200
-#         HTMLImageSizeCapRenderer.max_height = 200
-#         html = markdown(
-#             text,
-#             renderer=HTMLImageSizeCapRenderer
-#         )
-#         expected_width = HTMLImageSizeCapRenderer.max_width
-#         expected_height = HTMLImageSizeCapRenderer.max_width
-#         expected_html = (
-#             '<p>This has an image in the wiki page.\n'
-#             '<img src="https://tinyurl.com/3453t48r" '
-#             'alt="Someone taking a pic on their phone camera" '
-#             f'width="{expected_height}" height="{expected_width}" />'
-#             'This is an image above this text.\n'
-#             'Another paragraph.</p>\n'
-#         )
-#         assert html == expected_html, (
-#             'Expected HTML: ',
-#             expected_html,
-#             'Actual HTML: ',
-#             html
-#         )
-
-#         # Use a 300x300 image - should not be resized
-#         text = """This has an image in the wiki page.
-# ![Someone taking a pic on their phone camera][1]This is an image above this text.
-# Another paragraph.
-
-#   [1]: https://upload.wikimedia.org/wikipedia/commons/3/3c/300_x_300.png"""
-#         HTMLImageSizeCapRenderer.max_width = 800
-#         HTMLImageSizeCapRenderer.max_height = 400
-#         html = markdown(
-#             text,
-#             renderer=HTMLImageSizeCapRenderer
-#         )
-#         expected_width = 300
-#         expected_height = 300
-#         expected_html = (
-#             '<p>This has an image in the wiki page.\n'
-#             '<img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/300_x_300.png" '
-#             'alt="Someone taking a pic on their phone camera" '
-#             f'width="{expected_width}" height="{expected_height}" />'
-#             'This is an image above this text.\n'
-#             'Another paragraph.</p>\n'
-#         )
-#         assert html == expected_html, (
-#             'Expected HTML: ',
-#             expected_html,
-#             'Actual HTML: ',
-#             html
-#         )
+        # Mock requests to simulate errors when trying to download images
+        with patch('urllib.request.urlopen') as mock_get:
+            mock_get.side_effect = urllib.error.HTTPError(
+                url='https://osf.io/download/x/',
+                code=401,
+                msg='Unauthorized',
+                hdrs={},
+                fp=None
+            )
+            html = markdown(text, renderer=HTMLImageSizeCapRenderer)
+            assert f'<a href="{url}">{url}</a>' in html, (
+                f'<a href="{url}">{url}</a>',
+                html
+            )
+        with patch('urllib.request.urlopen') as mock_get:
+            mock_get.side_effect = PIL.UnidentifiedImageError()
+            html = markdown(text, renderer=HTMLImageSizeCapRenderer)
+            assert f'<a href="{url}">{url}</a>' in html, (
+                f'<a href="{url}">{url}</a>',
+                html
+            )
 
 
 class TestExporter(TestCase):
@@ -187,10 +158,10 @@ class TestExporter(TestCase):
         mock_request_instance = MagicMock()
         mock_request_class.return_value = mock_request_instance
         call_api('https://test.osf.io', pat='pat', is_json=True)
-        version = importlib.metadata.version("osfio-export-tool")
+        version = importlib.metadata.version("osfexport")
         expected_calls = [
             call().add_header('Authorization', 'Bearer pat'),
-            call().add_header('User-Agent', f'osfio-export-tool/{version} (Python)'),
+            call().add_header('User-Agent', f'osfexport/{version} (Python)'),
             call().add_header('Accept', 'application/vnd.api+json;version=2.20')
         ]
         mock_request_class.assert_has_calls(expected_calls, any_order=False)

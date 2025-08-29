@@ -204,8 +204,8 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
     request = webhelper.Request(url, method=method)
     request.add_header('Authorization', f'Bearer {pat}')
 
-    version = importlib.metadata.version("osfio-export-tool")
-    request.add_header('User-Agent', f'osfio-export-tool/{version} (Python)')
+    version = importlib.metadata.version("osfexport")
+    request.add_header('User-Agent', f'osfexport/{version} (Python)')
 
     # Pin API version so that JSON has correct format
     API_VERSION = '2.20'
