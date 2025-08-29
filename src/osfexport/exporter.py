@@ -273,12 +273,12 @@ def paginate_json_result(start, action, **kwargs):
                 curr_page = MockAPIResponse.read(next_link)
             results.append(action(curr_page, **kwargs))
         except HTTPError as e:
-            pass
+            print("Error whilst parsing JSON page; skipping to next one...")
         # Stop if no next link found
         try:
             next_link = curr_page['links']['next']
             is_last_page = not next_link
-        except KeyError:
+        except (KeyError, UnboundLocalError):
             is_last_page = True
     return results
 
@@ -461,12 +461,12 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
             start = project_id
         else:
             start = 'nodes'
-
+    
     results = paginate_json_result(
         start, get_project_data, dryrun=dryrun, usetest=usetest,
         pat=pat, filters=node_filter, project_id=project_id, per_page=page_size
     )
-    l1, l2 = zip(*list(results))
+    l1, l2 = zip(*list(results)) if len(results) > 0 else (), ()
     projects = [item for sublist in l1 for item in sublist]
 
     # After pagination we get indexes of root nodes local to each page
