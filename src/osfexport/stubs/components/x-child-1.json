@@ -312,8 +312,8 @@
                 }
             },
             "links": {
-                "html": "https://test.osf.io/x/",
-                "self": "https://api.test.osf.io/v2/nodes/x/",
+                "html": "https://test.osf.io/a/",
+                "self": "https://api.test.osf.io/v2/nodes/a/",
                 "iri": "https://test.osf.io/x"
             }
         }
