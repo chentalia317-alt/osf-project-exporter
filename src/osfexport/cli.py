@@ -96,9 +96,10 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
             pdf, path = formatter.write_pdf(projects, idx, folder)
             click.echo(f'Project exported to {path}')
     except HTTPError as e:
+        click.echo("Exporting failed as an error occurred:\n")
         if e.code == 401:
             click.echo(
-                f"""The PAT given does not have permission to export the chosen project{"s" if not project_id else ""}. Please double-check you have assigned the "osf.full_read" permission to your token{", and you are a contributor if it's private" if project_id else ""}."""
+                f"""The PAT used could not be used to authenticate you. Did you enter your PAT correctly?"""
             )
         elif e.code == 404:
             click.echo(
@@ -106,7 +107,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
             )
         elif e.code == 403:
             click.echo(
-                """You aren't able to access this. Check that you are a contributor."""
+                f"""You aren't able to access {"these projects" if not project_id else "this project"}. Please double-check you have assigned the "osf.full_read" permission to your token{", and you are a contributor if it's private" if project_id else ""}."""
             )
 
 

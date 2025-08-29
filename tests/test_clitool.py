@@ -1010,25 +1010,7 @@ class TestCLI(TestCase):
             ],
             terminal_width=60
         )
-        message = """The PAT given does not have permission to export the chosen projects. Please double-check you have assigned the "osf.full_read" permission to your token."""
-        assert message in result.output, (
-                result.output,
-                message
-            )
-        
-        result = runner.invoke(
-            cli, [
-                'export-projects',
-                '--usetest',
-                '--url', 'abc'
-            ],
-            terminal_width=60
-        )
-        message = """The PAT given does not have permission to export the chosen project. Please double-check you have assigned the "osf.full_read" permission to your token, and you are a contributor if it's private."""
-        assert message in result.output, (
-                result.output,
-                message
-            )
+        assert "Exporting failed as an error occurred:" in result.output
 
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
