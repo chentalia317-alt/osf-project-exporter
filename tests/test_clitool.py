@@ -983,6 +983,30 @@ class TestCLI(TestCase):
     def test_prompt_pat_if_exporting_all_projects(self, mock_obj):
         pat = prompt_pat()
         assert pat == 'strinput'
+    
+    @patch('osfexport.cli.prompt_pat')
+    @patch('osfexport.exporter.get_nodes')
+    def test_export_projects_handles_http_errors(self, mock_func, mock_prompt):
+        mock_prompt.return_value = '-'
+        mock_func.side_effect = urllib.error.HTTPError(
+            url='https://test.osf.io',
+            code=401,
+            msg='HTTP Error 401: Unauthorized',
+            hdrs={},
+            fp=None
+        )
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, [
+                'export-projects',
+                '--usetest'
+            ],
+            terminal_width=60
+        )
+        assert """The PAT given does not have permission to export the chosen projects.
+            Please double-check you have assigned the "osf.full_read" permission to your token, and you are a contributor on this project if it's private.""" in result.output, (
+                result.output
+            )
 
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
