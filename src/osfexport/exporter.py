@@ -606,7 +606,6 @@ def get_project_data(nodes, **kwargs):
             # In general, start nodes for PDFs have no parents
             if 'links' not in project['relationships']['parent']:
                 root_nodes.append(idx)
-            
             elif project_data['parent'] is None:
                 parent_link = project['relationships']['parent'][
                     'links']['related']['href']
@@ -627,7 +626,7 @@ def get_project_data(nodes, **kwargs):
                     )
                 except (webhelper.HTTPError, ValueError):
                     print(f"Failed to load parent for {project_data['metadata']['title']}")
-                    print(f"Try to give a PAT beforehand using the --pat flag.", "\n")
+                    print("Try to give a PAT beforehand using the --pat flag.", "\n")
 
         # Projects specified by ID to export also count as start nodes for PDFs
         # This will be the first node in list of root nodes
@@ -644,7 +643,7 @@ def get_project_data(nodes, **kwargs):
                 children.append(child['id'])
                 nodes['data'].append(child)  # Add to list of nodes to search
             return children
-        
+
         children_link = relations['children']['links']['related']['href']
         children = list(paginate_json_result(
             children_link, dryrun=dryrun, pat=pat, action=get_children

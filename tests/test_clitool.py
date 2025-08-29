@@ -493,7 +493,7 @@ class TestExporter(TestCase):
         assert projects[0]['metadata']['id'] == 'a'
         assert projects[0]['parent'][0] == 'Test1', (
             projects[0]['parent'][0],
-            f'Expected: Test1'
+            'Expected: Test1'
         )
         assert projects[0]['parent'][1] == 'https://test.osf.io/x/', (
             projects[0]['parent'][1],
@@ -905,8 +905,6 @@ class TestFormatter(TestCase):
             'Actual: ',
             content_first_page.replace(' ', '')
         )
-
-        #print(import_one.pages[4].extract_text(extraction_mode='layout'))
 
         content_fourth_page = import_one.pages[4].extract_text(
             extraction_mode='layout'
