@@ -184,13 +184,20 @@ class TestExporter(TestCase):
         )
         results = paginate_json_result(
             start='nodes', action=mock_get_data, dryrun=True, usetest=False,
-            pat='', filters={}, project_id='', per_page=20
+            pat='', filters={}, project_id='', per_page=20, fail_on_first=False
         )
         # There are 2 pages of nodes to read in the mock JSON data
         assert mock_get_data.call_count == 2, (
             f'Wrong num of calls: {mock_get_data.call_count}'
         )
         assert results is not None
+
+        # Raise error on first error
+        with self.assertRaises(urllib.error.HTTPError):
+            results = paginate_json_result(
+                start='nodes', action=mock_get_data, dryrun=True, usetest=False,
+                pat='', filters={}, project_id='', per_page=20
+            )
 
     @patch('urllib.request.urlopen')
     @patch('urllib.request.Request')
