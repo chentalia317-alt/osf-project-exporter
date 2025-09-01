@@ -173,7 +173,7 @@ def is_public(url):
 
 def call_api(
         url, pat, method='GET', per_page=100, filters={}, is_json=True,
-        usetest=False
+        usetest=False, max_tries=5
     ):
     """Call OSF v2 API methods.
 
@@ -199,6 +199,8 @@ def call_api(
         If True, use fixed delay of 0.1 seconds for tests.
         If False, use a random delay between [1, 60] seconds between requests.
         This spaces out requests over time to give the API chance to recover.
+    max_tries: int
+        Number of attempts to make before raising a 429 error. Default is 5, Limit is 7.
     
     Throws
     -------------
@@ -231,10 +233,13 @@ def call_api(
             f'application/vnd.api+json;version={API_VERSION}'
         )
     
+    if max_tries > 7:
+        max_tries = 7  #  Cap retries to reduce requests sent and max delay time
+    
     # Retry requests if we get 429 errors
     try_count = 0
     result = None
-    while try_count < 5 and result is None:
+    while try_count < max_tries and result is None:
         try:
             result = webhelper.urlopen(request)
         except HTTPError as e:
