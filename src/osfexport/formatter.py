@@ -234,12 +234,13 @@ class PDF(FPDF):
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         with self.table(
             headings_style=PDF.HEADINGS_STYLE,
-            col_widths=(1, 0.5, 1), align="LEFT"
+            col_widths=(0.8, 0.5, 1.2), align="LEFT"
         ) as table:
             row = table.row()
             row.cell('Name')
             row.cell('Bibliographic?')
             row.cell('Profile Link')
+            self.set_font(self.font, size=PDF.FONT_SIZES['h5'])
             for data_row in project['contributors']:
                 row = table.row()
                 for idx, datum in enumerate(data_row):
