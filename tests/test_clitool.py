@@ -214,6 +214,27 @@ class TestExporter(TestCase):
             call().add_header('Accept', 'application/vnd.api+json;version=2.20')
         ]
         mock_request_class.assert_has_calls(expected_calls, any_order=False)
+    
+    @patch('urllib.request.urlopen')
+    @patch('urllib.request.Request')
+    def test_call_api_handle_429_errors(self, mock_request_class, mock_urlopen):
+        # Mock Request instances to check headers
+        # Mock urlopen to avoid real HTTP calls
+        mock_request_instance = MagicMock()
+        mock_request_class.return_value = mock_request_instance
+        mock_urlopen.side_effect = urllib.error.HTTPError(
+            code=429,
+            msg="error",
+            url="",
+            hdrs={},
+            fp=None
+        )
+
+        max_tries = 3
+        with self.assertRaises(urllib.error.HTTPError):
+            call_api('https://test.osf.io', pat='pat', is_json=True, wait_time=0.1, max_tries=max_tries)
+        assert len(mock_urlopen.call_args_list) == max_tries
+        
 
     def test_get_public_status(self):
         # Public url
