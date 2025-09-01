@@ -125,7 +125,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
                 )
         else:
             click.echo(
-                f"Unexpected error: {e.reason}. Please try again later."
+                f"Unexpected error connecting to the OSF: {e.reason}. Please try again later."
             )
 
 
