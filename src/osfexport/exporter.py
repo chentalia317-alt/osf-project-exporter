@@ -173,8 +173,7 @@ def is_public(url):
 
 def call_api(
         url, pat, method='GET', per_page=100, filters={}, is_json=True,
-        usetest=False, max_tries=5
-    ):
+        usetest=False, max_tries=5):
     """Call OSF v2 API methods.
 
     Parameters
@@ -201,7 +200,7 @@ def call_api(
         This spaces out requests over time to give the API chance to recover.
     max_tries: int
         Number of attempts to make before raising a 429 error. Default is 5, Limit is 7.
-    
+
     Throws
     -------------
         HTTPError - 429 error if we can't connect to the API after retries.
@@ -232,10 +231,10 @@ def call_api(
             'Accept',
             f'application/vnd.api+json;version={API_VERSION}'
         )
-    
+
     if max_tries > 7:
-        max_tries = 7  #  Cap retries to reduce requests sent and max delay time
-    
+        max_tries = 7  # Cap retries to reduce requests sent and max delay time
+
     # Retry requests if we get 429 errors
     try_count = 0
     result = None

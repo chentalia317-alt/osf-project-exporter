@@ -214,7 +214,7 @@ class TestExporter(TestCase):
                 start='nodes', action=mock_get_data, dryrun=True, usetest=False,
                 pat='', filters={}, project_id='', per_page=20
             )
-        
+
         # Raise error if it's HTTP 429 error code
         mock_get_data.side_effect = urllib.error.HTTPError(
             url='https://test.osf.io',
@@ -244,7 +244,7 @@ class TestExporter(TestCase):
             call().add_header('Accept', 'application/vnd.api+json;version=2.20')
         ]
         mock_request_class.assert_has_calls(expected_calls, any_order=False)
-    
+
     @patch('urllib.request.urlopen')
     @patch('urllib.request.Request')
     def test_call_api_handle_429_errors(self, mock_request_class, mock_urlopen):
@@ -264,7 +264,6 @@ class TestExporter(TestCase):
             # Use constant time delays instead of random for quick test
             call_api('https://test.osf.io', pat='pat', is_json=True, usetest=True)
         assert len(mock_urlopen.call_args_list) == 5
-        
 
     def test_get_public_status(self):
         # Public url

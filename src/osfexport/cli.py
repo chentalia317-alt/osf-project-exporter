@@ -100,16 +100,17 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
         if isinstance(e, HTTPError):
             if e.code == 401:
                 click.echo(
-                    "The PAT used could not authenticate you. Did you enter your PAT correctly?"
+                    "The token used couldn't authenticate you. You may have entered it incorrectly."
                 )
                 click.echo()
             elif e.code == 404:
                 click.echo(
-                    """The project couldn't be found. Please check the URL or project ID is correct."""
+                    """The project couldn't be found. Please check the URL/project ID is correct."""
                 )
             elif e.code == 403:
+                text = "this project" if project_id else "these projects"
                 click.echo(
-                    f"You aren't able to access {"this project" if project_id else "these projects"}."
+                    f"You aren't a contributor for {text}."
                 )
                 click.echo(
                     f"""Please check your PAT has the \"osf.full_read\" permission
@@ -117,7 +118,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
                 )
             elif e.code == 429:
                 click.echo(
-                    f"""Too many requests to the API, please try again in a few minutes."""
+                    """Too many requests to the API, please try again in a few minutes."""
                 )
             else:
                 click.echo(
@@ -127,7 +128,6 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
             click.echo(
                 f"Unexpected error connecting to the OSF: {e.reason}. Please try again later."
             )
-
 
 
 @click.command()
