@@ -316,7 +316,7 @@ def paginate_json_result(start, action, fail_on_first=True, **kwargs):
                 curr_page = MockAPIResponse.read(next_link)
             results.append(action(curr_page, **kwargs))
         except HTTPError as e:
-            if fail_on_first and is_first_item:
+            if fail_on_first and is_first_item or e.code == 429:
                 raise e
             else:
                 click.echo("Error whilst parsing JSON page; continuing with other pages...")
@@ -708,6 +708,8 @@ def get_project_data(nodes, **kwargs):
             projects.append(project_data)
         except (HTTPError, KeyError) as e:
             if isinstance(e, HTTPError):
+                if e.code == 429:
+                    raise e
                 click.echo(f"A project failed to export: {e.code}")
             else:
                 click.echo("A project failed to export: Unexpected API response.")
