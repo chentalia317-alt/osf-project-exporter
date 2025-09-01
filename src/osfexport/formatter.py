@@ -74,6 +74,7 @@ class PDF(FPDF):
         'h4': 9,  # Body
         'h5': 8  # Footer
     }
+    LINK_STYLE = FontFace(emphasis="UNDERLINE", size_pt=FONT_SIZES['h5'])
     LINE_PADDING = -1 # Gaps between lines
     TITLE_CELL_WIDTH = 150  # Shorter width to avoid QR code clipping
     CELL_WIDTH = 180  # Width of text cells
@@ -199,7 +200,7 @@ class PDF(FPDF):
         parent = project['parent']
         if parent:
             self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-            self.write(h=0, text=f'cat cat cat cat cat cat cat cat cat cat cat cat cat cat cat carParent: {parent[0]}: ')
+            self.write(h=0, text=f'Parent: {parent[0]} ')
             self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='U')
             self.write(h=0, text=f'{parent[1]}\n', link=parent[1])
             self.ln(h=5)
@@ -211,7 +212,7 @@ class PDF(FPDF):
         self.image(qr_img, w=30, x=180, y=5)
         title = project['metadata']['title']
         self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-        self.write(h=0, text=f'{title}: ')
+        self.write(h=0, text=f'{title} ')
         self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='U')
         self.write(h=0, text=f'{url}\n', link=url)
         self.ln(h=5)
@@ -233,7 +234,7 @@ class PDF(FPDF):
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         with self.table(
             headings_style=PDF.HEADINGS_STYLE,
-            col_widths=(1, 0.5, 1)
+            col_widths=(1, 0.5, 1), align="LEFT"
         ) as table:
             row = table.row()
             row.cell('Name')
@@ -247,7 +248,7 @@ class PDF(FPDF):
                     if datum is False:
                         datum = 'No'
                     if idx == 2:
-                        row.cell(text=datum, link=datum)
+                        row.cell(text=datum, link=datum, style=self.LINK_STYLE)
                     else:
                         row.cell(datum)
         self.ln(h=7)
@@ -263,7 +264,7 @@ class PDF(FPDF):
         if len(project['files']) > 0:
             with self.table(
                 headings_style=PDF.HEADINGS_STYLE,
-                col_widths=(1, 0.3, 1.2)
+                col_widths=(1, 0.3, 1.2), align="LEFT"
             ) as table:
                 self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
                 row = table.row()
@@ -279,7 +280,7 @@ class PDF(FPDF):
                         if datum is False or datum is None:
                             datum = 'N/A'
                         if idx == 2:
-                            row.cell(text=datum, link=datum)
+                            row.cell(text=datum, link=datum, style=self.LINK_STYLE)
                         else:
                             row.cell(datum)
         else:
