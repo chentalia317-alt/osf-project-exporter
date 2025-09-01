@@ -74,7 +74,7 @@ class PDF(FPDF):
         'h4': 9,  # Body
         'h5': 8  # Footer
     }
-    LINE_PADDING = -1 # Gaps between lines
+    LINE_PADDING = -1  # Gaps between lines
     TITLE_CELL_WIDTH = 150  # Shorter width to avoid QR code clipping
     CELL_WIDTH = 180  # Width of text cells
 
@@ -166,7 +166,7 @@ class PDF(FPDF):
             else:
                 self.multi_cell(
                     w=PDF.CELL_WIDTH, h=None,
-                    text=f'NA',
+                    text='NA',
                     align='L', markdown=True, padding=PDF.LINE_PADDING
                 )
         else:
@@ -353,7 +353,7 @@ def explore_project_tree(project, projects, pdf=None):
     # Start with no PDF at root projects
     if not pdf:
         pdf = PDF()
-    
+
     pdf.set_line_width(0.05)
     pdf.set_left_margin(10)
     pdf.set_right_margin(10)
