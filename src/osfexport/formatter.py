@@ -315,9 +315,11 @@ class PDF(FPDF):
         self.ln(h=10)
 
         # Write wikis separately to more easily handle Markdown parsing
-        self._write_wiki_pages(wikis)
+        self._write_wiki_pages(
+            wikis, parent=parent, title=project['metadata']['title']
+        )
 
-    def _write_wiki_pages(self, wikis):
+    def _write_wiki_pages(self, wikis, title, parent=None):
         """Write inplace the wiki pages to the PDF.
 
         Parameters
@@ -330,8 +332,13 @@ class PDF(FPDF):
             self.add_page()
             if i == 0:
                 self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
+                title_template = '4. Wiki ({}{}{})'
+                if parent:
+                    header = title_template.format(f'Parent: {parent[0]}', ' | ', title)
+                else:
+                    header = title_template.format('', '', title)
                 self.multi_cell(
-                    w=PDF.CELL_WIDTH, h=None, text='4. Wiki\n',
+                    w=PDF.CELL_WIDTH, h=None, text=f'{header}\n',
                     align='L')
                 self.ln()
             self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
