@@ -173,6 +173,22 @@ class TestExporter(TestCase):
             f'Wrong num of calls: {mock_get_inst.call_count}'
         )
 
+        mock_get_inst.side_effect = urllib.error.HTTPError(
+            url='https://test.osf.io',
+            code=429,
+            msg='Too many requests',
+            hdrs={},
+            fp=None
+        )
+        nodes = MockAPIResponse.read('nodes')
+        with self.assertRaises(urllib.error.HTTPError):
+            projects, root_nodes = get_project_data(
+                nodes,
+                pat='',
+                dryrun=False,
+                usetest=True
+            )
+
     @patch('osfexport.exporter.get_project_data')
     def test_paginate_json_result_gets_next_page_despite_function_errors(self, mock_get_data):
         mock_get_data.side_effect = urllib.error.HTTPError(
@@ -197,6 +213,20 @@ class TestExporter(TestCase):
             results = paginate_json_result(
                 start='nodes', action=mock_get_data, dryrun=True, usetest=False,
                 pat='', filters={}, project_id='', per_page=20
+            )
+        
+        # Raise error if it's HTTP 429 error code
+        mock_get_data.side_effect = urllib.error.HTTPError(
+            url='https://test.osf.io',
+            code=429,
+            msg='Too many requests',
+            hdrs={},
+            fp=None
+        )
+        with self.assertRaises(urllib.error.HTTPError):
+            results = paginate_json_result(
+                start='nodes', action=mock_get_data, dryrun=True, usetest=False,
+                pat='', filters={}, project_id='', per_page=20, fail_on_first=False
             )
 
     @patch('urllib.request.urlopen')
