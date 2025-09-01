@@ -198,10 +198,13 @@ class PDF(FPDF):
         # Start with parent, project headers and links
         parent = project['parent']
         if parent:
-            self.set_x(6)
+            self.set_x(8)
             self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
             self.multi_cell(w=PDF.TITLE_CELL_WIDTH, h=None, text=f'Parent: {parent[0]}\n', align='L')
             self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
+            # The positions where text starts vary between line breaks
+            # These set_x statements try to fix start positions for consistent positioning
+            self.set_x(10)
             self.cell(
                 text='Parent URL:', align='L'
             )
@@ -210,7 +213,7 @@ class PDF(FPDF):
             )
             self.ln(h=10)
         
-        self.set_x(8)
+        self.set_x(10)
         title = project['metadata']['title']
         self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
         self.multi_cell(
@@ -223,7 +226,9 @@ class PDF(FPDF):
         self.url = url  # Set current URL to use in QR codes
         qr_img = self.generate_qr_code()
         self.image(qr_img, w=30, x=Align.R, y=5)
+        
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
+        self.set_x(10)
         self.cell(
             text='Project URL:',
             align='L'
