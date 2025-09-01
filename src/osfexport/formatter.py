@@ -199,46 +199,26 @@ class PDF(FPDF):
         parent = project['parent']
         if parent:
             self.set_x(8)
-            self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-            self.multi_cell(w=PDF.TITLE_CELL_WIDTH, h=None, text=f'Parent: {parent[0]}\n', align='L')
-            self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
-            # The positions where text starts vary between line breaks
-            # These set_x statements try to fix start positions for consistent positioning
-            self.set_x(10)
-            self.cell(
-                text='Parent URL:', align='L'
+            self.set_font(self.font, size=PDF.FONT_SIZES['h1'])
+            self.multi_cell(
+                w=PDF.TITLE_CELL_WIDTH, h=None, align='L', markdown=True,
+                text=f'**Parent: {parent[0]}** - [{parent[1]}]({parent[1]})'
             )
-            self.cell(
-                text=f'{parent[1]}', align='L', link=parent[1]
-            )
-            self.ln(h=10)
-        
-        self.set_x(10)
-        title = project['metadata']['title']
-        self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-        self.multi_cell(
-            w=PDF.CELL_WIDTH, h=None, text=f'{title}\n',
-            align='L', padding=PDF.LINE_PADDING
-        )
+            self.ln(h=5)
 
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')
         self.url = url  # Set current URL to use in QR codes
         qr_img = self.generate_qr_code()
         self.image(qr_img, w=30, x=Align.R, y=5)
-        
-        self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
-        self.set_x(10)
-        self.cell(
-            text='Project URL:',
-            align='L'
+        title = project['metadata']['title']
+        self.set_font(self.font, size=PDF.FONT_SIZES['h1'])
+        self.multi_cell(
+            w=PDF.CELL_WIDTH, h=None, markdown=True,
+            align='L', padding=PDF.LINE_PADDING,
+            text=f'**{title}** - [{url}]({url})\n'
         )
-        self.cell(
-            text=f'{url}',
-            align='L',
-            link=url
-        )
-        self.ln(h=10)
+        self.ln(h=7)
 
         # Write title for metadata section, then actual fields
         self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
