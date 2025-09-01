@@ -68,13 +68,13 @@ class PDF(FPDF):
     BLUE = (173, 216, 230)
     HEADINGS_STYLE = FontFace(emphasis="BOLD", fill_color=BLUE)
     FONT_SIZES = {
-        'h1': 18,  # Project titles
-        'h2': 16,  # Section titles
-        'h3': 14,  # Section sub-titles
-        'h4': 12,  # Body
-        'h5': 10  # Footer
+        'h1': 16,  # Project titles
+        'h2': 12,  # Section titles
+        'h3': 10,  # Section sub-titles
+        'h4': 9,  # Body
+        'h5': 8  # Footer
     }
-    LINE_PADDING = 0  # Gaps between lines
+    LINE_PADDING = -1 # Gaps between lines
     CELL_WIDTH = 180  # Width of text cells
 
     def __init__(self, url=''):
