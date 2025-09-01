@@ -5,6 +5,8 @@ import datetime
 from urllib.error import HTTPError
 import urllib.request as webhelper
 import importlib.metadata
+import time
+from functools import wraps
 
 import click
 
@@ -169,7 +171,10 @@ def is_public(url):
     return result == 200
 
 
-def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
+def call_api(
+        url, pat, method='GET', per_page=100, filters={}, is_json=True,
+        wait_time=5, max_tries=5
+    ):
     """Call OSF v2 API methods.
 
     Parameters
@@ -190,6 +195,14 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
         Example Query String: ?filter[category]=project&filter[title]=ttt
     is_json: bool
         If true, set API version to get correct API responses.
+    wait_time: int
+        Number of seconds to wait between retrying requests. Default is 1 second.
+    max_tries: int
+        Number of reties to attempt before raising a HTTPError. Default is 5.
+    
+    Throws
+    -------------
+        HTTPError - 429 error if we can't connect to the API after retries.
 
     Returns
     ----------
@@ -217,7 +230,29 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
             'Accept',
             f'application/vnd.api+json;version={API_VERSION}'
         )
-    result = webhelper.urlopen(request)
+    
+    # Retry requests if we get 429 errors up to a certain amount of times
+    # If not successful after then raise an error
+    try_count = 0
+    result = None
+    while max_tries > try_count and result is None:
+        try:
+            result = webhelper.urlopen(request)
+        except HTTPError as e:
+            # Other error codes tell us directly something is wrong
+            if e.code == 429:
+                time.sleep(wait_time)
+                try_count += 1
+            else:
+                raise e
+    if result is None:
+        raise HTTPError(
+            url=url,
+            code=429,
+            msg="Could not connect to the OSF API.",
+            hdrs=request.headers,
+            fp=None
+        )
     return result
 
 
