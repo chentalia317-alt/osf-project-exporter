@@ -147,21 +147,28 @@ class PDF(FPDF):
                 align='L', markdown=True, padding=PDF.LINE_PADDING
             )
             self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
-            for idx, item in enumerate(fielddict[key]):
-                for subkey in item.keys():
-                    if subkey in pdf_display_names:
-                        field_name = pdf_display_names[subkey]
-                    else:
-                        field_name = subkey.replace('_', ' ').title()
+            if len(fielddict[key]) > 0:
+                for idx, item in enumerate(fielddict[key]):
+                    for subkey in item.keys():
+                        if subkey in pdf_display_names:
+                            field_name = pdf_display_names[subkey]
+                        else:
+                            field_name = subkey.replace('_', ' ').title()
 
-                    self.multi_cell(
-                        w=PDF.CELL_WIDTH, h=None,
-                        text=f'**{field_name}:** {item[subkey]}\n',
-                        align='L', markdown=True, padding=PDF.LINE_PADDING
-                    )
-                if idx < len(fielddict[key])-1:
-                    self.ln()
-                    self.set_x(9)
+                        self.multi_cell(
+                            w=PDF.CELL_WIDTH, h=None,
+                            text=f'**{field_name}:** {item[subkey]}\n',
+                            align='L', markdown=True, padding=PDF.LINE_PADDING
+                        )
+                    if idx < len(fielddict[key])-1:
+                        self.ln()
+                        self.set_x(9)
+            else:
+                self.multi_cell(
+                    w=PDF.CELL_WIDTH, h=None,
+                    text=f'NA',
+                    align='L', markdown=True, padding=PDF.LINE_PADDING
+                )
         else:
             # Simple key-value attributes can go on one-line
             self.multi_cell(
