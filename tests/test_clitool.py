@@ -994,7 +994,7 @@ class TestCLI(TestCase):
     @patch('osfexport.cli.prompt_pat')
     @patch('osfexport.exporter.get_nodes')
     def test_export_projects_handles_http_url_errors(self, mock_func, mock_prompt):
-        codes = [401, 402, 403, 404, 500, -1]
+        codes = [401, 402, 403, 404, 429, 500, -1]
         for code in codes:
             mock_prompt.return_value = '-'
             if code != -1:
