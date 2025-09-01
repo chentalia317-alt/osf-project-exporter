@@ -75,6 +75,7 @@ class PDF(FPDF):
         'h5': 8  # Footer
     }
     LINE_PADDING = -1 # Gaps between lines
+    TITLE_CELL_WIDTH = 150  # Shorter width to avoid QR code clipping
     CELL_WIDTH = 180  # Width of text cells
 
     def __init__(self, url=''):
@@ -192,7 +193,7 @@ class PDF(FPDF):
         if parent:
             self.set_x(6)
             self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-            self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=f'Parent: {parent[0]}\n', align='L')
+            self.multi_cell(w=PDF.TITLE_CELL_WIDTH, h=None, text=f'Parent: {parent[0]}\n', align='L')
             self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
             self.cell(
                 text='Parent URL:', align='L'
