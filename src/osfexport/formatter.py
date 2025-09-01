@@ -218,7 +218,7 @@ class PDF(FPDF):
             align='L', padding=PDF.LINE_PADDING,
             text=f'**{title}** - [{url}]({url})\n'
         )
-        self.ln(h=7)
+        self.ln(h=5)
 
         # Write title for metadata section, then actual fields
         self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
@@ -228,7 +228,7 @@ class PDF(FPDF):
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         for key in project['metadata']:
             self._write_list_section(key, project['metadata'])
-        self.ln(h=5)
+        self.ln(h=7)
 
         # Write Contributors in table
         self.set_x(8)
@@ -254,7 +254,7 @@ class PDF(FPDF):
                         row.cell(text=datum, link=datum)
                     else:
                         row.cell(datum)
-        self.ln(h=10)
+        self.ln(h=7)
 
         # List files stored in storage providers
         # For now only OSF Storage is involved
