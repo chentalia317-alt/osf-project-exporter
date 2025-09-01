@@ -993,17 +993,22 @@ class TestCLI(TestCase):
 
     @patch('osfexport.cli.prompt_pat')
     @patch('osfexport.exporter.get_nodes')
-    def test_export_projects_handles_http_errors(self, mock_func, mock_prompt):
-        codes = [401, 402, 403, 404, 500]
+    def test_export_projects_handles_http_url_errors(self, mock_func, mock_prompt):
+        codes = [401, 402, 403, 404, 500, -1]
         for code in codes:
             mock_prompt.return_value = '-'
-            mock_func.side_effect = urllib.error.HTTPError(
-                url='https://test.osf.io',
-                code=code,
-                msg='HTTP Error',
-                hdrs={},
-                fp=None
-            )
+            if code != -1:
+                mock_func.side_effect = urllib.error.HTTPError(
+                    url='https://test.osf.io',
+                    code=code,
+                    msg='HTTP Error',
+                    hdrs={},
+                    fp=None
+                )
+            else:
+                mock_func.side_effect = urllib.error.URLError(
+                    reason="URL Error"
+                )
             runner = CliRunner()
             result = runner.invoke(
                 cli, [
