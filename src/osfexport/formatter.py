@@ -146,7 +146,7 @@ class PDF(FPDF):
                 align='L', markdown=True, padding=PDF.LINE_PADDING
             )
             self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
-            for item in fielddict[key]:
+            for idx, item in enumerate(fielddict[key]):
                 for subkey in item.keys():
                     if subkey in pdf_display_names:
                         field_name = pdf_display_names[subkey]
@@ -158,7 +158,9 @@ class PDF(FPDF):
                         text=f'**{field_name}:** {item[subkey]}\n',
                         align='L', markdown=True, padding=PDF.LINE_PADDING
                     )
-                self.write(0, '\n')
+                if idx < len(fielddict[key])-1:
+                    self.ln()
+                    self.set_x(9)
         else:
             # Simple key-value attributes can go on one-line
             self.multi_cell(
@@ -182,15 +184,13 @@ class PDF(FPDF):
         """
 
         self.add_page()
-        self.set_line_width(0.05)
-        self.set_left_margin(10)
-        self.set_right_margin(10)
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         wikis = project['wikis']
 
         # Start with parent, project headers and links
         parent = project['parent']
         if parent:
+            self.set_x(6)
             self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
             self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=f'Parent: {parent[0]}\n', align='L')
             self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
@@ -198,10 +198,11 @@ class PDF(FPDF):
                 text='Parent URL:', align='L'
             )
             self.cell(
-                text=f'{parent[1]}\n', align='L', link=parent[1]
+                text=f'{parent[1]}', align='L', link=parent[1]
             )
-            self.write(0, '\n\n')
-
+            self.ln(h=10)
+        
+        self.set_x(8)
         title = project['metadata']['title']
         self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
         self.multi_cell(
@@ -224,9 +225,7 @@ class PDF(FPDF):
             align='L',
             link=url
         )
-        self.write(0, '\n\n')
-        self.ln()
-        self.ln()
+        self.ln(h=10)
 
         # Write title for metadata section, then actual fields
         self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
@@ -236,10 +235,10 @@ class PDF(FPDF):
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         for key in project['metadata']:
             self._write_list_section(key, project['metadata'])
-        self.write(0, '\n')
-        self.write(0, '\n')
+        self.ln(h=10)
 
         # Write Contributors in table
+        self.set_x(8)
         self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
         self.multi_cell(w=PDF.CELL_WIDTH, h=None, text='2. Contributors\n', align='L')
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
@@ -262,11 +261,11 @@ class PDF(FPDF):
                         row.cell(text=datum, link=datum)
                     else:
                         row.cell(datum)
-        self.write(0, '\n')
-        self.write(0, '\n')
+        self.ln(h=10)
 
         # List files stored in storage providers
         # For now only OSF Storage is involved
+        self.set_x(8)
         self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
         self.multi_cell(w=PDF.CELL_WIDTH, h=None, text='3. Files in Main Project\n', align='L')
         self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='B')
@@ -298,9 +297,9 @@ class PDF(FPDF):
                 w=PDF.CELL_WIDTH, h=None, text='No files found for this project.\n', align='L'
             )
             self.write(0, '\n')
+        self.ln(h=10)
 
         # Write wikis separately to more easily handle Markdown parsing
-        self.ln()
         self._write_wiki_pages(wikis)
 
     def _write_wiki_pages(self, wikis):
@@ -315,8 +314,10 @@ class PDF(FPDF):
         for i, wiki in enumerate(wikis.keys()):
             self.add_page()
             if i == 0:
-                self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-                self.multi_cell(w=PDF.CELL_WIDTH, h=None, text='4. Wiki\n', align='L')
+                self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
+                self.multi_cell(
+                    w=PDF.CELL_WIDTH, h=None, text='4. Wiki\n',
+                    align='L')
                 self.ln()
             self.set_font(self.font, size=PDF.FONT_SIZES['h2'], style='B')
             self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=f'{wiki}\n')
@@ -350,6 +351,10 @@ def explore_project_tree(project, projects, pdf=None):
     # Start with no PDF at root projects
     if not pdf:
         pdf = PDF()
+    
+    pdf.set_line_width(0.05)
+    pdf.set_left_margin(10)
+    pdf.set_right_margin(10)
 
     # Add current project to PDF
     pdf._write_project_body(project)
