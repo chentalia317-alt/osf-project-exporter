@@ -111,7 +111,7 @@ class PDF(FPDF):
         )
         self.cell(0, 10, f"Exported: {timestamp}", align="L")
         self.set_x(10)
-        self.set_y(-25)
+        self.set_y(-15)
         qr_img = self.generate_qr_code()
         self.image(qr_img, w=15, h=15, x=Align.C)
 
