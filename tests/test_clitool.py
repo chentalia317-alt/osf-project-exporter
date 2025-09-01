@@ -601,7 +601,7 @@ class TestFormatter(TestCase):
 
             title_one = projects[0]['metadata']['title'].replace(' ', '-')
             date_one = pdf_one.date_printed.strftime(
-                '%Y-%m-%d %H:%M:%S %Z'
+                '%Y-%m-%d %H-%M-%S %Z'
             ).replace(' ', '-')
             expected_filename = f'{title_one}-{date_one}.pdf'
 
@@ -670,7 +670,7 @@ class TestFormatter(TestCase):
 
             title_one = projects[0]['metadata']['title'].replace(' ', '-')
             date_one = pdf_one.date_printed.strftime(
-                '%Y-%m-%d %H:%M:%S %Z'
+                '%Y-%m-%d %H-%M-%S %Z'
             ).replace(' ', '-')
             expected_filename = f'{title_one}-{date_one}.pdf'
 
@@ -837,10 +837,10 @@ class TestFormatter(TestCase):
         title_one = projects[0]['metadata']['title'].replace(' ', '-')
         title_two = projects[2]['metadata']['title'].replace(' ', '-')
         date_one = pdf_one.date_printed.strftime(
-            '%Y-%m-%d %H:%M:%S %Z'
+            '%Y-%m-%d %H-%M-%S %Z'
         ).replace(' ', '-')
         date_two = pdf_two.date_printed.strftime(
-            '%Y-%m-%d %H:%M:%S %Z'
+            '%Y-%m-%d %H-%M-%S %Z'
         ).replace(' ', '-')
         path_one_real = os.path.join(
             os.getcwd(), FOLDER_OUT,
