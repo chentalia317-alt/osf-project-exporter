@@ -243,7 +243,7 @@ class PDF(FPDF):
         self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
         for key in project['metadata']:
             self._write_list_section(key, project['metadata'])
-        self.ln(h=10)
+        self.ln(h=5)
 
         # Write Contributors in table
         self.set_x(8)
