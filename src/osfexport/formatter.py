@@ -287,12 +287,14 @@ class PDF(FPDF):
         if len(project['files']) > 0:
             with self.table(
                 headings_style=PDF.HEADINGS_STYLE,
-                col_widths=(1, 0.5, 1)
+                col_widths=(1, 0.3, 1.2)
             ) as table:
+                self.set_font(self.font, size=PDF.FONT_SIZES['h4'])
                 row = table.row()
                 row.cell('File Name')
                 row.cell('Size (MB)')
                 row.cell('Download Link')
+                self.set_font(self.font, size=PDF.FONT_SIZES['h5'])
                 for data_row in project['files']:
                     row = table.row()
                     for idx, datum in enumerate(data_row):
