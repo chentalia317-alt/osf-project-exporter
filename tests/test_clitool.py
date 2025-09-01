@@ -230,11 +230,10 @@ class TestExporter(TestCase):
             fp=None
         )
 
-        max_tries = 5
         with self.assertRaises(urllib.error.HTTPError):
             # Use constant time delays instead of random for quick test
-            call_api('https://test.osf.io', pat='pat', is_json=True, max_tries=max_tries, usetest=True)
-        assert len(mock_urlopen.call_args_list) == max_tries
+            call_api('https://test.osf.io', pat='pat', is_json=True, usetest=True)
+        assert len(mock_urlopen.call_args_list) == 5
         
 
     def test_get_public_status(self):

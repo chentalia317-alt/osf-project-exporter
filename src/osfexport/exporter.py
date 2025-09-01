@@ -6,7 +6,7 @@ from urllib.error import HTTPError
 import urllib.request as webhelper
 import importlib.metadata
 import time
-from functools import wraps
+import random
 
 import click
 
@@ -173,7 +173,7 @@ def is_public(url):
 
 def call_api(
         url, pat, method='GET', per_page=100, filters={}, is_json=True,
-        wait_time=5, max_tries=5
+        usetest=False
     ):
     """Call OSF v2 API methods.
 
@@ -195,10 +195,10 @@ def call_api(
         Example Query String: ?filter[category]=project&filter[title]=ttt
     is_json: bool
         If true, set API version to get correct API responses.
-    wait_time: int
-        Number of seconds to wait between retrying requests. Default is 1 second.
-    max_tries: int
-        Number of reties to attempt before raising a HTTPError. Default is 5.
+    usetest: bool
+        If True, use fixed delay of 0.1 seconds for tests.
+        If False, use a random delay between [1, 60] seconds between requests.
+        This spaces out requests over time to give the API chance to recover.
     
     Throws
     -------------
@@ -231,17 +231,22 @@ def call_api(
             f'application/vnd.api+json;version={API_VERSION}'
         )
     
-    # Retry requests if we get 429 errors up to a certain amount of times
-    # If not successful after then raise an error
+    # Retry requests if we get 429 errors
     try_count = 0
     result = None
-    while max_tries > try_count and result is None:
+    while try_count < 5 and result is None:
         try:
             result = webhelper.urlopen(request)
         except HTTPError as e:
             # Other error codes tell us directly something is wrong
             if e.code == 429:
-                time.sleep(wait_time)
+                if not usetest:
+                    # Wait longer between requests to give API more recovery time
+                    # Wait random periods to avoid hammering requests all at once
+                    min_wait = (try_count+1)**2
+                    time.sleep(random.uniform(min_wait, 60))
+                else:
+                    time.sleep(0.5)  # Wait constant time for tests
                 try_count += 1
             else:
                 raise e
@@ -249,7 +254,7 @@ def call_api(
         raise HTTPError(
             url=url,
             code=429,
-            msg="Could not connect to the OSF API.",
+            msg="Too many requests to the OSF API.",
             hdrs=request.headers,
             fp=None
         )
