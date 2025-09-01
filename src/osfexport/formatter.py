@@ -74,7 +74,7 @@ class PDF(FPDF):
         'h4': 9,  # Body
         'h5': 8  # Footer
     }
-    LINE_PADDING = -1  # Gaps between lines
+    LINE_PADDING = -1 # Gaps between lines
     TITLE_CELL_WIDTH = 150  # Shorter width to avoid QR code clipping
     CELL_WIDTH = 180  # Width of text cells
 
@@ -166,7 +166,7 @@ class PDF(FPDF):
             else:
                 self.multi_cell(
                     w=PDF.CELL_WIDTH, h=None,
-                    text='NA',
+                    text=f'NA',
                     align='L', markdown=True, padding=PDF.LINE_PADDING
                 )
         else:
@@ -198,26 +198,22 @@ class PDF(FPDF):
         # Start with parent, project headers and links
         parent = project['parent']
         if parent:
-            self.set_x(8)
-            self.set_font(self.font, size=PDF.FONT_SIZES['h1'])
-            self.multi_cell(
-                w=PDF.TITLE_CELL_WIDTH, h=None, align='L', markdown=True,
-                text=f'**Parent: {parent[0]}** - [{parent[1]}]({parent[1]})'
-            )
+            self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
+            self.write(h=0, text=f'cat cat cat cat cat cat cat cat cat cat cat cat cat cat cat carParent: {parent[0]}: ')
+            self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='U')
+            self.write(h=0, text=f'{parent[1]}\n', link=parent[1])
             self.ln(h=5)
-
+        
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')
         self.url = url  # Set current URL to use in QR codes
         qr_img = self.generate_qr_code()
-        self.image(qr_img, w=30, x=Align.R, y=5)
+        self.image(qr_img, w=30, x=180, y=5)
         title = project['metadata']['title']
-        self.set_font(self.font, size=PDF.FONT_SIZES['h1'])
-        self.multi_cell(
-            w=PDF.CELL_WIDTH, h=None, markdown=True,
-            align='L', padding=PDF.LINE_PADDING,
-            text=f'**{title}** - [{url}]({url})\n'
-        )
+        self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
+        self.write(h=0, text=f'{title}: ')
+        self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='U')
+        self.write(h=0, text=f'{url}\n', link=url)
         self.ln(h=5)
 
         # Write title for metadata section, then actual fields
@@ -353,10 +349,10 @@ def explore_project_tree(project, projects, pdf=None):
     # Start with no PDF at root projects
     if not pdf:
         pdf = PDF()
-
+    
     pdf.set_line_width(0.05)
     pdf.set_left_margin(10)
-    pdf.set_right_margin(10)
+    pdf.set_right_margin(30)
 
     # Add current project to PDF
     pdf._write_project_body(project)
