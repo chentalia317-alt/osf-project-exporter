@@ -509,7 +509,7 @@ class TestExporter(TestCase):
             roots
         )
         assert len(projects) == 3, (
-            print(projects)
+            projects
         )
         assert projects[0]['metadata']['id'] == 'x'
         assert projects[0]['children'] == ['a', 'b'], (
@@ -659,7 +659,6 @@ class TestFormatter(TestCase):
         except Exception as e:
             if isinstance(e, AssertionError):
                 raise e
-            print(e)
         finally:
             if os.path.exists(path_one):
                 os.remove(path_one)
@@ -733,7 +732,6 @@ class TestFormatter(TestCase):
         except Exception as e:
             if isinstance(e, AssertionError):
                 raise e
-            print(e)
         finally:
             if os.path.exists(path_one):
                 os.remove(path_one)
@@ -1067,7 +1065,6 @@ class TestCLI(TestCase):
                 ],
                 terminal_width=60
             )
-            print(result.output)
             assert "Exporting failed as an error occurred:" in result.output
 
     def test_pull_projects_command_on_mocks(self):
