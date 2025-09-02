@@ -75,7 +75,7 @@ class PDF(FPDF):
         'h5': 8  # Footer
     }
     LINK_STYLE = FontFace(emphasis="UNDERLINE", size_pt=FONT_SIZES['h5'])
-    LINE_PADDING = -1 # Gaps between lines
+    LINE_PADDING = -1  # Gaps between lines
     TITLE_CELL_WIDTH = 150  # Shorter width to avoid QR code clipping
     CELL_WIDTH = 180  # Width of text cells
 
@@ -167,7 +167,7 @@ class PDF(FPDF):
             else:
                 self.multi_cell(
                     w=PDF.CELL_WIDTH, h=None,
-                    text=f'NA',
+                    text='NA',
                     align='L', markdown=True, padding=PDF.LINE_PADDING
                 )
         else:
@@ -204,7 +204,7 @@ class PDF(FPDF):
             self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='U')
             self.write(h=0, text=f'{parent[1]}\n', link=parent[1])
             self.ln(h=5)
-        
+
         # Pop URL field to avoid printing it out in Metadata section
         url = project['metadata'].pop('url', '')
         self.url = url  # Set current URL to use in QR codes
@@ -351,7 +351,7 @@ def explore_project_tree(project, projects, pdf=None):
     # Start with no PDF at root projects
     if not pdf:
         pdf = PDF()
-    
+
     pdf.set_line_width(0.05)
     pdf.set_left_margin(10)
     pdf.set_right_margin(30)
