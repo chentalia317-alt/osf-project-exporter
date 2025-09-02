@@ -37,6 +37,7 @@ jobs:
     - name: Run local tests
       run: |
           python -m unittest tests.test_clitool.TestExporter
+          python -m unittest tests.test_clitool.TestFormatter
           python -m unittest tests.test_clitool.TestCLI
     - name: Run API tests
       run: |
