@@ -484,24 +484,21 @@ class TestExporter(TestCase):
             assert os.getcwd() == cwd
 
     def test_extract_project_id_from_strings(self):
-        url = 'https://osf.io/x/'
-        project_id = extract_project_id(url)
-        assert project_id == 'x', f'Expected "x", got {project_id}'
-
-        url = 'https://api.test.osf.io/v2/nodes/x/'
-        project_id = extract_project_id(url)
-        assert project_id == 'x', f'Expected "x", got {project_id}'
-
-        # TODO: add test for passing a URL for test site when
-        # we are using production site, and vice versa
-
-        url = 'x'
-        project_id = extract_project_id(url)
-        assert project_id == 'x', f'Expected "x", got {project_id}'
-
-        # Should just run normally
-        url = ''
-        project_id = extract_project_id(url)
+        input_expected = [
+            ('https://osf.io/x/', 'x'),
+            ('https://api.test.osf.io/v2/nodes/x', 'x'),
+            ('https://api.test.osf.io/v2/nodes/x/?filter[name=lol]', 'x'),
+            ('x', 'x'),
+            ('', ''),
+            ('https://test.osf.io/af454s/?view_only=sdghsgfdsgj&field=name', 'af454s'),
+            ('https://osf.io/12ap3c/?view_only=[sdghsgfdsgj]&field=name', '12ap3c')
+        ]
+        for item in input_expected:
+            result = extract_project_id(item[0])
+            assert result == item[1], (
+                f"Expected {item[1]}, got: ",
+                result
+            )
 
     @patch('osfexport.exporter.call_api')
     def test_add_on_paginated_results(self, mock_get):
