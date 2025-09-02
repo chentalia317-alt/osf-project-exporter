@@ -1,5 +1,5 @@
 import os
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 import click
 
@@ -95,28 +95,46 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
             click.echo(f'Exporting project {title}...')
             pdf, path = formatter.write_pdf(projects, idx, folder)
             click.echo(f'Project exported to {path}')
-    except HTTPError as e:
-        click.echo("Exporting failed as an error occurred:\n")
-        if e.code == 401:
-            click.echo(
-                "The PAT used could not authenticate you. Did you enter your PAT correctly?"
-            )
-            click.echo()
-        elif e.code == 404:
-            click.echo(
-                """The project couldn't be found. Please check the URL or project ID is correct."""
-            )
-        elif e.code == 403:
-            click.echo(
-                f"You aren't able to access {"this project" if project_id else "these projects"}."
-            )
-            click.echo(
-                f"""Please check your PAT has the \"osf.full_read\" permission
-                {", and you are a contributor if it's private" if project_id else ""}."""
-            )
+    except (HTTPError, URLError) as e:
+        click.echo("Exporting failed as an error occurred: ")
+        if isinstance(e, HTTPError):
+            if e.code == 401:
+                click.echo(
+                    "We couldn't authenticate you with the personal access token."
+                )
+                click.echo(
+                    "If you already have access to the OSF, please check the token is correct."
+                )
+            elif e.code == 404:
+                click.echo(
+                    "The project couldn't be found. Please check the URL/project ID is correct."
+                )
+            elif e.code == 403:
+                if project_id:
+                    click.echo(
+                        "Please check you are a contributor for this private project."
+                    )
+                    click.echo(
+                        "If you are, does your token have the \"osf.full_read\" permission?"
+                    )
+                else:
+                    click.echo(
+                        "Does your personal access token have the \"osf.full_read\" permission?"
+                    )
+                    click.echo(
+                        "This is needed to allow access to your projects with this token."
+                    )
+            elif e.code == 429:
+                click.echo(
+                    """Too many requests to the API, please try again in a few minutes."""
+                )
+            else:
+                click.echo(
+                    f"Unexpected error: HTTP {e.code}. Please try again later."
+                )
         else:
             click.echo(
-                f"Unexpected error: {e.code}. Please try again later."
+                f"Unexpected error connecting to the OSF: {e.reason}. Please try again later."
             )
 
 

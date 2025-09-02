@@ -5,6 +5,8 @@ import datetime
 from urllib.error import HTTPError
 import urllib.request as webhelper
 import importlib.metadata
+import time
+import random
 
 import click
 
@@ -190,7 +192,9 @@ def is_public(url):
     return result == 200
 
 
-def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
+def call_api(
+        url, pat, method='GET', per_page=100, filters={}, is_json=True,
+        usetest=False, max_tries=5):
     """Call OSF v2 API methods.
 
     Parameters
@@ -211,6 +215,16 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
         Example Query String: ?filter[category]=project&filter[title]=ttt
     is_json: bool
         If true, set API version to get correct API responses.
+    usetest: bool
+        If True, use fixed delay of 0.1 seconds for tests.
+        If False, use a random delay between [1, 60] seconds between requests.
+        This spaces out requests over time to give the API chance to recover.
+    max_tries: int
+        Number of attempts to make before raising a 429 error. Default is 5, Limit is 7.
+
+    Throws
+    -------------
+        HTTPError - 429 error if we can't connect to the API after retries.
 
     Returns
     ----------
@@ -238,7 +252,37 @@ def call_api(url, pat, method='GET', per_page=100, filters={}, is_json=True):
             'Accept',
             f'application/vnd.api+json;version={API_VERSION}'
         )
-    result = webhelper.urlopen(request)
+
+    if max_tries > 7:
+        max_tries = 7  # Cap retries to reduce requests sent and max delay time
+
+    # Retry requests if we get 429 errors
+    try_count = 0
+    result = None
+    while try_count < max_tries and result is None:
+        try:
+            result = webhelper.urlopen(request)
+        except HTTPError as e:
+            # Other error codes tell us directly something is wrong
+            if e.code == 429:
+                if not usetest:
+                    # Wait longer between requests to give API more recovery time
+                    # Wait random periods to avoid hammering requests all at once
+                    min_wait = (try_count+1)**2
+                    time.sleep(random.uniform(min_wait, 60))
+                else:
+                    time.sleep(0.5)  # Wait constant time for tests
+                try_count += 1
+            else:
+                raise e
+    if result is None:
+        raise HTTPError(
+            url=url,
+            code=429,
+            msg="Too many requests to the OSF API.",
+            hdrs=request.headers,
+            fp=None
+        )
     return result
 
 
@@ -297,7 +341,7 @@ def paginate_json_result(start, action, fail_on_first=True, **kwargs):
                 curr_page = MockAPIResponse.read(next_link)
             results.append(action(curr_page, **kwargs))
         except HTTPError as e:
-            if fail_on_first and is_first_item:
+            if fail_on_first and is_first_item or e.code == 429:
                 raise e
             else:
                 click.echo("Error whilst parsing JSON page; continuing with other pages...")
@@ -689,6 +733,8 @@ def get_project_data(nodes, **kwargs):
             projects.append(project_data)
         except (HTTPError, KeyError) as e:
             if isinstance(e, HTTPError):
+                if e.code == 429:
+                    raise e
                 click.echo(f"A project failed to export: {e.code}")
             else:
                 click.echo("A project failed to export: Unexpected API response.")

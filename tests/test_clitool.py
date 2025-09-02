@@ -32,14 +32,10 @@ from osfexport.formatter import (
     HTMLImageSizeCapRenderer,
     write_pdf
 )
-# from mistletoe import markdown
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
 FOLDER_OUT = os.path.join('tests', 'outfolder')
-
-# Run tests in docker container
-# with 'python -m unittest <tests.test_clitool.TESTCLASS>'
 
 
 class TestAPI(TestCase):
@@ -173,6 +169,22 @@ class TestExporter(TestCase):
             f'Wrong num of calls: {mock_get_inst.call_count}'
         )
 
+        mock_get_inst.side_effect = urllib.error.HTTPError(
+            url='https://test.osf.io',
+            code=429,
+            msg='Too many requests',
+            hdrs={},
+            fp=None
+        )
+        nodes = MockAPIResponse.read('nodes')
+        with self.assertRaises(urllib.error.HTTPError):
+            projects, root_nodes = get_project_data(
+                nodes,
+                pat='',
+                dryrun=False,
+                usetest=True
+            )
+
     @patch('osfexport.exporter.get_project_data')
     def test_paginate_json_result_gets_next_page_despite_function_errors(self, mock_get_data):
         mock_get_data.side_effect = urllib.error.HTTPError(
@@ -199,6 +211,20 @@ class TestExporter(TestCase):
                 pat='', filters={}, project_id='', per_page=20
             )
 
+        # Raise error if it's HTTP 429 error code
+        mock_get_data.side_effect = urllib.error.HTTPError(
+            url='https://test.osf.io',
+            code=429,
+            msg='Too many requests',
+            hdrs={},
+            fp=None
+        )
+        with self.assertRaises(urllib.error.HTTPError):
+            results = paginate_json_result(
+                start='nodes', action=mock_get_data, dryrun=True, usetest=False,
+                pat='', filters={}, project_id='', per_page=20, fail_on_first=False
+            )
+
     @patch('urllib.request.urlopen')
     @patch('urllib.request.Request')
     def test_call_api_add_headers(self, mock_request_class, mock_urlopen):
@@ -214,6 +240,26 @@ class TestExporter(TestCase):
             call().add_header('Accept', 'application/vnd.api+json;version=2.20')
         ]
         mock_request_class.assert_has_calls(expected_calls, any_order=False)
+
+    @patch('urllib.request.urlopen')
+    @patch('urllib.request.Request')
+    def test_call_api_handle_429_errors(self, mock_request_class, mock_urlopen):
+        # Mock Request instances to check headers
+        # Mock urlopen to avoid real HTTP calls
+        mock_request_instance = MagicMock()
+        mock_request_class.return_value = mock_request_instance
+        mock_urlopen.side_effect = urllib.error.HTTPError(
+            code=429,
+            msg="error",
+            url="",
+            hdrs={},
+            fp=None
+        )
+
+        with self.assertRaises(urllib.error.HTTPError):
+            # Use constant time delays instead of random for quick test
+            call_api('https://test.osf.io', pat='pat', is_json=True, usetest=True)
+        assert len(mock_urlopen.call_args_list) == 5
 
     def test_get_public_status(self):
         # Public url
@@ -463,7 +509,7 @@ class TestExporter(TestCase):
             roots
         )
         assert len(projects) == 3, (
-            print(projects)
+            projects
         )
         assert projects[0]['metadata']['id'] == 'x'
         assert projects[0]['children'] == ['a', 'b'], (
@@ -610,7 +656,6 @@ class TestFormatter(TestCase):
         except Exception as e:
             if isinstance(e, AssertionError):
                 raise e
-            print(e)
         finally:
             if os.path.exists(path_one):
                 os.remove(path_one)
@@ -684,7 +729,6 @@ class TestFormatter(TestCase):
         except Exception as e:
             if isinstance(e, AssertionError):
                 raise e
-            print(e)
         finally:
             if os.path.exists(path_one):
                 os.remove(path_one)
@@ -994,17 +1038,22 @@ class TestCLI(TestCase):
 
     @patch('osfexport.cli.prompt_pat')
     @patch('osfexport.exporter.get_nodes')
-    def test_export_projects_handles_http_errors(self, mock_func, mock_prompt):
-        codes = [401, 402, 403, 404, 500]
+    def test_export_projects_handles_http_url_errors(self, mock_func, mock_prompt):
+        codes = [401, 402, 403, 404, 429, 500, -1]
         for code in codes:
             mock_prompt.return_value = '-'
-            mock_func.side_effect = urllib.error.HTTPError(
-                url='https://test.osf.io',
-                code=code,
-                msg='HTTP Error',
-                hdrs={},
-                fp=None
-            )
+            if code != -1:
+                mock_func.side_effect = urllib.error.HTTPError(
+                    url='https://test.osf.io',
+                    code=code,
+                    msg='HTTP Error',
+                    hdrs={},
+                    fp=None
+                )
+            else:
+                mock_func.side_effect = urllib.error.URLError(
+                    reason="URL Error"
+                )
             runner = CliRunner()
             result = runner.invoke(
                 cli, [
