@@ -200,7 +200,7 @@ class PDF(FPDF):
         parent = project['parent']
         if parent:
             self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-            self.write(h=0, text=f'Parent: {parent[0]}')
+            self.write(h=0, text=f'Parent: {parent[0]}\n')
             self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='U')
             self.write(h=0, text=f'{parent[1]}\n', link=parent[1])
             self.ln(h=5)
@@ -212,7 +212,10 @@ class PDF(FPDF):
         self.image(qr_img, w=30, x=180, y=5)
         title = project['metadata']['title']
         self.set_font(self.font, size=PDF.FONT_SIZES['h1'], style='B')
-        self.write(h=0, text=f'{title} \n')
+        self.write(
+            h=0,
+            text=f"{'Component: ' if parent else ''}{title} \n"
+        )
         self.set_font(self.font, size=PDF.FONT_SIZES['h3'], style='U')
         self.write(h=0, text=f'{url}\n', link=url)
         self.ln(h=5)
