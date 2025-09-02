@@ -96,26 +96,34 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
             pdf, path = formatter.write_pdf(projects, idx, folder)
             click.echo(f'Project exported to {path}')
     except (HTTPError, URLError) as e:
-        click.echo("Exporting failed as an error occurred:\n")
+        click.echo("Exporting failed as an error occurred: ")
         if isinstance(e, HTTPError):
             if e.code == 401:
                 click.echo(
-                    "The token used couldn't authenticate you. You may have entered it incorrectly."
+                    "We couldn't authenticate you with the personal access token."
                 )
-                click.echo()
+                click.echo(
+                    "If you already have access to the OSF, please check the token is correct."
+                )
             elif e.code == 404:
                 click.echo(
-                    """The project couldn't be found. Please check the URL/project ID is correct."""
+                    "The project couldn't be found. Please check the URL/project ID is correct."
                 )
             elif e.code == 403:
-                text = "this project" if project_id else "these projects"
-                click.echo(
-                    f"You aren't a contributor for {text}."
-                )
-                click.echo(
-                    f"""Please check your PAT has the \"osf.full_read\" permission
-                    {", and you are a contributor if it's private" if project_id else ""}."""
-                )
+                if project_id:
+                    click.echo(
+                        "Please check you are a contributor for this private project."
+                    )
+                    click.echo(
+                        "If you are, does your personal access token have the \"osf.full_read\" permission?"
+                    )
+                else:
+                    click.echo(
+                        "Does your personal access token have the \"osf.full_read\" permission?"
+                    )
+                    click.echo(
+                        "This is needed to allow access to your projects with this token."
+                    )
             elif e.code == 429:
                 click.echo(
                     """Too many requests to the API, please try again in a few minutes."""

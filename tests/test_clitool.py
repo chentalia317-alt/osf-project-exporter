@@ -32,14 +32,10 @@ from osfexport.formatter import (
     HTMLImageSizeCapRenderer,
     write_pdf
 )
-# from mistletoe import markdown
 
 TEST_PDF_FOLDER = 'good-pdfs'
 TEST_INPUT = 'test_pdf.pdf'
 FOLDER_OUT = os.path.join('tests', 'outfolder')
-
-# Run tests in docker container
-# with 'python -m unittest <tests.test_clitool.TESTCLASS>'
 
 
 class TestAPI(TestCase):
@@ -1071,6 +1067,7 @@ class TestCLI(TestCase):
                 ],
                 terminal_width=60
             )
+            print(result.output)
             assert "Exporting failed as an error occurred:" in result.output
 
     def test_pull_projects_command_on_mocks(self):
