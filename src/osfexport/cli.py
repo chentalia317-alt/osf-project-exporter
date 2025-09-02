@@ -115,7 +115,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
                         "Please check you are a contributor for this private project."
                     )
                     click.echo(
-                        "If you are, does your personal access token have the \"osf.full_read\" permission?"
+                        "If you are, does your token have the \"osf.full_read\" permission?"
                     )
                 else:
                     click.echo(
