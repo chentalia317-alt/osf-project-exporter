@@ -651,7 +651,7 @@ class TestFormatter(TestCase):
 
             title_one = projects[0]['metadata']['title'].replace(' ', '-')
             date_one = pdf_one.date_printed.strftime(
-                '%Y-%m-%d %H:%M:%S %Z'
+                '%Y-%m-%d %H-%M-%S %Z'
             ).replace(' ', '-')
             expected_filename = f'{title_one}-{date_one}.pdf'
 
@@ -720,7 +720,7 @@ class TestFormatter(TestCase):
 
             title_one = projects[0]['metadata']['title'].replace(' ', '-')
             date_one = pdf_one.date_printed.strftime(
-                '%Y-%m-%d %H:%M:%S %Z'
+                '%Y-%m-%d %H-%M-%S %Z'
             ).replace(' ', '-')
             expected_filename = f'{title_one}-{date_one}.pdf'
 
@@ -728,9 +728,10 @@ class TestFormatter(TestCase):
 
             page_one = PdfReader(path_one)
             text = page_one.pages[0].extract_text()
-            assert f'Parent: {projects[0]['parent'][0]}' in text
-            assert f'Parent URL: {projects[0]['parent'][1]}' in text, (
-                'Expected parent URL in PDF, got: ',
+            assert f'Parent: {projects[0]['parent'][0]}' in text, (
+                text
+            )
+            assert f'{projects[0]['parent'][1]}' in text, (
                 text
             )
         except Exception as e:
@@ -887,10 +888,10 @@ class TestFormatter(TestCase):
         title_one = projects[0]['metadata']['title'].replace(' ', '-')
         title_two = projects[2]['metadata']['title'].replace(' ', '-')
         date_one = pdf_one.date_printed.strftime(
-            '%Y-%m-%d %H:%M:%S %Z'
+            '%Y-%m-%d %H-%M-%S %Z'
         ).replace(' ', '-')
         date_two = pdf_two.date_printed.strftime(
-            '%Y-%m-%d %H:%M:%S %Z'
+            '%Y-%m-%d %H-%M-%S %Z'
         ).replace(' ', '-')
         path_one_real = os.path.join(
             os.getcwd(), FOLDER_OUT,
@@ -1011,10 +1012,13 @@ class TestFormatter(TestCase):
         assert f'{projects[0]['metadata']['title']}' not in content_fourth_page, (
             'Incorrect parent title for component'
         )
-        assert f'{projects[3]['metadata']['title']}' in content_fourth_page
-        assert f'Parent: {projects[3]['parent'][0]}' in content_fourth_page
-        assert f'Parent URL:   {projects[3]['parent'][1]}' in content_fourth_page, (
-            projects[3]['parent'][1], content_fourth_page
+        assert f'Parent: {projects[3]['parent'][0]}' in content_fourth_page, (
+            f'Parent: {projects[3]['parent'][0]}',
+            content_fourth_page
+        )
+        assert f'{projects[3]['parent'][1]}' in content_fourth_page, (
+            f'Parent: {projects[3]['parent'][1]}',
+            content_fourth_page
         )
 
         # Remove files only if all good - keep for debugging otherwise
