@@ -122,7 +122,11 @@ def extract_project_id(url):
     Parameters
     ----------
     url: str
-        URL of the OSF project.
+        URL of the OSF project which should contain the project ID. E.g.:
+        - Full URL with parameters (https://osf.io/xyz/?param=value)
+        - API URL (https://api.test.osf.io/v2/nodes/xyz)
+        - Just the ID (xyz)
+        - Empty string
 
     Returns
     -------
@@ -130,8 +134,25 @@ def extract_project_id(url):
         Project ID extracted from the URL.
     """
 
-    project_id = url.strip("/").split("/")[-1]
-    return project_id
+    if not url:
+        return ''
+
+    parts = url.strip("/").split("/")
+    # Handle case of just ID provided
+    if len(parts) == 1:
+        return parts[0]
+
+    # API URLs are of form /nodes/id/...
+    if 'nodes' in parts:
+        idx = parts.index('nodes')
+        if idx + 1 < len(parts):
+            return parts[idx + 1]
+
+    # For regular URLs, extract ID from last path component before query params
+    if '?' in parts[-1]:
+        return parts[-2]
+    else:
+        return parts[-1]
 
 
 def get_host(is_test):
