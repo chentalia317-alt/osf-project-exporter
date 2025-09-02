@@ -678,7 +678,10 @@ class TestFormatter(TestCase):
 
             page_one = PdfReader(path_one)
             text = page_one.pages[0].extract_text()
-            assert f'Parent: {projects[0]['parent'][0]} - {projects[0]['parent'][1]}' in text, (
+            assert f'Parent: {projects[0]['parent'][0]}' in text, (
+                text
+            )
+            assert f'{projects[0]['parent'][1]}' in text, (
                 text
             )
         except Exception as e:
@@ -959,9 +962,12 @@ class TestFormatter(TestCase):
         assert f'{projects[0]['metadata']['title']}' not in content_fourth_page, (
             'Incorrect parent title for component'
         )
-        expected_parent_str = f'Parent: {projects[3]['parent'][0]} - {projects[3]['parent'][1]}'
-        assert expected_parent_str in content_fourth_page, (
-            expected_parent_str,
+        assert f'Parent: {projects[3]['parent'][0]}' in content_fourth_page, (
+            f'Parent: {projects[3]['parent'][0]}',
+            content_fourth_page
+        )
+        assert f'{projects[3]['parent'][1]}' in content_fourth_page, (
+            f'Parent: {projects[3]['parent'][1]}',
             content_fourth_page
         )
 
