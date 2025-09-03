@@ -197,10 +197,10 @@ def is_public(url):
         result = call_api(
             url, pat='', method='GET'
         ).status
-    except (webhelper.HTTPError, URLError) as e:
+    except (HTTPError, URLError) as e:
         # Don't raise error if we get a HTTP error with certain codes
         valid_error_codes = [401, 403]
-        if isinstance(e, webhelper.HTTPError) and e.code in valid_error_codes:
+        if isinstance(e, HTTPError) and e.code in valid_error_codes:
             result = e.code
         else:
             raise e
@@ -719,7 +719,7 @@ def get_project_data(nodes, **kwargs):
                             parent['data']['attributes']['title'],
                             parent['data']['links']['html']
                         )
-                    except (webhelper.HTTPError, ValueError):
+                    except (HTTPError, ValueError):
                         click.echo(f"Failed to load parent for {project_data['metadata']['title']}")
                         click.echo("Try to give a PAT beforehand using the --pat flag.", "\n")
 
