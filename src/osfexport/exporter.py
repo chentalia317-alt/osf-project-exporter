@@ -176,6 +176,7 @@ def get_host(is_test):
 
 def is_public(url):
     """Return boolean to indicate if a URL is public (True) or not (False).
+    This is mainly used for checking if a project is publicly accessible.
 
     Parameters
     ------------
