@@ -1048,8 +1048,9 @@ class TestCLI(TestCase):
     @patch('osfexport.cli.prompt_pat')
     @patch('osfexport.exporter.get_nodes')
     def test_export_projects_handles_http_url_errors(self, mock_func, mock_prompt):
-        codes = [401, 402, 403, 404, 429, 500, -1]
-        for code in codes:
+        # Handle errors from exporting nodes
+        export_codes = [401, 402, 403, 404, 429, 500, -1]
+        for code in export_codes:
             mock_prompt.return_value = '-'
             if code != -1:
                 mock_func.side_effect = urllib.error.HTTPError(
@@ -1071,7 +1072,36 @@ class TestCLI(TestCase):
                 ],
                 terminal_width=60
             )
-            assert "Exporting failed as an error occurred:" in result.output
+            assert "Exporting failed as an error occurred:" in result.output, (
+                result.output
+            )
+        
+        # Handle errors from is_public call when prompting for PAT
+        prompt_codes = [404, 500, -1]
+        for code in export_codes:
+            if code != -1:
+                mock_prompt.side_effect = urllib.error.HTTPError(
+                    url='https://test.osf.io',
+                    code=code,
+                    msg='HTTP Error',
+                    hdrs={},
+                    fp=None
+                )
+            else:
+                mock_prompt.side_effect = urllib.error.URLError(
+                    reason="URL Error"
+                )
+            runner = CliRunner()
+            result = runner.invoke(
+                cli, [
+                    'export-projects',
+                    '--usetest'
+                ],
+                terminal_width=60
+            )
+            assert "Exporting failed as an error occurred:" in result.output, (
+                result.output
+            )
 
     def test_pull_projects_command_on_mocks(self):
         """Test generating a PDF from parsed project data.
