@@ -262,27 +262,36 @@ class TestExporter(TestCase):
         assert len(mock_urlopen.call_args_list) == 5
 
     def test_get_public_status(self):
-        # Public url
         mock_response = MagicMock()
-        mock_response.status = 200
-        with patch('osfexport.exporter.call_api') as mock_call_api:
-            mock_call_api.return_value = mock_response
-            result = is_public('url')
-            mock_call_api.assert_called_once_with(
-                'url', pat='', method='GET'
-            )
-            assert result is True
 
-        # Private url
-        mock_response = MagicMock()
-        mock_response.status = 401
-        with patch('osfexport.exporter.call_api') as mock_call_api:
-            mock_call_api.return_value = mock_response
-            result = is_public('url')
-            mock_call_api.assert_called_once_with(
-                'url', pat='', method='GET'
-            )
-            assert result is False
+        valid_codes = [(200, True), (401, False), (403, False)]
+        for pair in valid_codes:
+            mock_response.status = pair[0]
+            with patch('osfexport.exporter.call_api') as mock_call_api:
+                mock_call_api.return_value = mock_response
+                result = is_public('url')
+                mock_call_api.assert_called_once_with(
+                    'url', pat='', method='GET'
+                )
+                assert result == pair[1]
+        
+        bad_codes = [400, 500, -1]
+        for code in bad_codes:
+            with patch('osfexport.exporter.call_api') as mock_call_api:
+                if code != -1:
+                    mock_call_api.side_effect = urllib.error.HTTPError(
+                        url='https://test.osf.io',
+                        code=code,
+                        msg='HTTP Error',
+                        hdrs={},
+                        fp=None
+                    )
+                else:
+                    mock_call_api.side_effect = urllib.error.URLError(
+                        reason="URL Error"
+                    )
+                with self.assertRaises(type(mock_call_api.side_effect)):
+                    result = is_public('url')
 
     def test_explore_mock_file_tree(self):
         files = explore_file_tree(
