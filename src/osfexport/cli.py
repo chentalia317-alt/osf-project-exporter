@@ -26,7 +26,7 @@ def prompt_pat(project_id='', usetest=False):
     -----------------
         pat: str
             Personal Access Token to use to authorise a user.
-    
+
     Raises
     -------------------
         HTTPError, URLError - passed on from is_public method.

@@ -186,7 +186,7 @@ def is_public(url):
     ----------------
         is_public: bool
             Whether we can access the URL without a PAT (i.e. status code 200)
-    
+
     Raises
     -------------------
         HTTPError, URLError

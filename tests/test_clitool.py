@@ -274,7 +274,7 @@ class TestExporter(TestCase):
                     'url', pat='', method='GET'
                 )
                 assert result == pair[1]
-        
+
         bad_codes = [400, 500, -1]
         for code in bad_codes:
             with patch('osfexport.exporter.call_api') as mock_call_api:
@@ -1075,9 +1075,8 @@ class TestCLI(TestCase):
             assert "Exporting failed as an error occurred:" in result.output, (
                 result.output
             )
-        
+
         # Handle errors from is_public call when prompting for PAT
-        prompt_codes = [404, 500, -1]
         for code in export_codes:
             if code != -1:
                 mock_prompt.side_effect = urllib.error.HTTPError(
