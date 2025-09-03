@@ -273,7 +273,10 @@ class TestExporter(TestCase):
                 mock_call_api.assert_called_once_with(
                     'url', pat='', method='GET'
                 )
-                assert result == pair[1]
+                assert result == pair[1], (
+                    f"Expected: {pair}"
+                    f"Actual code: {result}"
+                )
 
         bad_codes = [400, 500, -1]
         for code in bad_codes:
@@ -292,6 +295,7 @@ class TestExporter(TestCase):
                     )
                 with self.assertRaises(type(mock_call_api.side_effect)):
                     result = is_public('url')
+                    print(f"Code {code} should have failed by now!")
 
     def test_explore_mock_file_tree(self):
         files = explore_file_tree(
