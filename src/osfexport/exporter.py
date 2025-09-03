@@ -2,7 +2,7 @@ from collections import deque
 import json
 import os
 import datetime
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 import urllib.request as webhelper
 import importlib.metadata
 import time
@@ -176,20 +176,37 @@ def get_host(is_test):
 
 def is_public(url):
     """Return boolean to indicate if a URL is public (True) or not (False).
+    This is mainly used for checking if a project is publicly accessible.
 
     Parameters
     ------------
     url: str
         The URL to test.
+
+    Returns
+    ----------------
+        is_public: bool
+            Whether we can access the URL without a PAT (i.e. status code 200)
+
+    Raises
+    -------------------
+        HTTPError, URLError
+            If we get a HTTP error code that isn't 401/403, or a connection error.
     """
 
     try:
         result = call_api(
             url, pat='', method='GET'
         ).status
-    except webhelper.HTTPError as e:
-        result = e
-    return result == 200
+    except (HTTPError, URLError) as e:
+        # Don't raise error if we get a HTTP error with certain codes
+        valid_error_codes = [401, 403]
+        if isinstance(e, HTTPError) and e.code in valid_error_codes:
+            result = e.code
+        else:
+            raise e
+    is_public = result == 200
+    return is_public
 
 
 def call_api(
@@ -703,7 +720,7 @@ def get_project_data(nodes, **kwargs):
                             parent['data']['attributes']['title'],
                             parent['data']['links']['html']
                         )
-                    except (webhelper.HTTPError, ValueError):
+                    except (HTTPError, ValueError):
                         click.echo(f"Failed to load parent for {project_data['metadata']['title']}")
                         click.echo("Try to give a PAT beforehand using the --pat flag.", "\n")
 

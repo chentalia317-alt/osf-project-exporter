@@ -26,6 +26,10 @@ def prompt_pat(project_id='', usetest=False):
     -----------------
         pat: str
             Personal Access Token to use to authorise a user.
+
+    Raises
+    -------------------
+        HTTPError, URLError - passed on from is_public method.
     """
 
     if usetest:
@@ -81,11 +85,12 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
     else:
         click.echo('No project ID provided, extracting all projects.')
 
-    if not pat and not dryrun:
-        pat = prompt_pat(project_id=project_id, usetest=usetest)
-
-    click.echo('Downloading project data...')
     try:
+        if not pat and not dryrun:
+            pat = prompt_pat(project_id=project_id, usetest=usetest)
+
+        click.echo('Downloading project data...')
+
         projects, root_nodes = exporter.get_nodes(
             pat, dryrun=dryrun, project_id=project_id, usetest=usetest
         )
