@@ -364,7 +364,7 @@ def paginate_json_result(start, action, fail_on_first=True, **kwargs):
             if fail_on_first and is_first_item or e.code == 429:
                 raise e
             else:
-                logging.warning("Error whilst parsing JSON page; continuing with other pages...")
+                logging.warning("Warning: Couldn't parse JSON page, skipping to next page...")
         # Stop if no next link found
         try:
             next_link = curr_page['links']['next']
@@ -734,7 +734,7 @@ def get_project_data(nodes, **kwargs):
                         )
                     except (HTTPError, ValueError):
                         logging.warning(
-                            f"Failed to load parent for {project_data['metadata']['title']}"
+                            f"Warning: Parent of {project_data['metadata']['title']} is private."
                         )
                         logging.warning(
                             "Try to give a PAT beforehand using the --pat flag."
@@ -768,9 +768,9 @@ def get_project_data(nodes, **kwargs):
             if isinstance(e, HTTPError):
                 if e.code == 429:
                     raise e
-                logging.warning(f"A project failed to export: {e.code}")
+                logging.warning(f"Warning: A project failed to export: {e.code}")
             else:
-                logging.warning("A project failed to export: Unexpected API response.")
+                logging.warning("Warning: A project failed to export: Unexpected API response.")
             logging.warning("Continuing with exporting other projects...")
 
     return projects, root_nodes
