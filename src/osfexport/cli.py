@@ -55,7 +55,7 @@ def prompt_pat(project_id='', usetest=False):
     return pat
 
 
-@click.command()
+@click.command(name='projects')
 @click.option('--pat', type=str, default='',
               prompt='Enter your PAT', prompt_required=False, hide_input=True,
               help='Personal Access Token to authorise OSF account access.')
@@ -143,7 +143,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
             )
 
 
-@click.command()
+@click.command(name='welcome')
 @click.option('--pat', type=str, default='',
               prompt=True, hide_input=True,
               help='Personal Access Token to authorise OSF account access.')
@@ -152,7 +152,7 @@ def export_projects(folder, pat='', dryrun=False, url='', usetest=False):
               Otherwise, the production environment will be used.""")
 def show_welcome(pat, usetest):
     """Get a welcome message from the OSF site.
-    This is for testing if we can connect to the API."""
+    You can use this to test if the OSF server is running."""
 
     if usetest:
         api_host = API_HOST_TEST
