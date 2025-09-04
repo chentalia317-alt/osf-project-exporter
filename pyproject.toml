@@ -34,7 +34,7 @@ keywords = [
 [project.urls]
 Repository = "https://github.com/CenterForOpenScience/osf-project-exporter/tree/development"
 Issues = "https://github.com/CenterForOpenScience/osf-project-exporter/issues"
-Release Notes = "https://github.com/CenterForOpenScience/osf-project-exporter/releases"
+ReleaseNotes = "https://github.com/CenterForOpenScience/osf-project-exporter/releases"
 
 [project.scripts]
 # Executable scripts, names are commands
