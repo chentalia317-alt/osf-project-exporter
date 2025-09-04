@@ -737,8 +737,7 @@ def get_project_data(nodes, **kwargs):
                             f"Failed to load parent for {project_data['metadata']['title']}"
                         )
                         logging.warning(
-                            "Try to give a PAT beforehand using the --pat flag.",
-                            "\n"
+                            "Try to give a PAT beforehand using the --pat flag."
                         )
 
             # Projects specified by ID to export also count as start nodes for PDFs
@@ -849,6 +848,8 @@ def get_affiliated_institutions(project, **kwargs):
     for item in json_data['data']:
         values.append(item['attributes']['name'])
     values = ', '.join(values)
+    if not values:
+        values = 'NA'
     return values
 
 
