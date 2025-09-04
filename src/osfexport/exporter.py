@@ -621,12 +621,21 @@ def get_project_data(nodes, **kwargs):
             'id': lambda project, **kwargs: project['id'],
             'url': lambda project, **kwargs: project['links']['html'],
             'description': lambda project, **kwargs: project['attributes']['description'],
+            # timestamps are rendered as yyyy-mm-dd hour:minute UTC (24hr)
             'date_created': lambda project, **kwargs: datetime.datetime.fromisoformat(
                     project['attributes']['date_created']
-                ).astimezone().strftime('%Y-%m-%d'),
+                ).astimezone(
+                    datetime.timezone.utc
+                ).strftime(
+                    '%Y-%m-%d %H:%M %Z'
+                ),
             'date_modified': lambda project, **kwargs: datetime.datetime.fromisoformat(
                     project['attributes']['date_modified']
-                ).astimezone().strftime('%Y-%m-%d'),
+                ).astimezone(
+                    datetime.timezone.utc
+                ).strftime(
+                    '%Y-%m-%d %H:%M %Z'
+                ),
             'public': lambda project, **kwargs: project['attributes']['public'],
             'category': get_category,
             'tags': get_tags,
