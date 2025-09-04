@@ -7,8 +7,11 @@ import urllib.request as webhelper
 import importlib.metadata
 import time
 import random
+import logging
 
-import click
+logging.basicConfig(
+    level=logging.WARNING, format='%(message)s'
+)
 
 
 API_HOST_TEST = os.getenv('API_HOST_TEST', 'https://api.test.osf.io/v2')
@@ -361,7 +364,7 @@ def paginate_json_result(start, action, fail_on_first=True, **kwargs):
             if fail_on_first and is_first_item or e.code == 429:
                 raise e
             else:
-                click.echo("Error whilst parsing JSON page; continuing with other pages...")
+                logging.warning("Error whilst parsing JSON page; continuing with other pages...")
         # Stop if no next link found
         try:
             next_link = curr_page['links']['next']
@@ -721,8 +724,8 @@ def get_project_data(nodes, **kwargs):
                             parent['data']['links']['html']
                         )
                     except (HTTPError, ValueError):
-                        click.echo(f"Failed to load parent for {project_data['metadata']['title']}")
-                        click.echo("Try to give a PAT beforehand using the --pat flag.", "\n")
+                        logging.warning(f"Failed to load parent for {project_data['metadata']['title']}")
+                        logging.warning("Try to give a PAT beforehand using the --pat flag.", "\n")
 
             # Projects specified by ID to export also count as start nodes for PDFs
             # This will be the first node in list of root nodes
@@ -752,10 +755,10 @@ def get_project_data(nodes, **kwargs):
             if isinstance(e, HTTPError):
                 if e.code == 429:
                     raise e
-                click.echo(f"A project failed to export: {e.code}")
+                logging.warning(f"A project failed to export: {e.code}")
             else:
-                click.echo("A project failed to export: Unexpected API response.")
-            click.echo("Continuing with exporting other projects...")
+                logging.warning("A project failed to export: Unexpected API response.")
+            logging.warning("Continuing with exporting other projects...")
 
     return projects, root_nodes
 
