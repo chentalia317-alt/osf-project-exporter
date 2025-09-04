@@ -1071,7 +1071,7 @@ class TestCLI(TestCase):
             runner = CliRunner()
             result = runner.invoke(
                 cli, [
-                    'export-projects',
+                    'projects',
                     '--usetest'
                 ],
                 terminal_width=60
@@ -1097,7 +1097,7 @@ class TestCLI(TestCase):
             runner = CliRunner()
             result = runner.invoke(
                 cli, [
-                    'export-projects',
+                    'projects',
                     '--usetest'
                 ],
                 terminal_width=60
@@ -1117,7 +1117,8 @@ class TestCLI(TestCase):
         runner = CliRunner()
         result = runner.invoke(
             cli, [
-                'export-projects', '--dryrun',
+                'projects',
+                '--dryrun',
                 '--folder', FOLDER_OUT,
                 '--url', '',
                 '--pat', ''
