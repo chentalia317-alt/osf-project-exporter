@@ -81,7 +81,9 @@ class PDF(FPDF):
 
     def __init__(self, url=''):
         super().__init__()
-        self.date_printed = datetime.datetime.now().astimezone()
+        self.date_printed = datetime.datetime.now(
+            datetime.timezone.utc
+        )
         self.url = url
         # Setup unicode font for use. Can have 4 styles
         self.font = 'dejavu-sans'
