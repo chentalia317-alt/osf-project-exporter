@@ -724,8 +724,13 @@ def get_project_data(nodes, **kwargs):
                             parent['data']['links']['html']
                         )
                     except (HTTPError, ValueError):
-                        logging.warning(f"Failed to load parent for {project_data['metadata']['title']}")
-                        logging.warning("Try to give a PAT beforehand using the --pat flag.", "\n")
+                        logging.warning(
+                            f"Failed to load parent for {project_data['metadata']['title']}"
+                        )
+                        logging.warning(
+                            "Try to give a PAT beforehand using the --pat flag.",
+                            "\n"
+                        )
 
             # Projects specified by ID to export also count as start nodes for PDFs
             # This will be the first node in list of root nodes
