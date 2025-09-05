@@ -21,11 +21,11 @@ class HTMLImageSizeCapRenderer(HTMLRenderer):
     max_width: int
         Max width of images. Image widths above this get shrunk.
         Default is 300 pixels.
-    
+
     max_height: int
         Max height of images. Image heights above this get shrunk.
         default is 300 pixels.
-    
+
     """
 
     max_width = 300

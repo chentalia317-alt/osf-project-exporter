@@ -39,7 +39,7 @@ class MockAPIResponse:
     JSON_FILES: static
         Key-value dictionary of IDs and paths to stub JSON files.
         These are used to generate mock responses to API calls.
-    
+
     MARKDOWN_FILES: static
         Key-value dictionary of IDs and paths to stub Markdown files.
         These are used to generate mock responses to API calls to get Wiki data.
@@ -349,7 +349,7 @@ def paginate_json_result(start, action, fail_on_first=True, **kwargs):
     ------------------
     results: deque
         Queue of results per page
-    
+
     Throws
     ------------------
     HTTPError, URLError - non-429 HTTP errors which indicate a problem
