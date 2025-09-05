@@ -13,3 +13,5 @@ Tests are written using the `unittest` framework and are kept in tests/test_clit
 * TestCLI: tests code in cli.py
 * TestExporter: tests code in exporter.py
 * TestAPI: API tests to check we can use the OSF v2 API as expected
+
+You can run these tests using `python -m unittest tests.test_clitool`.
