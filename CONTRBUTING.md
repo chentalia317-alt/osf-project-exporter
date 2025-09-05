@@ -4,6 +4,15 @@
 
 By contributing, you are agreeing that we may redistribute your work under [this license](https://github.com/CenterForOpenScience/osf-project-exporter?tab=Apache-2.0-1-ov-file).
 
+## Development Setup
+
+### Virtual Environment
+
+1. Clone this repository onto your local machine.
+2. Create a virtual environment to install dependencies. For `virtualenv` this is done with ``virtualenv <myenvname>``. Make sure your virtual environment is setup to use Python 3.12 or above (e.g., ``virtualenv <myenvname> --python="/usr/bin/python3.12"`` on Linux.)
+3. From local Git repo: Activate your virtual environment and run ``pip install -e osfexport`` to install this repository as a modifiable package.
+4. On the OSF website, create or log in to your account.  Set up a personal access token (PAT) by going into your account settings, select `Personal access tokens` in the left side menu, and clicking `Create token`. You should give the token a name that helps you remember why you made it, like "PDF export", and choose the `osf.full_read` scope - this allows this token to read all public and private projects on your account.
+
 ## Guidelines
 
 ### GitHub Flow
@@ -38,20 +47,14 @@ All code must pass [flake8 linting](https://peps.python.org/pep-0008/)
 
 Imports are should be ordered in pep8 style.
 
-Keep commit histories as clean and simple as possible, with meanigful commit messages.
+Keep commit histories as clean and simple as possible, with meaningful commit messages.
 
-Add docstrings and comments to document what your functions, classes and code does.
+Add docstrings to explain expected inputs, outputs and errors for classes and functions.
+Add comments to explain why sections of code are structured like they are (and how they do it if that would be helpful.)
 
 Add tests for new features or checking for bugs, to help verify the correctness of your changes.
 
 Make a PR to resolve one issue only. Keep changes made to only those needed to resolve the issue.
+In your PR, add a link to what the PR addresses, and describe how the changes made address the issue.
 
-
-## Development Setup
-
-### Virtual Environment
-
-1. Clone this repository onto your local machine.
-2. Create a virtual environment to install dependencies. For `virtualenv` this is done with ``virtualenv <myenvname>``. Make sure your virtual environment is setup to use Python 3.12 or above (e.g., ``virtualenv <myenvname> --python="/usr/bin/python3.12"`` on Linux.)
-3. From local Git repo: Activate your virtual environment and run ``pip install -e osfexport`` to install this repository as a modifiable package.
-4. On the OSF website, create or log in to your account.  Set up a personal access token (PAT) by going into your account settings, select `Personal access tokens` in the left side menu, and clicking `Create token`. You should give the token a name that helps you remember why you made it, like "PDF export", and choose the `osf.full_read` scope - this allows this token to read all public and private projects on your account.
+Pull requests should not be merged unless all checks pass and have been approved by one human reviewer.
