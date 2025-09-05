@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>osfexport.formatter API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>osfexport.formatter</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="osfexport.formatter.explore_project_tree"><code class="name flex">
+<span>def <span class="ident">explore_project_tree</span></span>(<span>project, projects, pdf=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def explore_project_tree(project, projects, pdf=None):
+    &#34;&#34;&#34;Recursively find child projects and write them to a PDF.
+
+    Parameters
+    -----------
+        project: dict
+            Dictionary containing project data to write.
+        projects: list[dict]
+            List of all projects to explore.
+        pdf: PDF
+            PDF object to write to. If None, a new PDF will be created.
+
+    Returns
+    -----------
+        pdf: PDF
+            PDF object with the project and its children written to it.&#34;&#34;&#34;
+
+    # Start with no PDF at root projects
+    if not pdf:
+        pdf = PDF()
+
+    pdf.set_line_width(0.05)
+    pdf.set_left_margin(10)
+    pdf.set_right_margin(30)
+
+    # Add current project to PDF
+    pdf._write_project_body(project)
+
+    # Do children last so that they come at end of the PDF
+    children = project[&#39;children&#39;]
+    for child_id in children:
+        child_project = next(
+            (p for p in projects if p[&#39;metadata&#39;][&#39;id&#39;] == child_id), None
+        )
+        if child_project:
+            pdf = explore_project_tree(
+                child_project, projects, pdf=pdf
+            )
+
+    return pdf</code></pre>
+</details>
+<div class="desc"><p>Recursively find child projects and write them to a PDF.</p>
+<h2 id="parameters">Parameters</h2>
+<pre><code>project: dict
+    Dictionary containing project data to write.
+projects: list[dict]
+    List of all projects to explore.
+pdf: PDF
+    PDF object to write to. If None, a new PDF will be created.
+</code></pre>
+<h2 id="returns">Returns</h2>
+<pre><code>pdf: PDF
+    PDF object with the project and its children written to it.
+</code></pre></div>
+</dd>
+<dt id="osfexport.formatter.write_pdf"><code class="name flex">
+<span>def <span class="ident">write_pdf</span></span>(<span>projects, root_idx, folder='')</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_pdf(projects, root_idx, folder=&#39;&#39;):
+    &#34;&#34;&#34;Make PDF for each project.
+
+    Parameters
+    ------------
+        projects: dict[str, str|tuple]
+            Projects found to export into the PDF.
+        root_idx: int
+            Position of root node (no parent) in the projects list.
+            This is used for accessing root projects without sorting the list.
+        folder: str
+            The path to the folder to output the project PDFs in.
+            Default is the current working directory.
+
+    Returns
+    ------------
+        pdf: PDF
+            Project export PDF
+        path: str
+            Path to the PDF file
+    &#34;&#34;&#34;
+
+    curr_project = projects[root_idx]
+    title = curr_project[&#39;metadata&#39;][&#39;title&#39;]
+    pdf = explore_project_tree(curr_project, projects)
+
+    # Remove spaces in file name for better behaviour on Linux
+    # Add timestamp to allow distinguishing between PDFs at a glance
+    timestamp = pdf.date_printed.strftime(
+        &#39;%Y-%m-%d %H-%M-%S %Z&#39;
+    ).replace(&#39; &#39;, &#39;-&#39;)
+    filename = f&#39;{title.replace(&#39; &#39;, &#39;-&#39;)}-{timestamp}.pdf&#39;
+
+    if folder:
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        path = os.path.join(os.getcwd(), folder, filename)
+    else:
+        path = os.path.join(os.getcwd(), filename)
+    pdf.output(path)
+
+    return pdf, path</code></pre>
+</details>
+<div class="desc"><p>Make PDF for each project.</p>
+<h2 id="parameters">Parameters</h2>
+<pre><code>projects: dict[str, str|tuple]
+    Projects found to export into the PDF.
+root_idx: int
+    Position of root node (no parent) in the projects list.
+    This is used for accessing root projects without sorting the list.
+folder: str
+    The path to the folder to output the project PDFs in.
+    Default is the current working directory.
+</code></pre>
+<h2 id="returns">Returns</h2>
+<pre><code>pdf: PDF
+    Project export PDF
+path: str
+    Path to the PDF file
+</code></pre></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="osfexport.formatter.HTMLImageSizeCapRenderer"><code class="flex name class">
+<span>class <span class="ident">HTMLImageSizeCapRenderer</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HTMLImageSizeCapRenderer(HTMLRenderer):
+    &#34;&#34;&#34;
+    Custom Markdown to HTML renderer which caps image size.
+
+    Attributes
+    ------------------
+    max_width: int
+        Max width of images. Image widths above this get shrunk.
+        Default is 300 pixels.
+    
+    max_height: int
+        Max height of images. Image heights above this get shrunk.
+        default is 300 pixels.
+    
+    &#34;&#34;&#34;
+
+    max_width = 300
+    max_height = 300
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def render_image(self, token):
+        &#34;&#34;&#34;Render an image with a specified size.&#34;&#34;&#34;
+
+        template = &#39;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34;{}{}{} /&gt;&#39;
+
+        # Cap image size if needed so they can fit on the page
+        try:
+            img_info = get_img_info(token.src)
+        except (urllib.error.HTTPError, PIL.UnidentifiedImageError):
+            return f&#39;&lt;a href=&#34;{html.escape(token.src)}&#34;&gt;{token.src}&lt;/a&gt;&#39;
+
+        if img_info[&#39;w&#39;] &gt; HTMLImageSizeCapRenderer.max_width:
+            new_width = HTMLImageSizeCapRenderer.max_width
+        else:
+            new_width = img_info[&#39;w&#39;]
+        width = &#39; width=&#34;{}&#34;&#39;.format(html.escape(str(new_width)))
+
+        if img_info[&#39;h&#39;] &gt; HTMLImageSizeCapRenderer.max_height:
+            new_height = HTMLImageSizeCapRenderer.max_height
+        else:
+            new_height = img_info[&#39;h&#39;]
+        height = &#39; height=&#34;{}&#34;&#39;.format(html.escape(str(new_height)))
+
+        if token.title:
+            title = &#39; title=&#34;{}&#34;&#39;.format(html.escape(token.title))
+        else:
+            title = &#34;&#34;
+        return template.format(token.src, self.render_to_plain(token), title, width, height)</code></pre>
+</details>
+<div class="desc"><p>Custom Markdown to HTML renderer which caps image size.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>max_width</code></strong> :&ensp;<code>int</code></dt>
+<dd>Max width of images. Image widths above this get shrunk.
+Default is 300 pixels.</dd>
+<dt><strong><code>max_height</code></strong> :&ensp;<code>int</code></dt>
+<dd>Max height of images. Image heights above this get shrunk.
+default is 300 pixels.</dd>
+</dl>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>extras</code></strong> :&ensp;<code>list</code></dt>
+<dd>allows subclasses to add even more custom tokens.</dd>
+<dt><strong><code>html_escape_double_quotes</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether to also escape double
+quotes when HTML-escaping rendered text.</dd>
+<dt><strong><code>html_escape_single_quotes</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether to also escape single
+quotes when HTML-escaping rendered text.</dd>
+<dt><strong><code>process_html_tokens</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether to include HTML tokens in the
+processing. If <code>False</code>, HTML markup will be treated as plain
+text: e.g. input <code>&lt;br&gt;</code> will be rendered as <code>&amp;lt;br&amp;gt;</code>.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>additional parameters to be passed to the ancestor's
+constructor.</dd>
+</dl></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mistletoe.html_renderer.HtmlRenderer</li>
+<li>mistletoe.base_renderer.BaseRenderer</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="osfexport.formatter.HTMLImageSizeCapRenderer.max_height"><code class="name">var <span class="ident">max_height</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="osfexport.formatter.HTMLImageSizeCapRenderer.max_width"><code class="name">var <span class="ident">max_width</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="osfexport.formatter.HTMLImageSizeCapRenderer.render_image"><code class="name flex">
+<span>def <span class="ident">render_image</span></span>(<span>self, token)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def render_image(self, token):
+    &#34;&#34;&#34;Render an image with a specified size.&#34;&#34;&#34;
+
+    template = &#39;&lt;img src=&#34;{}&#34; alt=&#34;{}&#34;{}{}{} /&gt;&#39;
+
+    # Cap image size if needed so they can fit on the page
+    try:
+        img_info = get_img_info(token.src)
+    except (urllib.error.HTTPError, PIL.UnidentifiedImageError):
+        return f&#39;&lt;a href=&#34;{html.escape(token.src)}&#34;&gt;{token.src}&lt;/a&gt;&#39;
+
+    if img_info[&#39;w&#39;] &gt; HTMLImageSizeCapRenderer.max_width:
+        new_width = HTMLImageSizeCapRenderer.max_width
+    else:
+        new_width = img_info[&#39;w&#39;]
+    width = &#39; width=&#34;{}&#34;&#39;.format(html.escape(str(new_width)))
+
+    if img_info[&#39;h&#39;] &gt; HTMLImageSizeCapRenderer.max_height:
+        new_height = HTMLImageSizeCapRenderer.max_height
+    else:
+        new_height = img_info[&#39;h&#39;]
+    height = &#39; height=&#34;{}&#34;&#39;.format(html.escape(str(new_height)))
+
+    if token.title:
+        title = &#39; title=&#34;{}&#34;&#39;.format(html.escape(token.title))
+    else:
+        title = &#34;&#34;
+    return template.format(token.src, self.render_to_plain(token), title, width, height)</code></pre>
+</details>
+<div class="desc"><p>Render an image with a specified size.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="osfexport.formatter.PDF"><code class="flex name class">
+<span>class <span class="ident">PDF</span></span>
+<span>(</span><span>url='')</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PDF(FPDF):
+    &#34;&#34;&#34;Custom PDF class to implement extra customisation.
+
+    Attributes:
+        date_printed: datetime
+            Date and time when the project was exported.
+        url: str
+            Current URL to include in QR codes.
+        parent_url: str
+            URL of root project to use in component sections.
+        parent_title: str
+            Title of root project to use in component sections.
+    &#34;&#34;&#34;
+
+    # Global styles for PDF
+    BLUE = (173, 216, 230)
+    HEADINGS_STYLE = FontFace(emphasis=&#34;BOLD&#34;, fill_color=BLUE)
+    FONT_SIZES = {
+        &#39;h1&#39;: 16,  # Project titles
+        &#39;h2&#39;: 12,  # Section titles
+        &#39;h3&#39;: 10,  # Section sub-titles
+        &#39;h4&#39;: 9,  # Body
+        &#39;h5&#39;: 8  # Footer
+    }
+    LINK_STYLE = FontFace(emphasis=&#34;UNDERLINE&#34;, size_pt=FONT_SIZES[&#39;h5&#39;])
+    LINE_PADDING = -1  # Gaps between lines
+    TITLE_CELL_WIDTH = 150  # Shorter width to avoid QR code clipping
+    CELL_WIDTH = 180  # Width of text cells
+
+    def __init__(self, url=&#39;&#39;):
+        super().__init__()
+        self.date_printed = datetime.datetime.now(
+            datetime.timezone.utc
+        )
+        self.url = url
+        # Setup unicode font for use. Can have 4 styles
+        self.font = &#39;dejavu-sans&#39;
+        self.add_font(self.font, style=&#34;&#34;, fname=os.path.join(
+            os.path.dirname(__file__), &#39;font&#39;, &#39;DejaVuSans.ttf&#39;))
+        self.add_font(self.font, style=&#34;b&#34;, fname=os.path.join(
+            os.path.dirname(__file__), &#39;font&#39;, &#39;DejaVuSans-Bold.ttf&#39;))
+        self.add_font(self.font, style=&#34;i&#34;, fname=os.path.join(
+            os.path.dirname(__file__), &#39;font&#39;, &#39;DejaVuSans-Oblique.ttf&#39;))
+        self.add_font(self.font, style=&#34;bi&#34;, fname=os.path.join(
+            os.path.dirname(__file__), &#39;font&#39;, &#39;DejaVuSans-BoldOblique.ttf&#39;))
+
+    def generate_qr_code(self):
+        &#34;&#34;&#34;
+        Make a QR code based on the current PDF&#39;s URL.
+        &#34;&#34;&#34;
+
+        qr = qrcode.make(self.url)
+        img_byte_arr = io.BytesIO()
+        qr.save(img_byte_arr, format=&#39;PNG&#39;)
+        img_byte_arr.seek(0)
+        return img_byte_arr
+
+    def footer(self):
+        &#34;&#34;&#34;
+        Makes the PDF footer, including Exported at timestamp
+        &#34;&#34;&#34;
+
+        self.set_y(-15)
+        self.set_x(-30)
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h5&#39;])
+        self.cell(0, 10, f&#34;Page: {self.page_no()}&#34;, align=&#34;C&#34;)
+        self.set_x(10)
+        timestamp = self.date_printed.strftime(
+            &#39;%Y-%m-%d %H:%M:%S %Z&#39;
+        )
+        self.cell(0, 10, f&#34;Exported: {timestamp}&#34;, align=&#34;L&#34;)
+        self.set_x(10)
+        self.set_y(-15)
+        qr_img = self.generate_qr_code()
+        self.image(qr_img, w=15, h=15, x=Align.C)
+
+    def _write_list_section(self, key, fielddict):
+        &#34;&#34;&#34;Handle writing fields of different types inplace to a PDF.
+        Possible types are lists, strings or dictionaries.
+
+        Parameters
+        -----------
+            key: str
+                Name of the field to write.
+            fielddict: dict
+                Dictionary containing the data for each field to include.
+                e.g. {
+                &#39;subjects&#39;: &#39;s1, s2, s3&#39;,
+                &#39;title&#39;: &#39;title1&#39;
+                }
+        &#34;&#34;&#34;
+
+        # Set nicer display names for certain PDF fields
+        pdf_display_names = {
+            &#39;identifiers&#39;: &#39;DOI&#39;,
+            &#39;funders&#39;: &#39;Support/Funding Information&#39;
+        }
+        if key in pdf_display_names:
+            field_name = pdf_display_names[key]
+        else:
+            field_name = key.replace(&#39;_&#39;, &#39; &#39;).title()
+
+        if isinstance(fielddict[key], list):
+            # Create separate paragraphs for more complex attributes
+            self.write(0, &#39;\n&#39;)
+            self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h3&#39;])
+            self.multi_cell(
+                w=PDF.CELL_WIDTH, h=None,
+                text=f&#39;**{field_name}**\n&#39;,
+                align=&#39;L&#39;, markdown=True, padding=PDF.LINE_PADDING
+            )
+            self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h4&#39;])
+            if len(fielddict[key]) &gt; 0:
+                for idx, item in enumerate(fielddict[key]):
+                    for subkey in item.keys():
+                        if subkey in pdf_display_names:
+                            field_name = pdf_display_names[subkey]
+                        else:
+                            field_name = subkey.replace(&#39;_&#39;, &#39; &#39;).title()
+
+                        self.multi_cell(
+                            w=PDF.CELL_WIDTH, h=None,
+                            text=f&#39;**{field_name}:** {item[subkey]}\n&#39;,
+                            align=&#39;L&#39;, markdown=True, padding=PDF.LINE_PADDING
+                        )
+                    if idx &lt; len(fielddict[key])-1:
+                        self.ln()
+                        self.set_x(9)
+            else:
+                self.multi_cell(
+                    w=PDF.CELL_WIDTH, h=None,
+                    text=&#39;NA&#39;,
+                    align=&#39;L&#39;, markdown=True, padding=PDF.LINE_PADDING
+                )
+        else:
+            # Simple key-value attributes can go on one-line
+            self.multi_cell(
+                w=PDF.CELL_WIDTH,
+                h=None,
+                text=f&#39;**{field_name}:** {fielddict[key]}\n&#39;,
+                align=&#39;L&#39;,
+                markdown=True,
+                padding=PDF.LINE_PADDING
+            )
+
+    def _write_project_body(self, project):
+        &#34;&#34;&#34;Write inplace the body of a project to the PDF.
+
+        Parameters
+        -----------
+            project: dict
+                Dictionary containing project data to write.
+        &#34;&#34;&#34;
+
+        self.add_page()
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h4&#39;])
+        wikis = project[&#39;wikis&#39;]
+
+        # Start with parent, project headers and links
+        parent = project[&#39;parent&#39;]
+        if parent:
+            self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h1&#39;], style=&#39;B&#39;)
+            self.write(h=0, text=f&#39;Parent: {parent[0]}\n&#39;)
+            self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h3&#39;], style=&#39;U&#39;)
+            self.write(h=0, text=f&#39;{parent[1]}\n&#39;, link=parent[1])
+            self.ln(h=5)
+
+        # Pop URL field to avoid printing it out in Metadata section
+        url = project[&#39;metadata&#39;].pop(&#39;url&#39;, &#39;&#39;)
+        self.url = url  # Set current URL to use in QR codes
+        qr_img = self.generate_qr_code()
+        self.image(qr_img, w=30, x=180, y=5)
+        title = project[&#39;metadata&#39;][&#39;title&#39;]
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h1&#39;], style=&#39;B&#39;)
+        self.write(
+            h=0,
+            text=f&#34;{&#39;Component: &#39; if parent else &#39;&#39;}{title} \n&#34;
+        )
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h3&#39;], style=&#39;U&#39;)
+        self.write(h=0, text=f&#39;{url}\n&#39;, link=url)
+        self.ln(h=5)
+
+        # Write title for metadata section, then actual fields
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h2&#39;], style=&#39;B&#39;)
+        self.multi_cell(
+            w=PDF.CELL_WIDTH, h=None, text=&#39;1. Project Metadata\n&#39;,
+            align=&#39;L&#39;, padding=PDF.LINE_PADDING)
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h4&#39;])
+        for key in project[&#39;metadata&#39;]:
+            self._write_list_section(key, project[&#39;metadata&#39;])
+        self.ln(h=7)
+
+        # Write Contributors in table
+        self.set_x(8)
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h2&#39;], style=&#39;B&#39;)
+        self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=&#39;2. Contributors\n&#39;, align=&#39;L&#39;)
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h4&#39;])
+        with self.table(
+            headings_style=PDF.HEADINGS_STYLE,
+            col_widths=(0.8, 0.5, 1.2), align=&#34;LEFT&#34;
+        ) as table:
+            row = table.row()
+            row.cell(&#39;Name&#39;)
+            row.cell(&#39;Bibliographic?&#39;)
+            row.cell(&#39;Profile Link&#39;)
+            self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h5&#39;])
+            for data_row in project[&#39;contributors&#39;]:
+                row = table.row()
+                for idx, datum in enumerate(data_row):
+                    if datum is True:
+                        datum = &#39;Yes&#39;
+                    if datum is False:
+                        datum = &#39;No&#39;
+                    if idx == 2:
+                        row.cell(text=datum, link=datum, style=self.LINK_STYLE)
+                    else:
+                        row.cell(datum)
+        self.ln(h=7)
+
+        # List files stored in storage providers
+        # For now only OSF Storage is involved
+        self.set_x(8)
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h2&#39;], style=&#39;B&#39;)
+        self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=&#39;3. Files in Main Project\n&#39;, align=&#39;L&#39;)
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h3&#39;], style=&#39;B&#39;)
+        self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=&#39;OSF Storage\n&#39;, align=&#39;L&#39;)
+        self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h4&#39;])
+        if len(project[&#39;files&#39;]) &gt; 0:
+            with self.table(
+                headings_style=PDF.HEADINGS_STYLE,
+                col_widths=(1, 0.3, 1.2), align=&#34;LEFT&#34;
+            ) as table:
+                self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h4&#39;])
+                row = table.row()
+                row.cell(&#39;File Name&#39;)
+                row.cell(&#39;Size (MB)&#39;)
+                row.cell(&#39;Download Link&#39;)
+                self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h5&#39;])
+                for data_row in project[&#39;files&#39;]:
+                    row = table.row()
+                    for idx, datum in enumerate(data_row):
+                        if datum is True:
+                            datum = &#39;Yes&#39;
+                        if datum is False or datum is None:
+                            datum = &#39;N/A&#39;
+                        if idx == 2:
+                            row.cell(text=datum, link=datum, style=self.LINK_STYLE)
+                        else:
+                            row.cell(datum)
+        else:
+            self.write(0, &#39;\n&#39;)
+            self.multi_cell(
+                w=PDF.CELL_WIDTH, h=None, text=&#39;No files found for this project.\n&#39;, align=&#39;L&#39;
+            )
+            self.write(0, &#39;\n&#39;)
+        self.ln(h=10)
+
+        # Write wikis separately to more easily handle Markdown parsing
+        self._write_wiki_pages(
+            wikis, parent=parent, title=project[&#39;metadata&#39;][&#39;title&#39;]
+        )
+
+    def _write_wiki_pages(self, wikis, title, parent=None):
+        &#34;&#34;&#34;Write inplace the wiki pages to the PDF.
+
+        Parameters
+        -----------
+            wikis: dict
+                Dictionary containing wiki data to write.
+            title: str
+                Title of the current project.
+            parent: None | tuple[str, str]
+                Optional parent project with (name, url)
+
+        &#34;&#34;&#34;
+
+        for i, wiki in enumerate(wikis.keys()):
+            self.add_page()
+            if i == 0:
+                self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h2&#39;], style=&#39;B&#39;)
+                title_template = &#39;4. Wiki ({}{}{})&#39;
+                if parent:
+                    header = title_template.format(f&#39;Parent: {parent[0]}&#39;, &#39; | &#39;, title)
+                else:
+                    header = title_template.format(&#39;&#39;, &#39;&#39;, title)
+                self.multi_cell(
+                    w=PDF.CELL_WIDTH, h=None, text=f&#39;{header}\n&#39;,
+                    align=&#39;L&#39;)
+                self.ln()
+            self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h2&#39;], style=&#39;B&#39;)
+            self.multi_cell(w=PDF.CELL_WIDTH, h=None, text=f&#39;{wiki}\n&#39;)
+            self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h4&#39;])
+            html = markdown(
+                wikis[wiki],
+                renderer=HTMLImageSizeCapRenderer
+            )
+            self.write_html(html)</code></pre>
+</details>
+<div class="desc"><p>Custom PDF class to implement extra customisation.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>date_printed</code></strong></dt>
+<dd>datetime
+Date and time when the project was exported.</dd>
+<dt><strong><code>url</code></strong></dt>
+<dd>str
+Current URL to include in QR codes.</dd>
+<dt><strong><code>parent_url</code></strong></dt>
+<dd>str
+URL of root project to use in component sections.</dd>
+<dt><strong><code>parent_title</code></strong></dt>
+<dd>str
+Title of root project to use in component sections.</dd>
+</dl>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>orientation</code></strong> :&ensp;<code>str</code></dt>
+<dd>possible values are "portrait" (can be abbreviated "P")
+or "landscape" (can be abbreviated "L"). Default to "portrait".</dd>
+<dt><strong><code>unit</code></strong> :&ensp;<code>str, int, float</code></dt>
+<dd>possible values are "pt", "mm", "cm", "in", or a number.
+A point equals 1/72 of an inch, that is to say about 0.35 mm (an inch being 2.54 cm).
+This is a very common unit in typography; font sizes are expressed in this unit.
+If given a number, then it will be treated as the number of points per unit.
+(eg. 72 = 1 in)
+Default to "mm".</dd>
+<dt><strong><code>format</code></strong> :&ensp;<code>str</code></dt>
+<dd>possible values are "a3", "a4", "a5", "letter", "legal" or a tuple
+(width, height) expressed in the given unit. Default to "a4".</dd>
+<dt><strong><code>font_cache_dir</code></strong> :&ensp;<code>Path</code> or <code>str</code></dt>
+<dd>[<strong>DEPRECATED since v2.5.1</strong>] unused</dd>
+</dl></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>fpdf.fpdf.FPDF</li>
+<li>fpdf.graphics_state.GraphicsStateMixin</li>
+<li>fpdf.text_region.TextRegionMixin</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="osfexport.formatter.PDF.BLUE"><code class="name">var <span class="ident">BLUE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="osfexport.formatter.PDF.CELL_WIDTH"><code class="name">var <span class="ident">CELL_WIDTH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="osfexport.formatter.PDF.FONT_SIZES"><code class="name">var <span class="ident">FONT_SIZES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="osfexport.formatter.PDF.HEADINGS_STYLE"><code class="name">var <span class="ident">HEADINGS_STYLE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="osfexport.formatter.PDF.LINE_PADDING"><code class="name">var <span class="ident">LINE_PADDING</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="osfexport.formatter.PDF.LINK_STYLE"><code class="name">var <span class="ident">LINK_STYLE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="osfexport.formatter.PDF.TITLE_CELL_WIDTH"><code class="name">var <span class="ident">TITLE_CELL_WIDTH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="osfexport.formatter.PDF.footer"><code class="name flex">
+<span>def <span class="ident">footer</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def footer(self):
+    &#34;&#34;&#34;
+    Makes the PDF footer, including Exported at timestamp
+    &#34;&#34;&#34;
+
+    self.set_y(-15)
+    self.set_x(-30)
+    self.set_font(self.font, size=PDF.FONT_SIZES[&#39;h5&#39;])
+    self.cell(0, 10, f&#34;Page: {self.page_no()}&#34;, align=&#34;C&#34;)
+    self.set_x(10)
+    timestamp = self.date_printed.strftime(
+        &#39;%Y-%m-%d %H:%M:%S %Z&#39;
+    )
+    self.cell(0, 10, f&#34;Exported: {timestamp}&#34;, align=&#34;L&#34;)
+    self.set_x(10)
+    self.set_y(-15)
+    qr_img = self.generate_qr_code()
+    self.image(qr_img, w=15, h=15, x=Align.C)</code></pre>
+</details>
+<div class="desc"><p>Makes the PDF footer, including Exported at timestamp</p></div>
+</dd>
+<dt id="osfexport.formatter.PDF.generate_qr_code"><code class="name flex">
+<span>def <span class="ident">generate_qr_code</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_qr_code(self):
+    &#34;&#34;&#34;
+    Make a QR code based on the current PDF&#39;s URL.
+    &#34;&#34;&#34;
+
+    qr = qrcode.make(self.url)
+    img_byte_arr = io.BytesIO()
+    qr.save(img_byte_arr, format=&#39;PNG&#39;)
+    img_byte_arr.seek(0)
+    return img_byte_arr</code></pre>
+</details>
+<div class="desc"><p>Make a QR code based on the current PDF's URL.</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="osfexport" href="index.html">osfexport</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="osfexport.formatter.explore_project_tree" href="#osfexport.formatter.explore_project_tree">explore_project_tree</a></code></li>
+<li><code><a title="osfexport.formatter.write_pdf" href="#osfexport.formatter.write_pdf">write_pdf</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="osfexport.formatter.HTMLImageSizeCapRenderer" href="#osfexport.formatter.HTMLImageSizeCapRenderer">HTMLImageSizeCapRenderer</a></code></h4>
+<ul class="">
+<li><code><a title="osfexport.formatter.HTMLImageSizeCapRenderer.max_height" href="#osfexport.formatter.HTMLImageSizeCapRenderer.max_height">max_height</a></code></li>
+<li><code><a title="osfexport.formatter.HTMLImageSizeCapRenderer.max_width" href="#osfexport.formatter.HTMLImageSizeCapRenderer.max_width">max_width</a></code></li>
+<li><code><a title="osfexport.formatter.HTMLImageSizeCapRenderer.render_image" href="#osfexport.formatter.HTMLImageSizeCapRenderer.render_image">render_image</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="osfexport.formatter.PDF" href="#osfexport.formatter.PDF">PDF</a></code></h4>
+<ul class="two-column">
+<li><code><a title="osfexport.formatter.PDF.BLUE" href="#osfexport.formatter.PDF.BLUE">BLUE</a></code></li>
+<li><code><a title="osfexport.formatter.PDF.CELL_WIDTH" href="#osfexport.formatter.PDF.CELL_WIDTH">CELL_WIDTH</a></code></li>
+<li><code><a title="osfexport.formatter.PDF.FONT_SIZES" href="#osfexport.formatter.PDF.FONT_SIZES">FONT_SIZES</a></code></li>
+<li><code><a title="osfexport.formatter.PDF.HEADINGS_STYLE" href="#osfexport.formatter.PDF.HEADINGS_STYLE">HEADINGS_STYLE</a></code></li>
+<li><code><a title="osfexport.formatter.PDF.LINE_PADDING" href="#osfexport.formatter.PDF.LINE_PADDING">LINE_PADDING</a></code></li>
+<li><code><a title="osfexport.formatter.PDF.LINK_STYLE" href="#osfexport.formatter.PDF.LINK_STYLE">LINK_STYLE</a></code></li>
+<li><code><a title="osfexport.formatter.PDF.TITLE_CELL_WIDTH" href="#osfexport.formatter.PDF.TITLE_CELL_WIDTH">TITLE_CELL_WIDTH</a></code></li>
+<li><code><a title="osfexport.formatter.PDF.footer" href="#osfexport.formatter.PDF.footer">footer</a></code></li>
+<li><code><a title="osfexport.formatter.PDF.generate_qr_code" href="#osfexport.formatter.PDF.generate_qr_code">generate_qr_code</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
