@@ -13,3 +13,10 @@ Tests are written using the `unittest` framework and are kept in tests/test_clit
 * TestCLI: tests code in cli.py
 * TestExporter: tests code in exporter.py
 * TestAPI: API tests to check we can use the OSF v2 API as expected
+
+Basic Flow of Exporting
+=======================
+
+1. Users may need to give a string GUID to export a particular project. The easiest way to do this for them is to give the URL to their project. `osfexport` provides a way to project IDs from OSF project URLs with the `exporter.extract_project_id` method.
+2. Get data for projects for rendering via the OSF API using `exporter.get_nodes`. This will return a dictionary of projects with their attributes.
+3. Output the project data obtained to a PDF by passing the project dictionary to `formatter.write_pdfs`
