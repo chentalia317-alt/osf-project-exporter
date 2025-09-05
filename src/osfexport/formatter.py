@@ -13,7 +13,20 @@ import urllib
 
 
 class HTMLImageSizeCapRenderer(HTMLRenderer):
-    """Custom Markdown to HTML renderer which caps image size."""
+    """
+    Custom Markdown to HTML renderer which caps image size.
+
+    Attributes
+    ------------------
+    max_width: int
+        Max width of images. Image widths above this get shrunk.
+        Default is 300 pixels.
+
+    max_height: int
+        Max height of images. Image heights above this get shrunk.
+        default is 300 pixels.
+
+    """
 
     max_width = 300
     max_height = 300
@@ -53,6 +66,7 @@ class HTMLImageSizeCapRenderer(HTMLRenderer):
 
 class PDF(FPDF):
     """Custom PDF class to implement extra customisation.
+
     Attributes:
         date_printed: datetime
             Date and time when the project was exported.
@@ -97,6 +111,10 @@ class PDF(FPDF):
             os.path.dirname(__file__), 'font', 'DejaVuSans-BoldOblique.ttf'))
 
     def generate_qr_code(self):
+        """
+        Make a QR code based on the current PDF's URL.
+        """
+
         qr = qrcode.make(self.url)
         img_byte_arr = io.BytesIO()
         qr.save(img_byte_arr, format='PNG')
@@ -104,6 +122,10 @@ class PDF(FPDF):
         return img_byte_arr
 
     def footer(self):
+        """
+        Makes the PDF footer, including Exported at timestamp
+        """
+
         self.set_y(-15)
         self.set_x(-30)
         self.set_font(self.font, size=PDF.FONT_SIZES['h5'])
@@ -127,7 +149,11 @@ class PDF(FPDF):
             key: str
                 Name of the field to write.
             fielddict: dict
-                Dictionary containing the field data.
+                Dictionary containing the data for each field to include.
+                e.g. {
+                'subjects': 's1, s2, s3',
+                'title': 'title1'
+                }
         """
 
         # Set nicer display names for certain PDF fields
@@ -190,8 +216,6 @@ class PDF(FPDF):
         -----------
             project: dict
                 Dictionary containing project data to write.
-            parent_title: str
-                Title of the parent project.
         """
 
         self.add_page()
@@ -309,6 +333,11 @@ class PDF(FPDF):
         -----------
             wikis: dict
                 Dictionary containing wiki data to write.
+            title: str
+                Title of the current project.
+            parent: None | tuple[str, str]
+                Optional parent project with (name, url)
+
         """
 
         for i, wiki in enumerate(wikis.keys()):
@@ -345,8 +374,6 @@ def explore_project_tree(project, projects, pdf=None):
             List of all projects to explore.
         pdf: PDF
             PDF object to write to. If None, a new PDF will be created.
-        parent_title: str
-            Title of the parent project.
 
     Returns
     -----------
@@ -394,8 +421,10 @@ def write_pdf(projects, root_idx, folder=''):
 
     Returns
     ------------
-        pdfs: list
-            List of created PDF files.
+        pdf: PDF
+            Project export PDF
+        path: str
+            Path to the PDF file
     """
 
     curr_project = projects[root_idx]

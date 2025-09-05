@@ -30,7 +30,20 @@ URL_FILTERS = {
 
 
 class MockAPIResponse:
-    """Simulate OSF API response for testing purposes."""
+    """
+    Simulate OSF API response for testing purposes.
+
+    Attributes
+    ----------------
+
+    JSON_FILES: static
+        Key-value dictionary of IDs and paths to stub JSON files.
+        These are used to generate mock responses to API calls.
+
+    MARKDOWN_FILES: static
+        Key-value dictionary of IDs and paths to stub Markdown files.
+        These are used to generate mock responses to API calls to get Wiki data.
+    """
 
     JSON_FILES = {
         'nodes': os.path.join(
@@ -227,7 +240,7 @@ def call_api(
         Personal Access Token to authorise a user with.
     per_page: int
         Number of items to include in a JSON page for API responses.
-        The maximum is 100.
+        The maximum size is 100.
     filters: dict
         Dictionary of query parameters to filter results with.
 
@@ -245,6 +258,9 @@ def call_api(
     Throws
     -------------
         HTTPError - 429 error if we can't connect to the API after retries.
+        Other errors are thrown immediately.
+
+        URLError - failed to connect to OSF API
 
     Returns
     ----------
@@ -307,7 +323,7 @@ def call_api(
 
 
 def paginate_json_result(start, action, fail_on_first=True, **kwargs):
-    """Loop through paginated JSON responses and perform action on each.
+    """Loop through paginated JSON responses and perform an action on each.
 
     Parameters
     -------------
@@ -333,6 +349,10 @@ def paginate_json_result(start, action, fail_on_first=True, **kwargs):
     ------------------
     results: deque
         Queue of results per page
+
+    Throws
+    ------------------
+    HTTPError, URLError - non-429 HTTP errors which indicate a problem
     """
 
     next_link = start
@@ -518,7 +538,7 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
         Personal Access Token to authorise a user with.
     page_size: int
         How many nodes to put onto a page. Default is 100.
-        Possible range is 1-1000
+        Possible range is 1-100
     dryrun: bool
         If True, use test data from JSON stubs to mock API calls.
     project_id: str
@@ -577,7 +597,7 @@ def get_nodes(pat, page_size=100, dryrun=False, project_id='', usetest=False):
 
 
 def get_project_data(nodes, **kwargs):
-    """Pull and list projects for a user from the OSF.
+    """Pull and list projects for a specific JSON API response page.
 
     Parameters
     ----------
@@ -777,6 +797,8 @@ def get_project_data(nodes, **kwargs):
 
 
 def get_category(project, **kwargs):
+    """Get category from a project dictionary"""
+
     # Define nice representations of categories if needed
     CATEGORY_STRS = {
         '': 'Uncategorized',
@@ -789,6 +811,8 @@ def get_category(project, **kwargs):
 
 
 def get_tags(project, **kwargs):
+    """Get tags from a project dictionary"""
+
     if project['attributes']['tags']:
         return ', '.join(project['attributes']['tags'])
     else:
@@ -796,6 +820,16 @@ def get_tags(project, **kwargs):
 
 
 def get_contributors(project, **kwargs):
+    """Get contributors from a project dictionary
+
+    Parameters
+    --------------
+        dryrun: bool
+            If True, use test OSF API, otherwise use real API for calls
+        pat: str
+            Personal Access Token to authenticate users with.
+    """
+
     dryrun = kwargs.pop('dryrun', True)
     key = kwargs.pop('key', 'contributors')
     pat = kwargs.pop('pat', '')

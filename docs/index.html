@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>osfexport API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Package <code>osfexport</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="osfexport.cli" href="cli.html">osfexport.cli</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="osfexport.exporter" href="exporter.html">osfexport.exporter</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="osfexport.formatter" href="formatter.html">osfexport.formatter</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="osfexport.call_api"><code class="name flex">
+<span>def <span class="ident">call_api</span></span>(<span>url,<br>pat,<br>method='GET',<br>per_page=100,<br>filters={},<br>is_json=True,<br>usetest=False,<br>max_tries=5)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call_api(
+        url, pat, method=&#39;GET&#39;, per_page=100, filters={}, is_json=True,
+        usetest=False, max_tries=5):
+    &#34;&#34;&#34;Call OSF v2 API methods.
+
+    Parameters
+    ----------
+    url: str
+        URL to API method/resource/query.
+    method: str
+        HTTP method for the request.
+    pat: str
+        Personal Access Token to authorise a user with.
+    per_page: int
+        Number of items to include in a JSON page for API responses.
+        The maximum size is 100.
+    filters: dict
+        Dictionary of query parameters to filter results with.
+
+        Example Input: {&#39;category&#39;: &#39;project&#39;, &#39;title&#39;: &#39;ttt&#39;}
+        Example Query String: ?filter[category]=project&amp;filter[title]=ttt
+    is_json: bool
+        If true, set API version to get correct API responses.
+    usetest: bool
+        If True, use fixed delay of 0.1 seconds for tests.
+        If False, use a random delay between [1, 60] seconds between requests.
+        This spaces out requests over time to give the API chance to recover.
+    max_tries: int
+        Number of attempts to make before raising a 429 error. Default is 5, Limit is 7.
+
+    Throws
+    -------------
+        HTTPError - 429 error if we can&#39;t connect to the API after retries.
+        Other errors are thrown immediately.
+
+        URLError - failed to connect to OSF API
+
+    Returns
+    ----------
+        result: HTTPResponse
+            Response to the request from the API.
+    &#34;&#34;&#34;
+    if (filters or per_page) and method == &#39;GET&#39;:
+        query_string = &#39;&amp;&#39;.join([f&#39;filter[{key}]={value}&#39;
+                                 for key, value in filters.items()
+                                 if not isinstance(value, dict)])
+        if per_page:
+            query_string += f&#39;&amp;page[size]={per_page}&#39;
+        url = f&#39;{url}?{query_string}&#39;
+
+    request = webhelper.Request(url, method=method)
+    request.add_header(&#39;Authorization&#39;, f&#39;Bearer {pat}&#39;)
+
+    version = importlib.metadata.version(&#34;osfexport&#34;)
+    request.add_header(&#39;User-Agent&#39;, f&#39;osfexport/{version} (Python)&#39;)
+
+    # Pin API version so that JSON has correct format
+    API_VERSION = &#39;2.20&#39;
+    if is_json:
+        request.add_header(
+            &#39;Accept&#39;,
+            f&#39;application/vnd.api+json;version={API_VERSION}&#39;
+        )
+
+    if max_tries &gt; 7:
+        max_tries = 7  # Cap retries to reduce requests sent and max delay time
+
+    # Retry requests if we get 429 errors
+    try_count = 0
+    result = None
+    while try_count &lt; max_tries and result is None:
+        try:
+            result = webhelper.urlopen(request)
+        except HTTPError as e:
+            # Other error codes tell us directly something is wrong
+            if e.code == 429:
+                if not usetest:
+                    # Wait longer between requests to give API more recovery time
+                    # Wait random periods to avoid hammering requests all at once
+                    min_wait = (try_count+1)**2
+                    time.sleep(random.uniform(min_wait, 60))
+                else:
+                    time.sleep(0.5)  # Wait constant time for tests
+                try_count += 1
+            else:
+                raise e
+    if result is None:
+        raise HTTPError(
+            url=url,
+            code=429,
+            msg=&#34;Too many requests to the OSF API.&#34;,
+            hdrs=request.headers,
+            fp=None
+        )
+    return result</code></pre>
+</details>
+<div class="desc"><p>Call OSF v2 API methods.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
+<dd>URL to API method/resource/query.</dd>
+<dt><strong><code>method</code></strong> :&ensp;<code>str</code></dt>
+<dd>HTTP method for the request.</dd>
+<dt><strong><code>pat</code></strong> :&ensp;<code>str</code></dt>
+<dd>Personal Access Token to authorise a user with.</dd>
+<dt><strong><code>per_page</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of items to include in a JSON page for API responses.
+The maximum size is 100.</dd>
+<dt><strong><code>filters</code></strong> :&ensp;<code>dict</code></dt>
+<dd>
+<p>Dictionary of query parameters to filter results with.</p>
+<p>Example Input: {'category': 'project', 'title': 'ttt'}
+Example Query String: ?filter[category]=project&amp;filter[title]=ttt</p>
+</dd>
+<dt><strong><code>is_json</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true, set API version to get correct API responses.</dd>
+<dt><strong><code>usetest</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, use fixed delay of 0.1 seconds for tests.
+If False, use a random delay between [1, 60] seconds between requests.
+This spaces out requests over time to give the API chance to recover.</dd>
+<dt><strong><code>max_tries</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of attempts to make before raising a 429 error. Default is 5, Limit is 7.</dd>
+</dl>
+<h2 id="throws">Throws</h2>
+<pre><code>HTTPError - 429 error if we can't connect to the API after retries.
+Other errors are thrown immediately.
+
+URLError - failed to connect to OSF API
+</code></pre>
+<h2 id="returns">Returns</h2>
+<pre><code>result: HTTPResponse
+    Response to the request from the API.
+</code></pre></div>
+</dd>
+<dt id="osfexport.extract_project_id"><code class="name flex">
+<span>def <span class="ident">extract_project_id</span></span>(<span>url)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_project_id(url):
+    &#34;&#34;&#34;Extract project ID from a given OSF project URL.
+
+    Parameters
+    ----------
+    url: str
+        URL of the OSF project which should contain the project ID. E.g.:
+        - Full URL with parameters (https://osf.io/xyz/?param=value)
+        - API URL (https://api.test.osf.io/v2/nodes/xyz)
+        - Just the ID (xyz)
+        - Empty string
+
+    Returns
+    -------
+    str
+        Project ID extracted from the URL.
+    &#34;&#34;&#34;
+
+    if not url:
+        return &#39;&#39;
+
+    parts = url.strip(&#34;/&#34;).split(&#34;/&#34;)
+    # Handle case of just ID provided
+    if len(parts) == 1:
+        return parts[0]
+
+    # API URLs are of form /nodes/id/...
+    if &#39;nodes&#39; in parts:
+        idx = parts.index(&#39;nodes&#39;)
+        if idx + 1 &lt; len(parts):
+            return parts[idx + 1]
+
+    # For regular URLs, extract ID from last path component before query params
+    if &#39;?&#39; in parts[-1]:
+        return parts[-2]
+    else:
+        return parts[-1]</code></pre>
+</details>
+<div class="desc"><p>Extract project ID from a given OSF project URL.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
+<dd>URL of the OSF project which should contain the project ID. E.g.:
+- Full URL with parameters (<a href="https://osf.io/xyz/?param=value">https://osf.io/xyz/?param=value</a>)
+- API URL (<a href="https://api.test.osf.io/v2/nodes/xyz">https://api.test.osf.io/v2/nodes/xyz</a>)
+- Just the ID (xyz)
+- Empty string</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Project ID extracted from the URL.</dd>
+</dl></div>
+</dd>
+<dt id="osfexport.get_nodes"><code class="name flex">
+<span>def <span class="ident">get_nodes</span></span>(<span>pat, page_size=100, dryrun=False, project_id='', usetest=False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_nodes(pat, page_size=100, dryrun=False, project_id=&#39;&#39;, usetest=False):
+    &#34;&#34;&#34;Pull and list projects for a user from the OSF.
+
+    Parameters
+    ----------
+    pat: str
+        Personal Access Token to authorise a user with.
+    page_size: int
+        How many nodes to put onto a page. Default is 100.
+        Possible range is 1-100
+    dryrun: bool
+        If True, use test data from JSON stubs to mock API calls.
+    project_id: str
+        Optional ID for a specific OSF project to export.
+    usetest: bool
+        If True, use test API host, otherwise use production host.
+
+    Returns
+    ----------
+        projects: list[dict]
+            List of all project objects found
+        root_nodes: list[int]
+            List of indexes for root nodes in projects list.
+            These are the nodes to make PDFs for and start from in PDFs.
+    &#34;&#34;&#34;
+
+    # Set start link and page size filter based on flags
+    api_host = get_host(usetest)
+    node_filter = {}
+    if not dryrun:
+        if project_id:
+            start = f&#39;{api_host}/nodes/{project_id}/&#39;
+        else:
+            start = f&#39;{api_host}/users/me/nodes/&#39;
+            node_filter = {
+                &#39;parent&#39;: &#39;&#39;
+            }
+    else:
+        page_size = 4  # Nodes found are hardcoded for --dryrun
+        if project_id:
+            start = project_id
+        else:
+            start = &#39;nodes&#39;
+
+    results = paginate_json_result(
+        start, get_project_data, dryrun=dryrun, usetest=usetest,
+        pat=pat, filters=node_filter, project_id=project_id, per_page=page_size
+    )
+    if len(results) &gt; 0:
+        l1, l2 = zip(*list(results))
+    else:
+        l1, l2 = (), ()
+    projects = [item for sublist in l1 for item in sublist]
+
+    # After pagination we get indexes of root nodes local to each page
+    # We need to convert these to global indexes before merging the list
+    page_idx = -1
+    for page in l2:
+        page_idx += 1
+        for idx, n in enumerate(page):
+            global_node_idx = page_size*page_idx + n
+            page[idx] = global_node_idx
+    root_nodes = [item for sublist in l2 for item in sublist]
+
+    return projects, root_nodes</code></pre>
+</details>
+<div class="desc"><p>Pull and list projects for a user from the OSF.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>pat</code></strong> :&ensp;<code>str</code></dt>
+<dd>Personal Access Token to authorise a user with.</dd>
+<dt><strong><code>page_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>How many nodes to put onto a page. Default is 100.
+Possible range is 1-100</dd>
+<dt><strong><code>dryrun</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, use test data from JSON stubs to mock API calls.</dd>
+<dt><strong><code>project_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Optional ID for a specific OSF project to export.</dd>
+<dt><strong><code>usetest</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, use test API host, otherwise use production host.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<pre><code>projects: list[dict]
+    List of all project objects found
+root_nodes: list[int]
+    List of indexes for root nodes in projects list.
+    These are the nodes to make PDFs for and start from in PDFs.
+</code></pre></div>
+</dd>
+<dt id="osfexport.is_public"><code class="name flex">
+<span>def <span class="ident">is_public</span></span>(<span>url)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_public(url):
+    &#34;&#34;&#34;Return boolean to indicate if a URL is public (True) or not (False).
+    This is mainly used for checking if a project is publicly accessible.
+
+    Parameters
+    ------------
+    url: str
+        The URL to test.
+
+    Returns
+    ----------------
+        is_public: bool
+            Whether we can access the URL without a PAT (i.e. status code 200)
+
+    Raises
+    -------------------
+        HTTPError, URLError
+            If we get a HTTP error code that isn&#39;t 401/403, or a connection error.
+    &#34;&#34;&#34;
+
+    try:
+        result = call_api(
+            url, pat=&#39;&#39;, method=&#39;GET&#39;
+        ).status
+    except (HTTPError, URLError) as e:
+        # Don&#39;t raise error if we get a HTTP error with certain codes
+        valid_error_codes = [401, 403]
+        if isinstance(e, HTTPError) and e.code in valid_error_codes:
+            result = e.code
+        else:
+            raise e
+    is_public = result == 200
+    return is_public</code></pre>
+</details>
+<div class="desc"><p>Return boolean to indicate if a URL is public (True) or not (False).
+This is mainly used for checking if a project is publicly accessible.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
+<dd>The URL to test.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<pre><code>is_public: bool
+    Whether we can access the URL without a PAT (i.e. status code 200)
+</code></pre>
+<h2 id="raises">Raises</h2>
+<pre><code>HTTPError, URLError
+    If we get a HTTP error code that isn't 401/403, or a connection error.
+</code></pre></div>
+</dd>
+<dt id="osfexport.paginate_json_result"><code class="name flex">
+<span>def <span class="ident">paginate_json_result</span></span>(<span>start, action, fail_on_first=True, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def paginate_json_result(start, action, fail_on_first=True, **kwargs):
+    &#34;&#34;&#34;Loop through paginated JSON responses and perform an action on each.
+
+    Parameters
+    -------------
+    start: str
+        Link to start looping from
+    action: func
+        Takes in found JSON page and returns a result
+    per_page: int
+        How many items to include on one page. Default is 100.
+        Valid range is from 1-1000.
+    filters: dict
+        Optional key-value dict to filter queries by.
+    is_json:
+        If JSON response expected, add header to specify JSON format.
+    pat: str
+        Personal Access Token to authorise a user.
+    dryrun: bool
+        Flag for whether mock JSON or real API will be used.
+    **kwargs
+        Extra keyword args to pass down to action and call_api.
+
+    Returns
+    ------------------
+    results: deque
+        Queue of results per page
+    
+    Throws
+    ------------------
+    HTTPError, URLError - non-429 HTTP errors which indicate a problem
+    &#34;&#34;&#34;
+
+    next_link = start
+    is_last_page = False
+    is_first_item = True  # Want to throw error if very first item fails
+    results = deque()
+    per_page = kwargs.pop(&#39;per_page&#39;, 100)
+    filters = kwargs.pop(&#39;filters&#39;, {})
+    is_json = kwargs.pop(&#39;is_json&#39;, True)
+    pat = kwargs.get(&#39;pat&#39;, &#39;&#39;)
+    dryrun = kwargs.get(&#39;dryrun&#39;, False)
+    while not is_last_page:
+        try:
+            if not dryrun:
+                curr_page = call_api(
+                    next_link, pat, per_page=per_page, filters=filters,
+                    is_json=is_json)
+                # Catch error if call_api is replaced with mock in tests
+                try:
+                    curr_page = curr_page.read()
+                    if is_json:
+                        curr_page = json.loads(curr_page)
+                except AttributeError:
+                    pass
+            else:
+                curr_page = MockAPIResponse.read(next_link)
+            results.append(action(curr_page, **kwargs))
+        except HTTPError as e:
+            if fail_on_first and is_first_item or e.code == 429:
+                raise e
+            else:
+                logging.warning(&#34;Warning: Couldn&#39;t parse JSON page, skipping to next page...&#34;)
+        # Stop if no next link found
+        try:
+            next_link = curr_page[&#39;links&#39;][&#39;next&#39;]
+            is_last_page = not next_link
+        except (KeyError, UnboundLocalError):
+            is_last_page = True
+    return results</code></pre>
+</details>
+<div class="desc"><p>Loop through paginated JSON responses and perform an action on each.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>start</code></strong> :&ensp;<code>str</code></dt>
+<dd>Link to start looping from</dd>
+<dt><strong><code>action</code></strong> :&ensp;<code>func</code></dt>
+<dd>Takes in found JSON page and returns a result</dd>
+<dt><strong><code>per_page</code></strong> :&ensp;<code>int</code></dt>
+<dd>How many items to include on one page. Default is 100.
+Valid range is from 1-1000.</dd>
+<dt><strong><code>filters</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Optional key-value dict to filter queries by.</dd>
+<dt>is_json:</dt>
+<dt>If JSON response expected, add header to specify JSON format.</dt>
+<dt><strong><code>pat</code></strong> :&ensp;<code>str</code></dt>
+<dd>Personal Access Token to authorise a user.</dd>
+<dt><strong><code>dryrun</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether mock JSON or real API will be used.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Extra keyword args to pass down to action and call_api.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>results</code></strong> :&ensp;<code>deque</code></dt>
+<dd>Queue of results per page</dd>
+</dl>
+<h2 id="throws">Throws</h2>
+<p>HTTPError, URLError - non-429 HTTP errors which indicate a problem</p></div>
+</dd>
+<dt id="osfexport.prompt_pat"><code class="name flex">
+<span>def <span class="ident">prompt_pat</span></span>(<span>project_id='', usetest=False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prompt_pat(project_id=&#39;&#39;, usetest=False):
+    &#34;&#34;&#34;
+    Ask for a PAT if exporting a single project or all projects a user has.
+
+    Parameters
+    -------------
+        project_id: str
+            ID of a single project to export.
+            If one provided then ask for a PAT.
+        usetest: bool
+            Flag to indicate whether to use the test/production API server.
+
+    Returns
+    -----------------
+        pat: str
+            Personal Access Token to use to authorise a user.
+
+    Raises
+    -------------------
+        HTTPError, URLError - passed on from is_public method.
+    &#34;&#34;&#34;
+
+    if usetest:
+        api_host = API_HOST_TEST
+    else:
+        api_host = API_HOST_PROD
+
+    if not project_id:
+        pat = click.prompt(
+            &#39;Please enter your PAT to export all your projects&#39;,
+            type=str,
+            hide_input=True
+        )
+    elif not exporter.is_public(f&#39;{api_host}/nodes/{project_id}/&#39;):
+        pat = click.prompt(
+            &#39;Please enter your PAT to export this private project&#39;,
+            type=str,
+            hide_input=True
+        )
+    else:
+        pat = &#39;&#39;
+
+    return pat</code></pre>
+</details>
+<div class="desc"><p>Ask for a PAT if exporting a single project or all projects a user has.</p>
+<h2 id="parameters">Parameters</h2>
+<pre><code>project_id: str
+    ID of a single project to export.
+    If one provided then ask for a PAT.
+usetest: bool
+    Flag to indicate whether to use the test/production API server.
+</code></pre>
+<h2 id="returns">Returns</h2>
+<pre><code>pat: str
+    Personal Access Token to use to authorise a user.
+</code></pre>
+<h2 id="raises">Raises</h2>
+<pre><code>HTTPError, URLError - passed on from is_public method.
+</code></pre></div>
+</dd>
+<dt id="osfexport.write_pdf"><code class="name flex">
+<span>def <span class="ident">write_pdf</span></span>(<span>projects, root_idx, folder='')</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_pdf(projects, root_idx, folder=&#39;&#39;):
+    &#34;&#34;&#34;Make PDF for each project.
+
+    Parameters
+    ------------
+        projects: dict[str, str|tuple]
+            Projects found to export into the PDF.
+        root_idx: int
+            Position of root node (no parent) in the projects list.
+            This is used for accessing root projects without sorting the list.
+        folder: str
+            The path to the folder to output the project PDFs in.
+            Default is the current working directory.
+
+    Returns
+    ------------
+        pdf: PDF
+            Project export PDF
+        path: str
+            Path to the PDF file
+    &#34;&#34;&#34;
+
+    curr_project = projects[root_idx]
+    title = curr_project[&#39;metadata&#39;][&#39;title&#39;]
+    pdf = explore_project_tree(curr_project, projects)
+
+    # Remove spaces in file name for better behaviour on Linux
+    # Add timestamp to allow distinguishing between PDFs at a glance
+    timestamp = pdf.date_printed.strftime(
+        &#39;%Y-%m-%d %H-%M-%S %Z&#39;
+    ).replace(&#39; &#39;, &#39;-&#39;)
+    filename = f&#39;{title.replace(&#39; &#39;, &#39;-&#39;)}-{timestamp}.pdf&#39;
+
+    if folder:
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        path = os.path.join(os.getcwd(), folder, filename)
+    else:
+        path = os.path.join(os.getcwd(), filename)
+    pdf.output(path)
+
+    return pdf, path</code></pre>
+</details>
+<div class="desc"><p>Make PDF for each project.</p>
+<h2 id="parameters">Parameters</h2>
+<pre><code>projects: dict[str, str|tuple]
+    Projects found to export into the PDF.
+root_idx: int
+    Position of root node (no parent) in the projects list.
+    This is used for accessing root projects without sorting the list.
+folder: str
+    The path to the folder to output the project PDFs in.
+    Default is the current working directory.
+</code></pre>
+<h2 id="returns">Returns</h2>
+<pre><code>pdf: PDF
+    Project export PDF
+path: str
+    Path to the PDF file
+</code></pre></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="osfexport.MockAPIResponse"><code class="flex name class">
+<span>class <span class="ident">MockAPIResponse</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MockAPIResponse:
+    &#34;&#34;&#34;
+    Simulate OSF API response for testing purposes.
+
+    Attributes
+    ----------------
+
+    JSON_FILES: static
+        Key-value dictionary of IDs and paths to stub JSON files.
+        These are used to generate mock responses to API calls.
+    
+    MARKDOWN_FILES: static
+        Key-value dictionary of IDs and paths to stub Markdown files.
+        These are used to generate mock responses to API calls to get Wiki data.
+    &#34;&#34;&#34;
+
+    JSON_FILES = {
+        &#39;nodes&#39;: os.path.join(
+            STUBS_DIR, &#39;nodestubs.json&#39;),
+        &#39;nodes2&#39;: os.path.join(
+            STUBS_DIR, &#39;nodestubs2.json&#39;),
+        &#39;x&#39;: os.path.join(
+            STUBS_DIR, &#39;singlenode.json&#39;),
+        &#39;a&#39;: os.path.join(
+            STUBS_DIR, &#39;asingle.json&#39;),
+        &#39;affiliated_institutions&#39;: os.path.join(
+            STUBS_DIR, &#39;institutionstubs.json&#39;),
+        &#39;contributors&#39;: os.path.join(
+            STUBS_DIR, &#39;contributorstubs.json&#39;),
+        &#39;identifiers&#39;: os.path.join(
+            STUBS_DIR, &#39;doistubs.json&#39;),
+        &#39;custom_metadata&#39;: os.path.join(
+            STUBS_DIR, &#39;custommetadatastub.json&#39;),
+        &#39;root_folder&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;rootfolders.json&#39;),
+        &#39;root_files&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;rootfiles.json&#39;),
+        &#39;tf1_folder&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;tf1folders.json&#39;),
+        &#39;tf1-2_folder&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;tf1folders-2.json&#39;),
+        &#39;tf1-2_files&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;tf2-second-folders.json&#39;),
+        &#39;tf1_files&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;tf1files.json&#39;),
+        &#39;tf2_folder&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;tf2folders.json&#39;),
+        &#39;tf2-second_folder&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;tf2-second-folders.json&#39;),
+        &#39;tf2_files&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;tf2files.json&#39;),
+        &#39;tf2-second_files&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;tf2-second-files.json&#39;),
+        &#39;tf2-second-2_files&#39;: os.path.join(
+            STUBS_DIR, &#39;files&#39;, &#39;tf2-second-files-2.json&#39;),
+        &#39;license&#39;: os.path.join(
+            STUBS_DIR, &#39;licensestub.json&#39;),
+        &#39;subjects&#39;: os.path.join(
+            STUBS_DIR, &#39;subjectsstub.json&#39;),
+        &#39;wikis&#39;: os.path.join(
+            STUBS_DIR, &#39;wikis&#39;, &#39;wikistubs.json&#39;),
+        &#39;wikis2&#39;: os.path.join(
+            STUBS_DIR, &#39;wikis&#39;, &#39;wikis2stubs.json&#39;),
+        &#39;x-child-1&#39;: os.path.join(
+            STUBS_DIR, &#39;components&#39;, &#39;x-child-1.json&#39;),
+        &#39;x-child-2&#39;: os.path.join(
+            STUBS_DIR, &#39;components&#39;, &#39;x-child-2.json&#39;),
+        &#39;empty-children&#39;: os.path.join(
+            STUBS_DIR, &#39;components&#39;, &#39;empty-children.json&#39;),
+    }
+
+    MARKDOWN_FILES = {
+        &#39;helloworld&#39;: os.path.join(
+            STUBS_DIR, &#39;wikis&#39;, &#39;helloworld.md&#39;),
+        &#39;home&#39;: os.path.join(
+            STUBS_DIR, &#39;wikis&#39;, &#39;home.md&#39;),
+        &#39;anotherone&#39;: os.path.join(
+            STUBS_DIR, &#39;wikis&#39;, &#39;anotherone.md&#39;),
+    }
+
+    @staticmethod
+    def read(field):
+        &#34;&#34;&#34;Get mock response for a field.
+
+        Parameters
+        -----------
+            field: str
+                ID associated to a JSON or Markdown mock file.
+                Available fields to mock are listed in class-level
+                JSON_FILES and MARKDOWN_FILES attributes.
+
+        Returns
+        ------------
+            Parsed JSON dictionary or Markdown.&#34;&#34;&#34;
+
+        if field in MockAPIResponse.JSON_FILES.keys():
+            with open(MockAPIResponse.JSON_FILES[field], &#39;r&#39;) as file:
+                return json.load(file)
+        elif field in MockAPIResponse.MARKDOWN_FILES.keys():
+            with open(MockAPIResponse.MARKDOWN_FILES[field], &#39;r&#39;) as file:
+                return file.read()
+        else:
+            return {&#39;data&#39;: {}}</code></pre>
+</details>
+<div class="desc"><p>Simulate OSF API response for testing purposes.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>JSON_FILES</code></strong> :&ensp;<code>static</code></dt>
+<dd>Key-value dictionary of IDs and paths to stub JSON files.
+These are used to generate mock responses to API calls.</dd>
+<dt><strong><code>MARKDOWN_FILES</code></strong> :&ensp;<code>static</code></dt>
+<dd>Key-value dictionary of IDs and paths to stub Markdown files.
+These are used to generate mock responses to API calls to get Wiki data.</dd>
+</dl></div>
+<h3>Class variables</h3>
+<dl>
+<dt id="osfexport.MockAPIResponse.JSON_FILES"><code class="name">var <span class="ident">JSON_FILES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="osfexport.MockAPIResponse.MARKDOWN_FILES"><code class="name">var <span class="ident">MARKDOWN_FILES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="osfexport.MockAPIResponse.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>field)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def read(field):
+    &#34;&#34;&#34;Get mock response for a field.
+
+    Parameters
+    -----------
+        field: str
+            ID associated to a JSON or Markdown mock file.
+            Available fields to mock are listed in class-level
+            JSON_FILES and MARKDOWN_FILES attributes.
+
+    Returns
+    ------------
+        Parsed JSON dictionary or Markdown.&#34;&#34;&#34;
+
+    if field in MockAPIResponse.JSON_FILES.keys():
+        with open(MockAPIResponse.JSON_FILES[field], &#39;r&#39;) as file:
+            return json.load(file)
+    elif field in MockAPIResponse.MARKDOWN_FILES.keys():
+        with open(MockAPIResponse.MARKDOWN_FILES[field], &#39;r&#39;) as file:
+            return file.read()
+    else:
+        return {&#39;data&#39;: {}}</code></pre>
+</details>
+<div class="desc"><p>Get mock response for a field.</p>
+<h2 id="parameters">Parameters</h2>
+<pre><code>field: str
+    ID associated to a JSON or Markdown mock file.
+    Available fields to mock are listed in class-level
+    JSON_FILES and MARKDOWN_FILES attributes.
+</code></pre>
+<h2 id="returns">Returns</h2>
+<pre><code>Parsed JSON dictionary or Markdown.
+</code></pre></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="osfexport.cli" href="cli.html">osfexport.cli</a></code></li>
+<li><code><a title="osfexport.exporter" href="exporter.html">osfexport.exporter</a></code></li>
+<li><code><a title="osfexport.formatter" href="formatter.html">osfexport.formatter</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="osfexport.call_api" href="#osfexport.call_api">call_api</a></code></li>
+<li><code><a title="osfexport.extract_project_id" href="#osfexport.extract_project_id">extract_project_id</a></code></li>
+<li><code><a title="osfexport.get_nodes" href="#osfexport.get_nodes">get_nodes</a></code></li>
+<li><code><a title="osfexport.is_public" href="#osfexport.is_public">is_public</a></code></li>
+<li><code><a title="osfexport.paginate_json_result" href="#osfexport.paginate_json_result">paginate_json_result</a></code></li>
+<li><code><a title="osfexport.prompt_pat" href="#osfexport.prompt_pat">prompt_pat</a></code></li>
+<li><code><a title="osfexport.write_pdf" href="#osfexport.write_pdf">write_pdf</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="osfexport.MockAPIResponse" href="#osfexport.MockAPIResponse">MockAPIResponse</a></code></h4>
+<ul class="">
+<li><code><a title="osfexport.MockAPIResponse.JSON_FILES" href="#osfexport.MockAPIResponse.JSON_FILES">JSON_FILES</a></code></li>
+<li><code><a title="osfexport.MockAPIResponse.MARKDOWN_FILES" href="#osfexport.MockAPIResponse.MARKDOWN_FILES">MARKDOWN_FILES</a></code></li>
+<li><code><a title="osfexport.MockAPIResponse.read" href="#osfexport.MockAPIResponse.read">read</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

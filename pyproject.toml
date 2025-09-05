@@ -1,6 +1,6 @@
 [project]
 name = "osfexport"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
   {name = "Benito Matischen", email = "benito.matischen@manchester.ac.uk"},
   {name = "Ramiro Bravo", email = "ramiro.bravo@manchester.ac.uk"},
@@ -28,7 +28,7 @@ dependencies = [
 ]
 keywords = [
   "OSF", "osf", "backup", "Open Science Framework", "export",
-  "Centre for Open Science", "COS", "open science", "archive"
+  "Center for Open Science", "COS", "open science", "archive"
 ]
 
 [project.urls]
