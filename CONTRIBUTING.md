@@ -26,7 +26,7 @@ Contrbutions to code and documentation should follow the [GitHub flow model](htt
 - Before submitting a pull request re-merge the source branch and resolve any merge conflicts
 - A branch should not be merged until it passes all checks and has been approved by one person.
   - Checks for linting quality and if tests pass automatically runs when pull requests are made and updated.
-- Do not merge develop if you are working of a release branch and visa versa
+- Do not merge develop if you are working off a release branch and vice versa
 - Use -'s for spaces not _'s
 - Hotfixes are to be branched off main
   - Hotfix PR should be names hotfix/brief-description
