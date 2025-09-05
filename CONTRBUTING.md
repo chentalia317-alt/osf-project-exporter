@@ -4,18 +4,19 @@
 
 By contributing, you are agreeing that we may redistribute your work under [this license](https://github.com/CenterForOpenScience/osf-project-exporter?tab=Apache-2.0-1-ov-file).
 
-## Development Setup
-
-### Virtual Environment
-
-1. Clone this repository onto your local machine.
-2. Create a virtual environment to install dependencies. For `virtualenv` this is done with ``virtualenv <myenvname>``. Make sure your virtual environment is setup to use Python 3.12 or above (e.g., ``virtualenv <myenvname> --python="/usr/bin/python3.12"`` on Linux.)
-3. From local Git repo: Activate your virtual environment and run ``pip install -e osfexport`` to install this repository as a modifiable package.
-4. On the OSF website, create or log in to your account.  Set up a personal access token (PAT) by going into your account settings, select `Personal access tokens` in the left side menu, and clicking `Create token`. You should give the token a name that helps you remember why you made it, like "PDF export", and choose the `osf.full_read` scope - this allows this token to read all public and private projects on your account.
-
 ## Guidelines
 
 The below are guidelines about how contributions should be made, and are not necessarily hard rules.
+
+### Reporting a Bug
+For reporting bugs, create a new issue:
+- Describe what the bug is, what steps people can do to reproduce it, and what platform you were using `osfexport` on.
+- Add a `bug` label to the issue.
+
+### Suggesting a new Feature
+Create a new issue:
+- Describe what the feature is, and why it would be useful to add to the project.
+- Add a `enhancement` label to the issue.
 
 ### GitHub Flow
 
