@@ -10,6 +10,12 @@ from fpdf.image_parsing import get_img_info
 from mistletoe import markdown, HTMLRenderer
 import qrcode
 import urllib
+import re
+
+_EMOJI_RE = re.compile(r'([\U0001F300-\U0001FAFF\U00002700-\U000027BF\U00002600-\U000026FF])')
+
+def wrap_emoji_with_font(html_text: str) -> str:
+    return _EMOJI_RE.sub(r'<font face="noto-emoji">\1</font>', html_text)
 
 
 class HTMLImageSizeCapRenderer(HTMLRenderer):
@@ -109,6 +115,12 @@ class PDF(FPDF):
             os.path.dirname(__file__), 'font', 'DejaVuSans-Oblique.ttf'))
         self.add_font(self.font, style="bi", fname=os.path.join(
             os.path.dirname(__file__), 'font', 'DejaVuSans-BoldOblique.ttf'))
+         # Extra fonts to cover emoji / symbols
+        self.add_font('noto-emoji', style="", fname=os.path.join(
+            os.path.dirname(__file__), 'font', 'NotoEmoji-Regular.ttf'))
+        self.add_font('noto-symbols2', style="", fname=os.path.join(
+            os.path.dirname(__file__), 'font', 'NotoSansSymbols2-Regular.ttf'))
+
 
     def generate_qr_code(self):
         """
@@ -359,8 +371,10 @@ class PDF(FPDF):
             html = markdown(
                 wikis[wiki],
                 renderer=HTMLImageSizeCapRenderer
-            )
+)
+            html = wrap_emoji_with_font(html)
             self.write_html(html)
+
 
 
 def explore_project_tree(project, projects, pdf=None):
